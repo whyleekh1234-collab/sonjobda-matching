@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import SeedInitializer from "@/components/SeedInitializer";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -42,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${pretendard.variable} font-sans antialiased`}>
+        <SeedInitializer />
         {children}
       </body>
     </html>
