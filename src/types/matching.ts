@@ -88,7 +88,7 @@ export const defaultTimeline: TimelineItem[] = [
 export const statusLabels: Record<RequestStatus, { label: string; color: string }> = {
   pending: { label: "검토 대기", color: "bg-gray-100 text-gray-600" },
   matching: { label: "매칭 진행중", color: "bg-blue-100 text-blue-700" },
-  matched: { label: "매칭 완료", color: "bg-emerald-100 text-emerald-700" },
+  matched: { label: "매칭 성사", color: "bg-emerald-100 text-emerald-700" },
   completed: { label: "프로젝트 완료", color: "bg-purple-100 text-purple-700" },
   cancelled: { label: "취소됨", color: "bg-red-100 text-red-600" },
 };

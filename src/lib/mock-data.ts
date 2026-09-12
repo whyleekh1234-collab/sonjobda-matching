@@ -13,8 +13,21 @@ export function getMyRequests(userId: string): MatchRequest[] {
 }
 
 // 파트너사: 내 카테고리에 해당하는 의뢰 목록
-export function getRequestsForPartner(partnerCategories: string[], userId: string): MatchRequest[] {
-  return getAllRequests().filter((r) => partnerCategories.includes(r.category));
+// selfBusinessNumber가 주어지면 같은 회사(사업자등록번호)가 등록한 의뢰는 제외한다(자기 입찰 방지).
+export function getRequestsForPartner(
+  partnerCategories: string[],
+  selfBusinessNumber?: string
+): MatchRequest[] {
+  const matched = getAllRequests().filter((r) => partnerCategories.includes(r.category));
+  if (!selfBusinessNumber || typeof window === "undefined") return matched;
+
+  const users: { id: string; businessNumber?: string }[] = JSON.parse(
+    localStorage.getItem("sonjobda_users") || "[]"
+  );
+  return matched.filter((r) => {
+    const client = users.find((u) => u.id === r.clientId);
+    return client?.businessNumber !== selfBusinessNumber;
+  });
 }
 
 // legacy 호환
