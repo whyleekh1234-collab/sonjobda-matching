@@ -14,9 +14,13 @@ interface AuthContextType {
     company: string;
     businessNumber: string;
     phone: string;
+    address?: string;
     roles: Role[];
     partnerCategories?: PartnerCategory[];
   }) => Promise<void>;
+  findEmailByPhone: (name: string, phone: string) => Promise<string>;
+  findEmailByEmail: (name: string, email: string) => Promise<string>;
+  resetPassword: (email: string, newPassword: string) => Promise<void>;
   logout: () => void;
   switchRole: () => void;
 }
@@ -62,7 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("정지된 계정입니다. 관리자에게 문의해주세요.");
     }
 
-    const { password: _, ...userData } = found;
+    const userData = { ...found };
+    delete (userData as { password?: string }).password;
     setUser(userData);
     localStorage.setItem("sonjobda_user", JSON.stringify(userData));
   };
@@ -74,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     company: string;
     businessNumber: string;
     phone: string;
+    address?: string;
     roles: Role[];
     partnerCategories?: PartnerCategory[];
   }) => {
@@ -102,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       company: data.company,
       businessNumber: data.businessNumber,
       phone: data.phone,
+      ...(data.address?.trim() && { address: data.address.trim() }),
       roles: data.roles,
       activeRole: data.roles[0],
       ...(data.partnerCategories?.length && { partnerCategories: data.partnerCategories }),
@@ -114,6 +121,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("sonjobda_users", JSON.stringify(users));
 
     // 가입 후 바로 로그인하지 않음 - 관리자 승인 대기
+  };
+
+  const findEmailByPhone = async (name: string, phone: string) => {
+    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
+    const normalizedPhone = phone.replace(/[^0-9]/g, "");
+    const found = users.find(
+      (u: { name: string; phone: string }) =>
+        u.name === name.trim() &&
+        u.phone.replace(/[^0-9]/g, "") === normalizedPhone
+    );
+
+    if (!found) {
+      throw new Error(
+        "일치하는 회원 정보가 없습니다. 담당자 이름과 휴대폰 번호를 확인해주세요."
+      );
+    }
+
+    return found.email as string;
+  };
+
+  const findEmailByEmail = async (name: string, email: string) => {
+    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
+    const found = users.find(
+      (u: { name: string; email: string }) =>
+        u.name === name.trim() &&
+        u.email.toLowerCase() === email.trim().toLowerCase()
+    );
+
+    if (!found) {
+      throw new Error(
+        "일치하는 회원 정보가 없습니다. 담당자 이름과 이메일을 확인해주세요."
+      );
+    }
+
+    return found.email as string;
+  };
+
+  const resetPassword = async (email: string, newPassword: string) => {
+    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
+    const idx = users.findIndex(
+      (u: { email: string }) => u.email.toLowerCase() === email.trim().toLowerCase()
+    );
+
+    if (idx === -1) {
+      throw new Error("일치하는 회원 정보가 없습니다.");
+    }
+
+    users[idx].password = newPassword;
+    localStorage.setItem("sonjobda_users", JSON.stringify(users));
   };
 
   const logout = () => {
@@ -137,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, switchRole }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, findEmailByPhone, findEmailByEmail, resetPassword, logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );

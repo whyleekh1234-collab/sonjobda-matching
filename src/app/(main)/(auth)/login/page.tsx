@@ -37,11 +37,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* 헤더 */}
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary">손잡다</span>
-            <span className="text-2xl font-bold text-foreground">매칭</span>
-          </Link>
-          <h1 className="mt-6 text-2xl font-bold text-foreground">로그인</h1>
+          <h1 className="text-2xl font-bold text-foreground">로그인</h1>
           <p className="mt-2 text-sm text-foreground/60">
             계정에 로그인하여 매칭 서비스를 이용하세요.
           </p>
@@ -76,14 +72,9 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                  비밀번호
-                </label>
-                <button type="button" className="text-xs text-primary hover:underline">
-                  비밀번호 찾기
-                </button>
-              </div>
+              <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                비밀번호
+              </label>
               <input
                 type="password"
                 id="password"
@@ -106,6 +97,17 @@ export default function LoginPage() {
           </button>
 
         </form>
+
+        {/* 아이디 / 비밀번호 찾기 */}
+        <div className="mt-4 flex items-center justify-center gap-3 text-sm text-foreground/60">
+          <Link href="/find-email" className="hover:text-primary hover:underline">
+            이메일 찾기
+          </Link>
+          <span className="text-border">|</span>
+          <Link href="/reset-password" className="hover:text-primary hover:underline">
+            비밀번호 찾기
+          </Link>
+        </div>
 
         {/* 회원가입 링크 */}
         <p className="mt-6 text-center text-sm text-foreground/60">
