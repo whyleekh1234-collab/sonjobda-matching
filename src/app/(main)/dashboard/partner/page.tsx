@@ -7,7 +7,6 @@ import { getRequestsForPartner } from "@/lib/mock-data";
 import { quoteStatusLabels, defaultTimeline } from "@/types/matching";
 import type { MatchRequest, Quote, QuoteStatus, TimelineItem } from "@/types/matching";
 import type { Notice, Notification } from "@/types/auth";
-import Link from "next/link";
 
 export default function PartnerDashboard() {
   const { user } = useAuth();
@@ -25,7 +24,7 @@ export default function PartnerDashboard() {
   });
   const [attachment, setAttachment] = useState<{ name: string; data: string } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<"all" | QuoteStatus>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "closed" | QuoteStatus>("all");
   const [sentSortBy, setSentSortBy] = useState<"quoteCode" | "title" | "category" | "client" | "amount" | "status" | "date">("date");
   const [sentSortDir, setSentSortDir] = useState<"asc" | "desc">("desc");
   const toggleSentSort = (key: typeof sentSortBy) => {
@@ -37,7 +36,7 @@ export default function PartnerDashboard() {
   const loadRequests = useCallback(() => {
     if (!user || !user.partnerCategories) return;
     if (user.status === "suspended") { setRequests([]); return; }
-    const all = getRequestsForPartner(user.partnerCategories, user.id);
+    const all = getRequestsForPartner(user.partnerCategories, user.businessNumber);
     setRequests(all);
   }, [user]);
 
@@ -62,6 +61,8 @@ export default function PartnerDashboard() {
 
   // 의뢰서에서 위탁업무 파싱하여 타임라인 생성
   const getTimelineFromRequest = (request: MatchRequest): TimelineItem[] => {
+    // 보험 의뢰는 업무범위/소요개월 개념이 없으므로 빈 목록
+    if (request.category === "임상시험 보험") return [];
     const lines = (request.description || "").split("\n");
     const tasksLine = lines.find((l) => l.startsWith("위탁업무:"));
     if (!tasksLine) return defaultTimeline.map((t) => ({ ...t }));
@@ -244,11 +245,19 @@ export default function PartnerDashboard() {
     reader.readAsDataURL(file);
   };
 
-  // 필터링
-  const filteredRequests = requests.filter((r) => {
-    if (filterStatus === "all") return true;
-    return getMyQuoteStatus(r) === filterStatus;
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // 받은 의뢰 = 아직 열려 있는(pending) 의뢰. 숫자(stats)와 목록(filteredRequests)이 동일 집합을 사용한다.
+  const openRequests = requests.filter((r) => r.status === "pending");
+  // 마감된 의뢰 = 매칭 성사/완료/회수된 의뢰 (더 이상 견적 제출 불가)
+  const closedRequests = requests.filter(
+    (r) => r.status === "matched" || r.status === "completed" || r.status === "cancelled"
+  );
+
+  // 필터링 ("마감" 탭은 closedRequests, 나머지는 열린 의뢰를 견적상태별로)
+  const filteredRequests = (
+    filterStatus === "closed"
+      ? closedRequests
+      : openRequests.filter((r) => filterStatus === "all" || getMyQuoteStatus(r) === filterStatus)
+  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // 보류 처리
   const holdRequest = (requestId: string) => {
@@ -298,22 +307,18 @@ export default function PartnerDashboard() {
 
   // 보낸 견적: quoted 상태인 것
   const sentQuotes = requests.filter((r) => ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(getMyQuoteStatus(r)));
-  // 매칭 완료: 매칭 완료된 요청 중 내 견적이 있는 것
+  // 매칭 성사: 매칭 성사된 요청 중 내 견적이 있는 것
   const wonRequests = requests.filter((r) => (r.status === "matched" || r.status === "completed") && (r.quotes || []).some((q) => q.partnerId === user?.id && q.status === "accepted"));
 
-  const activeRequests = requests.filter((r) => {
-    const deadline = new Date(r.createdAt); deadline.setDate(deadline.getDate() + 7);
-    return r.status === "pending" && deadline >= new Date();
-  });
-
   const stats = {
-    total: activeRequests.length,
-    newCount: activeRequests.filter((r) => getMyQuoteStatus(r) === "new").length,
-    reviewing: activeRequests.filter((r) => getMyQuoteStatus(r) === "reviewing").length,
+    total: openRequests.length,
+    newCount: openRequests.filter((r) => getMyQuoteStatus(r) === "new").length,
+    reviewing: openRequests.filter((r) => getMyQuoteStatus(r) === "reviewing").length,
     quoted: sentQuotes.length,
-    rejected: activeRequests.filter((r) => getMyQuoteStatus(r) === "rejected").length,
-    hold: activeRequests.filter((r) => getMyQuoteStatus(r) === "hold").length,
+    rejected: openRequests.filter((r) => getMyQuoteStatus(r) === "rejected").length,
+    hold: openRequests.filter((r) => getMyQuoteStatus(r) === "hold").length,
     won: wonRequests.length,
+    closed: closedRequests.length,
   };
 
   // 전체 활동 피드 생성
@@ -359,7 +364,7 @@ export default function PartnerDashboard() {
     });
   });
 
-  // 매칭 완료
+  // 매칭 성사
   wonRequests.forEach((req) => {
     activities.push({ id: `won-${req.id}`, type: "won", title: `"${req.title}" 수주에 성공했습니다`, detail: `${req.clientCompany} | 예산: ${req.budget}`, date: req.createdAt, requestId: req.id });
   });
@@ -402,7 +407,7 @@ export default function PartnerDashboard() {
 
         {/* 상단 */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground">파트너사 대시보드</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">파트너사 대시보드</h1>
           <p className="mt-1 text-sm text-foreground/60">
             {user?.company}에 들어온 의뢰를 확인하고 견적서를 제출하세요.
           </p>
@@ -411,40 +416,40 @@ export default function PartnerDashboard() {
         {/* 메인 카드 3개 */}
         <div className="sticky top-[108px] z-30 mt-8 grid grid-cols-1 gap-4 bg-muted pb-4 sm:grid-cols-3">
           <button onClick={() => { setActiveSection("received"); setFilterStatus("all"); }}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "received" ? "border-primary bg-primary/5 shadow-md" : "border-border bg-white hover:border-primary/30 hover:shadow-md"}`}>
+            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "received" ? "border-primary bg-primary/5 shadow-md" : "border-border bg-surface shadow-card hover:border-primary/30 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground/50">받은 의뢰</p>
                 <p className="mt-1 text-3xl font-bold text-primary">{stats.total}</p>
                 <p className="mt-1 text-xs text-foreground/40">신규 {stats.newCount} | 검토중 {stats.reviewing}</p>
               </div>
-              <div className="rounded-xl bg-primary/10 p-3 text-primary">
+              <div className="rounded-xl bg-gradient-to-br from-primary to-primary-light p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
               </div>
             </div>
           </button>
           <button onClick={() => setActiveSection("sent")}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "sent" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-border bg-white hover:border-emerald-300 hover:shadow-md"}`}>
+            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "sent" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-border bg-surface shadow-card hover:border-emerald-300 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground/50">보낸 견적</p>
                 <p className="mt-1 text-3xl font-bold text-emerald-600">{stats.quoted}</p>
                 <p className="mt-1 text-xs text-foreground/40">제출 완료된 견적서</p>
               </div>
-              <div className="rounded-xl bg-emerald-100 p-3 text-emerald-600">
+              <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
               </div>
             </div>
           </button>
           <button onClick={() => setActiveSection("won")}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "won" ? "border-amber-500 bg-amber-50 shadow-md" : "border-border bg-white hover:border-amber-300 hover:shadow-md"}`}>
+            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "won" ? "border-amber-500 bg-amber-50 shadow-md" : "border-border bg-surface shadow-card hover:border-amber-300 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-foreground/50">매칭 완료</p>
+                <p className="text-sm font-medium text-foreground/50">매칭 성사</p>
                 <p className="mt-1 text-3xl font-bold text-amber-600">{stats.won}</p>
-                <p className="mt-1 text-xs text-foreground/40">매칭 완료된 프로젝트</p>
+                <p className="mt-1 text-xs text-foreground/40">매칭 성사된 프로젝트</p>
               </div>
-              <div className="rounded-xl bg-amber-100 p-3 text-amber-600">
+              <div className="rounded-xl bg-gradient-to-br from-amber-500 to-amber-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
               </div>
             </div>
@@ -457,7 +462,7 @@ export default function PartnerDashboard() {
             { key: "activity" as const, label: "전체 활동" },
             { key: "received" as const, label: "받은 의뢰" },
             { key: "sent" as const, label: "보낸 견적" },
-            { key: "won" as const, label: "매칭 완료" },
+            { key: "won" as const, label: "매칭 성사" },
           ]).map((tab) => (
             <button key={tab.key} onClick={() => { setActiveSection(tab.key); if (tab.key === "received") setFilterStatus("all"); }}
               className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${activeSection === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:text-foreground"}`}>
@@ -473,14 +478,14 @@ export default function PartnerDashboard() {
             <p className="mt-1 text-sm text-foreground/50">모든 활동 내역을 시간순으로 확인하세요.</p>
             <div className="mt-4">
               {activities.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">아직 활동 내역이 없습니다.</p>
                 </div>
               ) : (
                 <div className="relative space-y-0">
                   {/* 타임라인 세로선 */}
                   <div className="absolute left-5 top-3 bottom-3 w-px bg-border" />
-                  {activities.map((act, i) => {
+                  {activities.map((act) => {
                     const config = activityConfig[act.type];
                     const req = act.requestId ? requests.find((r) => r.id === act.requestId) : null;
                     return (
@@ -495,6 +500,7 @@ export default function PartnerDashboard() {
                               else setAttachment(null);
                             } else { setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: req ? getTimelineFromRequest(req) : [], amount: "", memo: "", expectedCra: "", monitoringPerSite: "", edcBrand: "" }); setAttachment(null); }
                           } else if (act.type === "notification") {
+                            markNotificationRead(act.id.replace("notif-", ""));
                             router.push("/notifications");
                           }
                         }}
@@ -506,7 +512,7 @@ export default function PartnerDashboard() {
                           </svg>
                         </div>
                         {/* 내용 */}
-                        <div className="flex-1 rounded-xl border border-border bg-white p-4 transition-all hover:border-primary/30 hover:shadow-md">
+                        <div className="flex-1 rounded-xl border border-border bg-surface shadow-card p-4 transition-all hover:border-primary/30 hover:shadow-md">
                           <p className="text-sm font-medium text-foreground">{act.title}</p>
                           <p className="mt-0.5 text-xs text-foreground/50">{act.detail}</p>
                           <p className="mt-1 text-xs text-foreground/30">{new Date(act.date).toLocaleString("ko-KR")}</p>
@@ -535,9 +541,10 @@ export default function PartnerDashboard() {
                 { key: "reviewing" as const, label: "검토중", count: stats.reviewing },
                 { key: "hold" as const, label: "보류", count: stats.hold },
                 { key: "rejected" as const, label: "거절", count: stats.rejected },
+                { key: "closed" as const, label: "마감", count: stats.closed },
               ]).map((tab) => (
                 <button key={tab.key} onClick={() => setFilterStatus(tab.key)}
-                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filterStatus === tab.key ? "bg-primary text-white" : "bg-white text-foreground/60 hover:bg-muted"}`}>
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filterStatus === tab.key ? "bg-primary text-white" : "bg-surface text-foreground/60 hover:bg-muted"}`}>
                   {tab.label} {tab.count > 0 && <span className="ml-0.5">{tab.count}</span>}
                 </button>
               ))}
@@ -545,7 +552,7 @@ export default function PartnerDashboard() {
 
             <div className="mt-4 space-y-4">
               {filteredRequests.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">{requests.length === 0 ? "아직 받은 의뢰가 없습니다." : "해당 상태의 의뢰가 없습니다."}</p>
                   {!user?.partnerCategories?.length && <p className="mt-2 text-sm text-foreground/40">파트너 카테고리가 설정되지 않았습니다.</p>}
                 </div>
@@ -553,6 +560,7 @@ export default function PartnerDashboard() {
                 filteredRequests.map((req) => {
                   const myStatus = getMyQuoteStatus(req);
                   const statusInfo = quoteStatusLabels[myStatus];
+                  const closedLabel = req.status === "cancelled" ? "회수됨" : (req.status === "matched" || req.status === "completed") ? "마감(매칭 성사)" : null;
                   return (
                     <div key={req.id} onClick={() => {
                       setSelectedRequest(req);
@@ -571,10 +579,14 @@ export default function PartnerDashboard() {
                         setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: getTimelineFromRequest(req), amount: "", memo: "", expectedCra: "", monitoringPerSite: "", edcBrand: "" });
                         setAttachment(null);
                       }
-                    }} className="cursor-pointer rounded-xl border border-border bg-white p-5 transition-all hover:border-primary hover:shadow-lg">
+                    }} className="cursor-pointer rounded-xl border border-border bg-surface shadow-card p-5 transition-all hover:border-primary hover:shadow-lg">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">{req.category}</span>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusInfo.color}`}>{statusInfo.label}</span>
+                        {closedLabel ? (
+                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">{closedLabel}</span>
+                        ) : (
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusInfo.color}`}>{statusInfo.label}</span>
+                        )}
                         <span className="text-xs text-foreground/40">{new Date(req.createdAt).toLocaleDateString("ko-KR")}</span>
                       </div>
                       <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
@@ -593,18 +605,17 @@ export default function PartnerDashboard() {
 
         {/* ═══ 보낸 견적 섹션 ═══ */}
         {activeSection === "sent" && (() => {
-          const [openSentId, setOpenSentId] = [selectedRequest?.id || null, (id: string | null) => { if (!id) setSelectedRequest(null); }];
           return (
           <div className="mt-8">
             <h2 className="text-lg font-semibold text-foreground">보낸 견적</h2>
             <p className="mt-1 text-sm text-foreground/50">제출 완료한 견적서 목록입니다.</p>
             <div className="mt-4">
               {sentQuotes.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">제출한 견적이 없습니다.</p>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-border bg-white">
+                <div className="rounded-2xl border border-border bg-surface shadow-card">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead>
@@ -659,15 +670,15 @@ export default function PartnerDashboard() {
                                   <div className="space-y-3">
                                     {/* 견적 상세 */}
                                     <div className="grid grid-cols-3 gap-3">
-                                      <div className="rounded-lg border border-border bg-white p-3 text-center">
+                                      <div className="rounded-lg border border-border bg-surface p-3 text-center">
                                         <p className="text-xs text-foreground/40">견적 금액</p>
                                         <p className="mt-1 text-lg font-bold text-primary">{myQuote?.amount}원</p>
                                       </div>
-                                      <div className="rounded-lg border border-border bg-white p-3 text-center">
+                                      <div className="rounded-lg border border-border bg-surface p-3 text-center">
                                         <p className="text-xs text-foreground/40">소요 기간</p>
                                         <p className="mt-1 text-base font-semibold text-foreground">{myQuote?.duration || "-"}</p>
                                       </div>
-                                      <div className="rounded-lg border border-border bg-white p-3 text-center">
+                                      <div className="rounded-lg border border-border bg-surface p-3 text-center">
                                         <p className="text-xs text-foreground/40">의뢰 예산</p>
                                         <p className="mt-1 text-sm font-semibold text-foreground">{req.budget}</p>
                                       </div>
@@ -678,7 +689,7 @@ export default function PartnerDashboard() {
                                         <p className="text-xs text-foreground/40">업무범위 및 소요개월</p>
                                         <div className="mt-1.5 flex flex-wrap gap-1.5">
                                           {myQuote.timeline.filter((t: { months: string }) => t.months).map((t: { label: string; months: string }, ti: number) => (
-                                            <span key={ti} className="rounded-md border border-border bg-white px-2 py-1 text-xs">
+                                            <span key={ti} className="rounded-md border border-border bg-surface px-2 py-1 text-xs">
                                               <span className="text-foreground/60">{t.label}</span> <span className="font-semibold text-foreground">{t.months}개월</span>
                                             </span>
                                           ))}
@@ -688,19 +699,19 @@ export default function PartnerDashboard() {
                                     {/* 모니터링/EDC */}
                                     {(myQuote?.expectedCra || myQuote?.monitoringPerSite || myQuote?.edcBrand) && (
                                       <div className="flex flex-wrap gap-3 text-sm">
-                                        {myQuote.expectedCra && <span className="rounded-md border border-border bg-white px-2 py-1 text-xs">CRA {myQuote.expectedCra}명</span>}
-                                        {myQuote.monitoringPerSite && <span className="rounded-md border border-border bg-white px-2 py-1 text-xs">모니터링 {myQuote.monitoringPerSite}회/기관</span>}
-                                        {myQuote.edcBrand && <span className="rounded-md border border-border bg-white px-2 py-1 text-xs">EDC: {myQuote.edcBrand}</span>}
+                                        {myQuote.expectedCra && <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs">CRA {myQuote.expectedCra}명</span>}
+                                        {myQuote.monitoringPerSite && <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs">모니터링 {myQuote.monitoringPerSite}회/기관</span>}
+                                        {myQuote.edcBrand && <span className="rounded-md border border-border bg-surface px-2 py-1 text-xs">EDC: {myQuote.edcBrand}</span>}
                                       </div>
                                     )}
                                     {/* 메모 */}
                                     {myQuote?.memo && (
-                                      <div className="rounded-lg bg-white p-3"><p className="text-xs text-foreground/40">메모</p><p className="mt-0.5 text-sm text-foreground/70">{myQuote.memo}</p></div>
+                                      <div className="rounded-lg bg-surface p-3"><p className="text-xs text-foreground/40">메모</p><p className="mt-0.5 text-sm text-foreground/70">{myQuote.memo}</p></div>
                                     )}
                                     {/* 첨부파일 */}
                                     {myQuote?.attachmentName && (
                                       <button onClick={() => { if (myQuote.attachmentData) { const a = document.createElement("a"); a.href = myQuote.attachmentData; a.download = myQuote.attachmentName || "file"; a.click(); } }}
-                                        className="flex items-center gap-2 rounded-lg border border-border bg-white p-3 text-primary/70 hover:border-primary hover:text-primary">
+                                        className="flex items-center gap-2 rounded-lg border border-border bg-surface p-3 text-primary/70 hover:border-primary hover:text-primary">
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                                         <span className="text-sm">{myQuote.attachmentName}</span>
                                       </button>
@@ -750,15 +761,15 @@ export default function PartnerDashboard() {
           );
         })()}
 
-        {/* ═══ 매칭 완료 섹션 ═══ */}
+        {/* ═══ 매칭 성사 섹션 ═══ */}
         {activeSection === "won" && (
           <div className="mt-8">
-            <h2 className="text-lg font-semibold text-foreground">매칭 완료</h2>
+            <h2 className="text-lg font-semibold text-foreground">매칭 성사</h2>
             <p className="mt-1 text-sm text-foreground/50">매칭이 완료되어 수주한 프로젝트입니다.</p>
             <div className="mt-4 space-y-4">
               {wonRequests.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
-                  <p className="text-foreground/50">아직 매칭 완료한 프로젝트가 없습니다.</p>
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
+                  <p className="text-foreground/50">아직 매칭 성사한 프로젝트가 없습니다.</p>
                   <p className="mt-1 text-sm text-foreground/40">견적서를 제출하고 의뢰사의 선택을 기다려보세요.</p>
                 </div>
               ) : wonRequests.map((req) => {
@@ -768,7 +779,7 @@ export default function PartnerDashboard() {
                     className="cursor-pointer rounded-xl border border-amber-200 bg-amber-50/50 p-5 transition-all hover:border-amber-400 hover:shadow-lg">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">{req.category}</span>
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">매칭 완료</span>
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">매칭 성사</span>
                     </div>
                     <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
                     <div className="mt-1 flex flex-wrap gap-4 text-xs text-foreground/50">
@@ -778,10 +789,10 @@ export default function PartnerDashboard() {
                     </div>
                     {/* 의뢰사 연락처 공개 */}
                     {(() => {
-                      const clientUser = JSON.parse(localStorage.getItem("sonjobda_users") || "[]").find((u: any) => u.id === req.clientId);
+                      const clientUser = JSON.parse(localStorage.getItem("sonjobda_users") || "[]").find((u: { id: string }) => u.id === req.clientId);
                       return (
                         <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                          <p className="mb-2 text-xs font-semibold text-blue-700">매칭 완료로 의뢰사 연락처가 공개되었습니다</p>
+                          <p className="mb-2 text-xs font-semibold text-blue-700">매칭 성사로 의뢰사 연락처가 공개되었습니다</p>
                           <div className="grid grid-cols-2 gap-2 text-xs text-blue-900">
                             <span>회사명: <span className="font-medium">{req.clientCompany}</span></span>
                             <span>담당자명: <span className="font-medium">{clientUser?.name || "-"}</span></span>
@@ -802,7 +813,7 @@ export default function PartnerDashboard() {
       {/* ═══ 의뢰 상세 + 견적 작성 모달 ═══ */}
       {selectedRequest && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" onClick={() => { setSelectedRequest(null); setIsEditing(false); }}>
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl sm:p-8" onClick={(e) => e.stopPropagation()}>
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-surface p-6 shadow-2xl sm:p-8" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-foreground">의뢰 상세</h2>
               <button onClick={() => { setSelectedRequest(null); setIsEditing(false); }} className="rounded-lg p-1 text-foreground/40 hover:bg-muted hover:text-foreground">
@@ -874,6 +885,26 @@ export default function PartnerDashboard() {
               const myStatus = getMyQuoteStatus(selectedRequest);
               const myQuote = (selectedRequest.quotes || []).find((q) => q.partnerId === user?.id);
 
+              // 마감된 의뢰(매칭 성사/완료/회수)는 더 이상 견적을 제출할 수 없다.
+              // 단, 이미 제출해 의뢰사 검토/수락/미결정 등으로 확정된 내 견적은 그대로 조회되게 둔다.
+              const isClosed =
+                selectedRequest.status === "matched" ||
+                selectedRequest.status === "completed" ||
+                selectedRequest.status === "cancelled";
+              const decided = ["accepted", "not_selected", "client_reviewing", "client_hold", "client_rejected"].includes(myStatus);
+              if (isClosed && !decided) {
+                return (
+                  <div className="mt-6 rounded-xl border border-border bg-muted p-4">
+                    <p className="text-sm font-medium text-foreground">마감된 의뢰입니다.</p>
+                    <p className="mt-1 text-xs text-foreground/50">
+                      {selectedRequest.status === "cancelled"
+                        ? "의뢰사가 회수한 의뢰로, 더 이상 견적을 제출할 수 없습니다."
+                        : "다른 파트너사와 매칭이 완료되어 더 이상 견적을 제출할 수 없습니다."}
+                    </p>
+                  </div>
+                );
+              }
+
               if (myStatus === "rejected") {
                 return (
                   <div className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-600">
@@ -915,15 +946,15 @@ export default function PartnerDashboard() {
                       </div>
                       {/* 핵심 정보 */}
                       <div className="mt-3 grid grid-cols-3 gap-3">
-                        <div className="rounded-lg border border-emerald-100 bg-white p-3 text-center">
+                        <div className="rounded-lg border border-emerald-100 bg-surface p-3 text-center">
                           <p className="text-xs text-emerald-600/60">견적 금액</p>
                           <p className="mt-1 text-lg font-bold text-primary">{myQuote.amount}원</p>
                         </div>
-                        <div className="rounded-lg border border-emerald-100 bg-white p-3 text-center">
+                        <div className="rounded-lg border border-emerald-100 bg-surface p-3 text-center">
                           <p className="text-xs text-emerald-600/60">소요 기간</p>
                           <p className="mt-1 text-base font-semibold text-foreground">{myQuote.duration || "-"}</p>
                         </div>
-                        <div className="rounded-lg border border-emerald-100 bg-white p-3 text-center">
+                        <div className="rounded-lg border border-emerald-100 bg-surface p-3 text-center">
                           <p className="text-xs text-emerald-600/60">견적번호</p>
                           <p className="mt-1 font-mono text-sm text-foreground/60">{myQuote.quoteCode || "-"}</p>
                         </div>
@@ -934,7 +965,7 @@ export default function PartnerDashboard() {
                           <p className="text-xs text-emerald-600/60">업무범위 및 소요개월</p>
                           <div className="mt-1.5 flex flex-wrap gap-1.5">
                             {myQuote.timeline.filter((t: { months: string }) => t.months).map((t: { label: string; months: string }, ti: number) => (
-                              <span key={ti} className="rounded-md border border-emerald-200 bg-white px-2 py-1 text-xs">
+                              <span key={ti} className="rounded-md border border-emerald-200 bg-surface px-2 py-1 text-xs">
                                 <span className="text-foreground/60">{t.label}</span> <span className="font-semibold text-foreground">{t.months}개월</span>
                               </span>
                             ))}
@@ -957,12 +988,12 @@ export default function PartnerDashboard() {
                       )}
                       {/* 메모 */}
                       {myQuote.memo && (
-                        <div className="mt-3 rounded-lg bg-white p-3"><span className="text-xs text-emerald-600/60">메모</span><p className="mt-0.5 text-sm text-foreground/70">{myQuote.memo}</p></div>
+                        <div className="mt-3 rounded-lg bg-surface p-3"><span className="text-xs text-emerald-600/60">메모</span><p className="mt-0.5 text-sm text-foreground/70">{myQuote.memo}</p></div>
                       )}
                       {/* 첨부파일 */}
                       {myQuote.attachmentName && (
                         <button onClick={() => { if (myQuote.attachmentData) { const a = document.createElement("a"); a.href = myQuote.attachmentData; a.download = myQuote.attachmentName || "file"; a.click(); } }}
-                          className="mt-3 flex w-full items-center gap-2 rounded-lg border border-emerald-200 bg-white p-3 text-emerald-700 hover:bg-emerald-50">
+                          className="mt-3 flex w-full items-center gap-2 rounded-lg border border-emerald-200 bg-surface p-3 text-emerald-700 hover:bg-emerald-50">
                           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                           <div className="text-left">
                             <p className="text-sm font-medium">견적서 다운로드</p>
@@ -1000,7 +1031,8 @@ export default function PartnerDashboard() {
                     {isEditing && <button onClick={() => setIsEditing(false)} className="text-xs font-medium text-foreground/50 hover:underline">취소</button>}
                   </div>
                   <div className="mt-4 space-y-5">
-                    {/* 업무범위 및 소요개월 */}
+                    {/* 업무범위 및 소요개월 (보험 의뢰는 표시하지 않음) */}
+                    {selectedRequest?.category !== "임상시험 보험" && (
                     <div className="rounded-xl border border-border p-4">
                       <h5 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                         <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -1022,6 +1054,7 @@ export default function PartnerDashboard() {
                         <span className="text-lg font-bold text-primary">{totalMonths.toFixed(1)} 개월</span>
                       </div>
                     </div>
+                    )}
 
                     {/* 모니터링 선택 시 추가 입력 */}
                     {quoteForm.timeline.some((t) => t.label === "모니터링") && (
@@ -1124,6 +1157,10 @@ export default function PartnerDashboard() {
                       <button onClick={() => holdRequest(selectedRequest.id)}
                         className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50">
                         보류
+                      </button>
+                      <button onClick={() => rejectRequest(selectedRequest.id)}
+                        className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-50">
+                        거절
                       </button>
                     </div>
                     )}

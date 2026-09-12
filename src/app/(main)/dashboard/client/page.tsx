@@ -128,7 +128,7 @@ export default function ClientDashboard() {
     return 0;
   };
 
-  // 예산 절감액 계산 (매칭 완료된 프로젝트: 예상예산 중간값 - 실제 수락 견적금액)
+  // 예산 절감액 계산 (매칭 성사된 프로젝트: 예상예산 중간값 - 실제 수락 견적금액)
   const totalSavings = completedRequests.reduce((sum, r) => {
     const budgetMid = budgetToNumber(r.budget || "");
     if (!budgetMid) return sum;
@@ -225,7 +225,7 @@ export default function ClientDashboard() {
         {/* 상단 */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">의뢰사 대시보드</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">의뢰사 대시보드</h1>
             <p className="mt-1 text-sm text-foreground/60">{user?.company}에서 등록한 의뢰를 관리하세요.</p>
           </div>
           {user?.status !== "restricted" && user?.status !== "suspended" && (
@@ -259,40 +259,40 @@ export default function ClientDashboard() {
         {/* 메인 카드 3개 */}
         <div className="sticky top-[108px] z-30 mt-8 grid grid-cols-1 gap-4 bg-muted pb-4 sm:grid-cols-3">
           <button onClick={() => setActiveSection("requests")}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "requests" ? "border-primary bg-primary/5 shadow-md" : "border-border bg-white hover:border-primary/30 hover:shadow-md"}`}>
+            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "requests" ? "border-primary bg-primary/5 shadow-md" : "border-border bg-surface shadow-card hover:border-primary/30 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground/50">등록한 의뢰</p>
                 <p className="mt-1 text-3xl font-bold text-primary">{requests.length}</p>
                 <p className="mt-1 text-xs text-foreground/40">대기 {requests.filter((r) => r.status === "pending").length} | 진행 {requests.filter((r) => r.status === "matching").length}</p>
               </div>
-              <div className="rounded-xl bg-primary/10 p-3 text-primary">
+              <div className="rounded-xl bg-gradient-to-br from-primary to-primary-light p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
               </div>
             </div>
           </button>
           <button onClick={() => setActiveSection("quotes")}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "quotes" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-border bg-white hover:border-emerald-300 hover:shadow-md"}`}>
+            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "quotes" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-border bg-surface shadow-card hover:border-emerald-300 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground/50">받은 견적</p>
                 <p className="mt-1 text-3xl font-bold text-emerald-600">{totalQuotes}</p>
                 <p className="mt-1 text-xs text-foreground/40">{quotedRequests.length}개 의뢰에 대한 견적</p>
               </div>
-              <div className="rounded-xl bg-emerald-100 p-3 text-emerald-600">
+              <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
             </div>
           </button>
           <button onClick={() => setActiveSection("completed")}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "completed" ? "border-amber-500 bg-amber-50 shadow-md" : "border-border bg-white hover:border-amber-300 hover:shadow-md"}`}>
+            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "completed" ? "border-amber-500 bg-amber-50 shadow-md" : "border-border bg-surface shadow-card hover:border-amber-300 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-foreground/50">매칭 완료</p>
+                <p className="text-sm font-medium text-foreground/50">매칭 성사</p>
                 <p className="mt-1 text-3xl font-bold text-amber-600">{completedRequests.length}</p>
                 <p className="mt-1 text-xs text-foreground/40">완료된 프로젝트</p>
               </div>
-              <div className="rounded-xl bg-amber-100 p-3 text-amber-600">
+              <div className="rounded-xl bg-gradient-to-br from-amber-500 to-amber-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
               </div>
             </div>
@@ -301,9 +301,9 @@ export default function ClientDashboard() {
 
         {/* 인사이트 카드 */}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-border bg-white p-5">
+          <div className="rounded-xl border border-border bg-surface shadow-card p-5">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-green-100 p-2.5 text-green-600">
+              <div className="rounded-lg bg-gradient-to-br from-green-500 to-green-400 p-2.5 text-white shadow-sm">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
               </div>
               <div>
@@ -311,12 +311,12 @@ export default function ClientDashboard() {
                 <p className="text-xl font-bold text-green-600">{totalSavings > 0 ? formatKoreanAmount(totalSavings) : "-"}</p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-foreground/40">매칭 완료된 프로젝트의 예상 예산 대비 실제 견적 금액 차이입니다. 손잡다매칭을 통해 절감된 비용을 확인하세요.</p>
+            <p className="mt-3 text-xs text-foreground/40">매칭 성사된 프로젝트의 예상 예산 대비 실제 견적 금액 차이입니다. 손잡다매칭을 통해 절감된 비용을 확인하세요.</p>
           </div>
           <button onClick={() => setActiveSection("undecided")}
-            className={`rounded-xl border p-5 text-left transition-all ${activeSection === "undecided" ? "border-orange-500 bg-orange-50 shadow-md" : "border-border bg-white hover:border-orange-300 hover:shadow-md"}`}>
+            className={`rounded-xl border p-5 text-left transition-all ${activeSection === "undecided" ? "border-orange-500 bg-orange-50 shadow-md" : "border-border bg-surface shadow-card hover:border-orange-300 hover:shadow-md"}`}>
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-orange-100 p-2.5 text-orange-600">
+              <div className="rounded-lg bg-gradient-to-br from-orange-500 to-orange-400 p-2.5 text-white shadow-sm">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <div>
@@ -334,7 +334,7 @@ export default function ClientDashboard() {
             { key: "activity" as const, label: "전체 활동" },
             { key: "requests" as const, label: "등록한 의뢰" },
             { key: "quotes" as const, label: "받은 견적" },
-            { key: "completed" as const, label: "매칭 완료" },
+            { key: "completed" as const, label: "매칭 성사" },
           ]).map((tab) => (
             <button key={tab.key} onClick={() => setActiveSection(tab.key)}
               className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${activeSection === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:text-foreground"}`}>
@@ -349,7 +349,7 @@ export default function ClientDashboard() {
             <h2 className="text-lg font-semibold text-foreground">전체 활동</h2>
             <div className="mt-4">
               {activities.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">아직 활동 내역이 없습니다.</p>
                   <Link href="/request/new" className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">첫 의뢰 등록하기</Link>
                 </div>
@@ -372,7 +372,7 @@ export default function ClientDashboard() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={config.icon} />
                           </svg>
                         </div>
-                        <div className="flex-1 rounded-xl border border-border bg-white p-4 transition-all hover:border-primary/30 hover:shadow-md">
+                        <div className="flex-1 rounded-xl border border-border bg-surface shadow-card p-4 transition-all hover:border-primary/30 hover:shadow-md">
                           <p className="text-sm font-medium text-foreground">{act.title}</p>
                           <p className="mt-0.5 text-xs text-foreground/50">{act.detail}</p>
                           <p className="mt-1 text-xs text-foreground/30">{new Date(act.date).toLocaleString("ko-KR")}</p>
@@ -392,7 +392,7 @@ export default function ClientDashboard() {
             <h2 className="text-lg font-semibold text-foreground">등록한 의뢰</h2>
             <div className="mt-4 space-y-4">
               {requests.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">등록된 의뢰가 없습니다.</p>
                   <Link href="/request/new" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">첫 의뢰 등록하기</Link>
                 </div>
@@ -415,7 +415,7 @@ export default function ClientDashboard() {
                 { key: "accepted" as const, label: "수락" },
               ]).map((tab) => (
                 <button key={tab.key} onClick={() => setQuoteStatusFilter(tab.key)}
-                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${quoteStatusFilter === tab.key ? "bg-primary text-white" : "bg-white text-foreground/60 hover:bg-muted"}`}>
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${quoteStatusFilter === tab.key ? "bg-primary text-white" : "bg-surface text-foreground/60 hover:bg-muted"}`}>
                   {tab.label}
                 </button>
               ))}
@@ -426,7 +426,7 @@ export default function ClientDashboard() {
                   : quoteStatusFilter === "undecided" ? quotedRequests.filter((r) => r.status !== "matched" && r.status !== "completed" && r.status !== "cancelled" && (r.quotes || []).some((q) => ["quoted", "client_reviewing", "client_hold"].includes(q.status)))
                   : quotedRequests.filter((r) => (r.quotes || []).some((q) => q.status === quoteStatusFilter));
                 return filtered.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">받은 견적이 없습니다.</p>
                 </div>
               ) : filtered.map((req) => {
@@ -438,7 +438,7 @@ export default function ClientDashboard() {
                 const isOpen = openQuoteRequestId === req.id;
                 const deadlineDate = new Date(req.createdAt); deadlineDate.setDate(deadlineDate.getDate() + 7);
                 return (
-                  <div key={req.id} id={`quote-card-${req.id}`} className="rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
+                  <div key={req.id} id={`quote-card-${req.id}`} className="rounded-xl border border-border bg-surface shadow-card transition-shadow hover:shadow-md">
                     <button onClick={() => {
                       if (!isOpen) {
                         // 펼칠 때 quoted 상태를 client_reviewing으로 변경
@@ -480,7 +480,7 @@ export default function ClientDashboard() {
                             const isQuoteOpen = expandedQuoteId === quote.id;
                             const partnerUser = (() => { const all = JSON.parse(localStorage.getItem("sonjobda_users") || "[]"); return all.find((u: { id: string }) => u.id === quote.partnerId); })();
                             return (
-                            <div key={quote.id} className={`rounded-xl border transition-shadow hover:shadow-md ${quote.status === "accepted" ? "border-primary bg-primary/5" : quote.status === "client_rejected" || quote.status === "not_selected" ? "border-border bg-muted/30" : "border-emerald-200 bg-white"}`}>
+                            <div key={quote.id} className={`rounded-xl border transition-shadow hover:shadow-md ${quote.status === "accepted" ? "border-primary bg-primary/5" : quote.status === "client_rejected" || quote.status === "not_selected" ? "border-border bg-muted/30" : "border-emerald-200 bg-surface"}`}>
                               <button onClick={() => setExpandedQuoteId(isQuoteOpen ? null : quote.id)} className="flex w-full items-center justify-between p-5 text-left">
                                 <div className="flex items-center gap-3">
                                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground/60">{quote.partnerCompany.charAt(0)}</div>
@@ -641,7 +641,7 @@ export default function ClientDashboard() {
                 {undecidedRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((req) => {
                   const quotes = (req.quotes || []).filter((q) => ["quoted", "client_reviewing", "client_hold"].includes(q.status));
                   return (
-                    <div key={req.id} className="rounded-xl border border-orange-200 bg-white p-5 transition-all hover:shadow-md">
+                    <div key={req.id} className="rounded-xl border border-orange-200 bg-surface p-5 transition-all hover:shadow-md">
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="flex items-center gap-2">
@@ -671,21 +671,21 @@ export default function ClientDashboard() {
           </div>
         )}
 
-        {/* ═══ 매칭 완료 ═══ */}
+        {/* ═══ 매칭 성사 ═══ */}
         {activeSection === "completed" && (
           <div className="mt-8">
-            <h2 className="text-lg font-semibold text-foreground">매칭 완료</h2>
+            <h2 className="text-lg font-semibold text-foreground">매칭 성사</h2>
             <p className="mt-1 text-sm text-foreground/50">매칭이 완료된 프로젝트입니다.</p>
             <div className="mt-4 space-y-4">
               {completedRequests.length === 0 ? (
-                <div className="rounded-xl border border-border bg-white p-12 text-center">
-                  <p className="text-foreground/50">아직 매칭 완료된 프로젝트가 없습니다.</p>
+                <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
+                  <p className="text-foreground/50">아직 매칭 성사된 프로젝트가 없습니다.</p>
                 </div>
               ) : completedRequests.map((req) => (
                 <div key={req.id} className="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">{req.category}</span>
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">매칭 완료</span>
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">매칭 성사</span>
                   </div>
                   <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
                   <div className="mt-1 flex flex-wrap gap-4 text-xs text-foreground/50">
@@ -695,10 +695,10 @@ export default function ClientDashboard() {
                   {/* 파트너사 연락처 공개 */}
                   {(() => {
                     const acceptedQuote = (req.quotes || []).find((q) => q.status === "accepted");
-                    const partnerUser = acceptedQuote ? JSON.parse(localStorage.getItem("sonjobda_users") || "[]").find((u: any) => u.id === acceptedQuote.partnerId) : null;
+                    const partnerUser = acceptedQuote ? JSON.parse(localStorage.getItem("sonjobda_users") || "[]").find((u: { id: string }) => u.id === acceptedQuote.partnerId) : null;
                     return acceptedQuote ? (
                       <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                        <p className="mb-2 text-xs font-semibold text-blue-700">매칭 완료로 파트너사 연락처가 공개되었습니다</p>
+                        <p className="mb-2 text-xs font-semibold text-blue-700">매칭 성사로 파트너사 연락처가 공개되었습니다</p>
                         <div className="grid grid-cols-2 gap-2 text-xs text-blue-900">
                           <span>회사명: <span className="font-medium">{acceptedQuote.partnerCompany}</span></span>
                           <span>담당자명: <span className="font-medium">{partnerUser?.name || "-"}</span></span>
@@ -729,7 +729,7 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
   const isExpired = request.status === "pending" && deadlineDate < new Date();
 
   return (
-    <div className="rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
+    <div className="rounded-xl border border-border bg-surface shadow-card transition-shadow hover:shadow-md">
       <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex w-full items-center justify-between p-5 text-left">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
