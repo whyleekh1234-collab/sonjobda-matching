@@ -22,6 +22,7 @@ export interface User {
   activeRole: Role;
   partnerCategories?: PartnerCategory[];
   phone?: string;
+  address?: string; // 기업주소 (선택)
   status: UserStatus;
   isCompanyAdmin?: boolean; // 회사 담당 관리자
   verified?: boolean;

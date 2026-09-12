@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Building2, Handshake } from "lucide-react";
 import type { PartnerCategory } from "@/types/auth";
 
 const partnerCategories: PartnerCategory[] = [
@@ -36,6 +37,7 @@ function SignupContent() {
     company: "",
     businessNumber: "",
     phone: "",
+    address: "",
     roles: [] as ("client" | "partner")[],
     partnerCategories: [] as PartnerCategory[],
     agreeTerms: false,
@@ -60,7 +62,6 @@ function SignupContent() {
       setForm((prev) => ({ ...prev, email: decodeURIComponent(inviteEmail) }));
       checkInvite(decodeURIComponent(inviteEmail));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // 이메일 입력 시 초대 여부 확인
@@ -124,6 +125,30 @@ function SignupContent() {
     setError("");
   };
 
+  // 기업주소 검색 (카카오/다음 우편번호 서비스)
+  const openAddressSearch = () => {
+    type DaumPostcode = {
+      Postcode: new (opts: {
+        oncomplete: (data: { roadAddress: string; jibunAddress: string; address: string }) => void;
+      }) => { open: () => void };
+    };
+    const w = window as unknown as { daum?: DaumPostcode };
+    const run = () => {
+      if (!w.daum) return;
+      new w.daum.Postcode({
+        oncomplete: (data) => {
+          setForm((prev) => ({ ...prev, address: data.roadAddress || data.address || data.jibunAddress }));
+          setError("");
+        },
+      }).open();
+    };
+    if (w.daum?.Postcode) { run(); return; }
+    const script = document.createElement("script");
+    script.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    script.onload = run;
+    document.body.appendChild(script);
+  };
+
   const validate = (): string | null => {
     if (form.roles.length === 0) return "회원 유형을 하나 이상 선택해주세요.";
     if (form.roles.includes("partner") && form.partnerCategories.length === 0) return "회사유형을 하나 이상 선택해주세요.";
@@ -170,6 +195,7 @@ function SignupContent() {
         company: form.company,
         businessNumber: form.businessNumber,
         phone: form.phone,
+        address: form.address,
         roles: form.roles,
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
       });
@@ -187,11 +213,7 @@ function SignupContent() {
       <div className="w-full max-w-md">
         {/* 헤더 */}
         <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary">손잡다</span>
-            <span className="text-2xl font-bold text-foreground">매칭</span>
-          </Link>
-          <h1 className="mt-6 text-2xl font-bold text-foreground">회원가입</h1>
+          <h1 className="text-2xl font-bold text-foreground">회원가입</h1>
           <p className="mt-2 text-sm text-foreground/60">
             손잡다매칭에 가입하고 최적의 파트너를 만나보세요.
           </p>
@@ -223,8 +245,8 @@ function SignupContent() {
                     : "border-border text-foreground/60 hover:border-foreground/30"
                 }`}
               >
-                <span className="block text-lg">🏢</span>
-                의뢰사
+                <Building2 className="mx-auto h-6 w-6" strokeWidth={1.75} />
+                <span className="mt-1.5 block">의뢰사</span>
                 <span className="mt-1 block text-xs font-normal text-foreground/40">파트너를 찾고 있어요</span>
               </button>
               <button
@@ -236,8 +258,8 @@ function SignupContent() {
                     : "border-border text-foreground/60 hover:border-foreground/30"
                 }`}
               >
-                <span className="block text-lg">🤝</span>
-                파트너사
+                <Handshake className="mx-auto h-6 w-6" strokeWidth={1.75} />
+                <span className="mt-1.5 block">파트너사</span>
                 <span className="mt-1 block text-xs font-normal text-foreground/40">프로젝트를 수주하고 싶어요</span>
               </button>
             </div>
@@ -421,6 +443,32 @@ function SignupContent() {
                 className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
+
+            {/* 기업주소 (선택) */}
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-foreground">
+                기업주소 <span className="text-xs font-normal text-foreground/40">(선택)</span>
+              </label>
+              <div className="mt-1 flex gap-2">
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="주소 검색을 눌러 주소를 입력하세요"
+                  className="flex-1 rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={openAddressSearch}
+                  className="flex-shrink-0 rounded-lg border border-border px-4 py-3 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted"
+                >
+                  주소 검색
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-foreground/40">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
+            </div>
           </div>
 
           {/* 약관 동의 */}
@@ -452,7 +500,7 @@ function SignupContent() {
               </span>
             </label>
             <p className="ml-7 text-xs text-amber-600">
-              ※ 매칭 완료 시 상대 업체에 회사명, 담당자명, 이메일, 연락처가 공개됩니다.
+              ※ 매칭 성사 시 상대 업체에 회사명, 담당자명, 이메일, 연락처가 공개됩니다.
             </p>
           </div>
 

@@ -40,7 +40,7 @@ export default function MyPage() {
   // 활동 요약
   const myRequests = getMyRequests(user.id);
   const receivedQuotes = myRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "quoted").length, 0);
-  const partnerRequests = user.partnerCategories ? getRequestsForPartner(user.partnerCategories, user.id) : [];
+  const partnerRequests = user.partnerCategories ? getRequestsForPartner(user.partnerCategories, user.businessNumber) : [];
   const submittedQuotes = partnerRequests.filter((r) => (r.quotes || []).some((q) => q.partnerId === user.id && ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status))).length;
 
   const saveProfile = () => {
@@ -164,8 +164,8 @@ export default function MyPage() {
   return (
     <div className="min-h-screen bg-muted py-8">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <h1 className="text-2xl font-bold text-foreground">마이페이지</h1>
-        <p className="mt-1 text-sm text-foreground/50">계정 정보를 관리하세요.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">마이페이지</h1>
+        <p className="mt-1 text-sm text-foreground-muted">계정 정보를 관리하세요.</p>
 
         {/* 탭 */}
         <div className="mt-6 flex gap-2 border-b border-border">
@@ -185,7 +185,7 @@ export default function MyPage() {
         {activeTab === "profile" && (
           <div className="mt-6 space-y-6">
             {/* 계정 상태 */}
-            <div className="flex items-center justify-between rounded-xl border border-border bg-white p-5">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-surface shadow-card p-5">
               <div>
                 <p className="text-sm text-foreground/50">계정 상태</p>
                 <span className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusColor}`}>{statusLabel}</span>
@@ -197,7 +197,7 @@ export default function MyPage() {
             </div>
 
             {/* 프로필 정보 */}
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-surface shadow-card p-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-foreground">프로필 정보</h3>
                 {!editMode ? (
@@ -239,6 +239,10 @@ export default function MyPage() {
                 <div>
                   <p className="text-xs text-foreground/40">사업자등록번호 <span className="text-foreground/20">(수정 불가)</span></p>
                   <p className="mt-1 text-sm font-medium text-foreground">{user.businessNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-foreground/40">기업주소</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{user.address || "-"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-foreground/40">회원 유형</p>
@@ -309,7 +313,7 @@ export default function MyPage() {
             </div>
 
             {/* 활동 요약 */}
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-surface shadow-card p-6">
               <h3 className="text-base font-semibold text-foreground">활동 요약</h3>
               <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {user.roles?.includes("client") && (
@@ -340,7 +344,7 @@ export default function MyPage() {
             </div>
 
             {/* 회원 탈퇴 */}
-            <div className="rounded-xl border border-red-100 bg-white p-6">
+            <div className="rounded-xl border border-red-100 bg-surface p-6">
               <h3 className="text-base font-semibold text-foreground">회원 탈퇴</h3>
               <p className="mt-1 text-sm text-foreground/50">탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
               <button onClick={deleteAccount}
@@ -354,7 +358,7 @@ export default function MyPage() {
         {/* 비밀번호 변경 */}
         {activeTab === "password" && (
           <div className="mt-6">
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-surface shadow-card p-6">
               <h3 className="text-base font-semibold text-foreground">비밀번호 변경</h3>
               <div className="mt-4 max-w-sm space-y-4">
                 <div>
@@ -389,7 +393,7 @@ export default function MyPage() {
         {activeTab === "company" && (
           <div className="mt-6 space-y-6">
             {/* 소속 회사 정보 */}
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-surface shadow-card p-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-foreground">소속 회사</h3>
                 {isAdmin && (
@@ -405,7 +409,7 @@ export default function MyPage() {
 
             {/* 멤버 초대 - 회사 관리자만 */}
             {isAdmin && (
-              <div className="rounded-xl border border-border bg-white p-6">
+              <div className="rounded-xl border border-border bg-surface shadow-card p-6">
                 <h3 className="text-base font-semibold text-foreground">멤버 초대</h3>
                 <p className="mt-1 text-xs text-foreground/40">같은 회사 직원을 초대할 수 있습니다.</p>
                 <div className="mt-4 flex gap-2">
@@ -417,7 +421,7 @@ export default function MyPage() {
             )}
 
             {/* 소속 멤버 */}
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-surface shadow-card p-6">
               <h3 className="text-base font-semibold text-foreground">소속 멤버 ({companyMembers.length}명)</h3>
               <p className="mt-1 text-xs text-foreground/40">같은 사업자등록번호로 가입한 멤버입니다.</p>
               <div className="mt-4 space-y-3">
@@ -462,7 +466,7 @@ export default function MyPage() {
       {/* 회사 정보 변경 요청 모달 */}
       {showCompanyChangeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCompanyChangeModal(false)}>
-          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground">회사 정보 변경 요청</h3>
             <p className="mt-1 text-sm text-foreground/50">변경이 필요한 내용을 작성해주세요. 관리자 확인 후 반영됩니다.</p>
             <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
