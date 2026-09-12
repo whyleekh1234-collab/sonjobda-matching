@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Workflow } from "lucide-react";
 import type { Notification } from "@/types/auth";
 
 const navItems = [
-  { label: "서비스 소개", href: "#services" },
-  { label: "매칭 프로세스", href: "#process" },
-  { label: "파트너사", href: "#partners" },
-  { label: "문의하기", href: "#contact" },
+  { label: "서비스 소개", href: "/#services" },
+  { label: "매칭 프로세스", href: "/#process" },
+  { label: "파트너사", href: "/#partners" },
+  { label: "문의하기", href: "/#contact" },
 ];
 
 const roleLabels = {
@@ -97,15 +98,20 @@ export default function Header() {
 
       {/* 메인 헤더 */}
       <header
-        className={`fixed z-50 w-full border-b border-border bg-background/80 backdrop-blur-md ${
+        className={`fixed z-50 w-full border-b border-border/70 bg-surface/80 backdrop-blur-md ${
           user ? "top-11" : "top-0"
         }`}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* 로고 */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">손잡다</span>
-            <span className="text-xl font-bold text-foreground">매칭</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-light text-white shadow-soft">
+              <Workflow className="h-5 w-5" strokeWidth={2.2} />
+            </span>
+            <span className="text-xl font-bold tracking-tight">
+              <span className="text-primary">손잡다</span>
+              <span className="text-foreground">매칭</span>
+            </span>
           </Link>
 
           {/* 데스크톱 네비게이션 */}
@@ -124,7 +130,7 @@ export default function Header() {
                 <Link href="/inquiry" className="text-sm font-medium text-foreground/70 transition-colors hover:text-primary">문의하기</Link>
                 <Link
                   href={user.activeRole === "partner" ? "/dashboard/partner" : "/dashboard/client"}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft transition-all hover:bg-primary-dark hover:shadow-card-hover"
                 >
                   {user.activeRole === "partner" ? "받은의뢰관리" : "견적요청관리"}
                 </Link>
@@ -150,7 +156,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/signup"
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft transition-all hover:bg-primary-dark hover:shadow-card-hover"
                   >
                     회원가입
                   </Link>

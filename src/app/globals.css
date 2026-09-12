@@ -1,40 +1,55 @@
 @import "tailwindcss";
 
 :root {
+  /* 표면 / 텍스트 (뉴트럴: slate 기반) */
   --background: #ffffff;
-  --foreground: #171717;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --secondary: #10b981;
-  --accent: #f59e0b;
-  --muted: #f3f4f6;
-  --border: #e5e7eb;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc; /* slate-50 — 섹션 교차 배경 */
+  --foreground: #0f172a;     /* slate-900 — 제목/본문 */
+  --foreground-muted: #475569; /* slate-600 — 보조 텍스트 */
+  --muted: #f1f5f9;          /* slate-100 */
+  --border: #e2e8f0;         /* slate-200 */
+
+  /* 브랜드 */
+  --primary: #2563eb;        /* blue-600 */
+  --primary-dark: #1d4ed8;   /* blue-700 */
+  --primary-light: #3b82f6;  /* blue-500 */
+  --secondary: #10b981;      /* emerald-500 */
+  --accent: #f59e0b;         /* amber-500 */
+
+  /* 보조 액센트 (그라데이션·메시·카테고리 틴트용) */
+  --accent-indigo: #6366f1;  /* indigo-500 */
+  --accent-cyan: #06b6d4;    /* cyan-500 */
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
   --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-dark: var(--primary-dark);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
+  --color-foreground-muted: var(--foreground-muted);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-accent-indigo: var(--accent-indigo);
+  --color-accent-cyan: var(--accent-cyan);
   --font-sans: var(--font-pretendard), "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --muted: #1f2937;
-    --border: #374151;
-  }
+  /* 프리미엄 소프트 섀도 (B2B SaaS 톤) */
+  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+  --shadow-card: 0 4px 18px -6px rgb(15 23 42 / 0.10), 0 2px 6px -2px rgb(15 23 42 / 0.05);
+  --shadow-card-hover: 0 18px 36px -10px rgb(37 99 235 / 0.20), 0 8px 16px -6px rgb(15 23 42 / 0.10);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* 스크롤바 스타일 */

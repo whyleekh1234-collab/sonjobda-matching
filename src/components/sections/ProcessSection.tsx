@@ -20,7 +20,7 @@ const clientSteps = [
   },
   {
     step: "04",
-    title: "매칭 완료",
+    title: "매칭 성사",
     description: "수락 즉시 상호 연락처가 공개됩니다. 바로 업무 협의를 시작하세요.",
   },
 ];
@@ -43,7 +43,7 @@ const partnerSteps = [
   },
   {
     step: "04",
-    title: "매칭 완료",
+    title: "매칭 성사",
     description: "의뢰사가 수락하면 상호 연락처가 공개됩니다. 바로 업무를 시작하세요.",
   },
 ];
@@ -53,63 +53,58 @@ export default function ProcessSection() {
   const steps = activeTab === "client" ? clientSteps : partnerSteps;
 
   return (
-    <section id="process" className="bg-muted py-20">
+    <section id="process" className="bg-surface-subtle py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* 섹션 헤더 */}
         <div className="text-center">
-          <span className="text-sm font-semibold uppercase tracking-wider text-primary">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             Process
           </span>
-          <h2 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             매칭 프로세스
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base text-foreground/60">
+          <p className="mx-auto mt-4 max-w-xl text-base text-foreground-muted">
             간단한 4단계로 최적의 파트너를 만나보세요.
           </p>
         </div>
 
-        {/* 탭 전환 */}
-        <div className="mt-10 flex justify-center gap-2">
-          <button
-            onClick={() => setActiveTab("client")}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-all ${
-              activeTab === "client"
-                ? "bg-primary text-white shadow-md"
-                : "bg-white text-foreground/60 hover:bg-primary/5"
-            }`}
-          >
-            의뢰사
-          </button>
-          <button
-            onClick={() => setActiveTab("partner")}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-all ${
-              activeTab === "partner"
-                ? "bg-primary text-white shadow-md"
-                : "bg-white text-foreground/60 hover:bg-primary/5"
-            }`}
-          >
-            파트너사
-          </button>
+        {/* 탭 전환 (세그먼트 컨트롤) */}
+        <div className="mt-10 flex justify-center">
+          <div className="inline-flex rounded-full border border-border bg-surface p-1 shadow-soft">
+            {(["client", "partner"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`rounded-full px-6 py-2 text-sm font-semibold transition-all ${
+                  activeTab === tab
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-foreground-muted hover:text-foreground"
+                }`}
+              >
+                {tab === "client" ? "의뢰사" : "파트너사"}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 프로세스 스텝 */}
-        <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {steps.map((item, index) => (
             <div key={item.step} className="relative text-center">
               {/* 연결선 (데스크톱) */}
               {index < steps.length - 1 && (
-                <div className="absolute right-0 top-10 hidden h-0.5 w-full translate-x-1/2 bg-border lg:block" />
+                <div className="absolute left-1/2 top-10 hidden h-px w-full bg-gradient-to-r from-primary/30 to-border lg:block" />
               )}
 
               {/* 스텝 번호 */}
-              <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary text-2xl font-bold text-white shadow-lg">
+              <div className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-surface text-2xl font-bold text-primary shadow-card ring-1 ring-border">
                 {item.step}
               </div>
 
-              <h3 className="mt-6 text-lg font-semibold text-foreground">
+              <h3 className="mt-6 text-lg font-semibold tracking-tight text-foreground">
                 {item.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-foreground/60">
+              <p className="mt-2 text-sm leading-relaxed text-foreground-muted">
                 {item.description}
               </p>
             </div>

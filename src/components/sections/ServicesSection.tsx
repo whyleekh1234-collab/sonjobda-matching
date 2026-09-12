@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FlaskConical, Factory, ClipboardList, FileCheck2, ShieldCheck, Package, Megaphone } from "lucide-react";
 
 const services = [
   {
@@ -45,7 +46,7 @@ const services = [
     ),
     title: "비공개 매칭",
     description:
-      "매칭 완료 전까지 상호 연락처가 비공개됩니다. 수락 후에만 담당자 정보가 공개되어 안전하게 협업을 시작합니다.",
+      "매칭 성사 전까지 상호 연락처가 비공개됩니다. 수락 후에만 담당자 정보가 공개되어 안전하게 협업을 시작합니다.",
   },
 ];
 
@@ -60,32 +61,32 @@ export default function ServicesSection() {
   const [activeDetail, setActiveDetail] = useState<string | null>(null);
 
   return (
-    <section id="services" className="bg-white py-20">
+    <section id="services" className="bg-surface py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* 섹션 헤더 */}
         <div className="text-center">
-          <span className="text-sm font-semibold uppercase tracking-wider text-primary">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             Services
           </span>
-          <h2 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             손잡다매칭 서비스
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base text-foreground/60">
+          <p className="mx-auto mt-4 max-w-xl text-base text-foreground-muted">
             임상시험부터 바이오 의약품 개발까지, 필요한 전문 파트너를 한 곳에서 찾으세요.
           </p>
         </div>
 
         {/* 서비스 카드 */}
-        <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((service) => (
             <button
               key={service.id}
               type="button"
               onClick={() => setActiveDetail(activeDetail === service.id ? null : service.id)}
-              className={`group rounded-2xl border p-6 text-left transition-all ${
+              className={`group rounded-2xl border p-6 text-left shadow-card transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-card-hover ${
                 activeDetail === service.id
-                  ? "border-primary bg-primary/5 shadow-lg"
-                  : "border-border bg-white hover:border-primary/30 hover:shadow-lg"
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-surface hover:border-primary/30"
               }`}
             >
               <div className={`flex h-14 w-14 items-center justify-center rounded-xl transition-colors ${
@@ -95,10 +96,10 @@ export default function ServicesSection() {
               }`}>
                 {service.icon}
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">
+              <h3 className="mt-4 text-lg font-semibold tracking-tight text-foreground">
                 {service.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-foreground/60">
+              <p className="mt-2 text-sm leading-relaxed text-foreground-muted">
                 {service.description}
               </p>
             </button>
@@ -261,22 +262,27 @@ export default function ServicesSection() {
                 <h3 className="mt-2 text-lg font-bold text-foreground">7개 전문 분야 파트너</h3>
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   {[
-                    { icon: "🧪", label: "CRO", desc: "임상시험 수탁기관" },
-                    { icon: "🏭", label: "CMO/CDMO", desc: "위탁생산" },
-                    { icon: "📋", label: "SMO", desc: "임상시험 운영" },
-                    { icon: "📊", label: "RA/인허가", desc: "인허가 컨설팅" },
-                    { icon: "🛡️", label: "임상시험 보험", desc: "보험가입" },
-                    { icon: "📦", label: "소모품 공급", desc: "인쇄물/키트" },
-                    { icon: "📢", label: "마케팅 대행", desc: "심포지엄/CSO" },
-                  ].map((cat) => (
-                    <div key={cat.label} className="flex items-center gap-3 rounded-xl border border-border bg-white p-3">
-                      <span className="text-2xl">{cat.icon}</span>
+                    { icon: FlaskConical, label: "CRO", desc: "임상시험 수탁기관" },
+                    { icon: Factory, label: "CMO/CDMO", desc: "위탁생산" },
+                    { icon: ClipboardList, label: "SMO", desc: "임상시험 운영" },
+                    { icon: FileCheck2, label: "RA/인허가", desc: "인허가 컨설팅" },
+                    { icon: ShieldCheck, label: "임상시험 보험", desc: "보험가입" },
+                    { icon: Package, label: "소모품 공급", desc: "인쇄물/키트" },
+                    { icon: Megaphone, label: "마케팅 대행", desc: "심포지엄/CSO" },
+                  ].map((cat) => {
+                    const Icon = cat.icon;
+                    return (
+                    <div key={cat.label} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
+                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Icon className="h-4 w-4" strokeWidth={1.75} />
+                      </span>
                       <div>
                         <p className="text-sm font-semibold text-foreground">{cat.label}</p>
-                        <p className="text-xs text-foreground/40">{cat.desc}</p>
+                        <p className="text-xs text-foreground-muted">{cat.desc}</p>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
