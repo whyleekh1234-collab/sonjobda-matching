@@ -1,7 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import type { User, Role, PartnerCategory } from "@/types/auth";
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import type { User, Role, PartnerCategory, UserStatus } from "@/types/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -20,56 +22,119 @@ interface AuthContextType {
   }) => Promise<void>;
   findEmailByPhone: (name: string, phone: string) => Promise<string>;
   findEmailByEmail: (name: string, email: string) => Promise<string>;
-  resetPassword: (email: string, newPassword: string) => Promise<void>;
-  logout: () => void;
-  switchRole: () => void;
+  // 이름 + 전화번호로 본인을 확인한 뒤, 그 계정 이메일로 Supabase가 실제
+  // 재설정 링크를 발송한다. 링크를 눌러 도착하는 곳은 /reset-password/confirm.
+  requestPasswordReset: (name: string, phone: string) => Promise<void>;
+  logout: () => Promise<void>;
+  switchRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// profiles + companies + auth 이메일을 화면이 지금까지 써 온 평평한 User
+// 모양으로 합친다. 18개 파일이 이 모양을 그대로 쓰고 있어서, 데이터 출처만
+// localStorage에서 Supabase로 바꾸고 내보내는 모양은 유지한다.
+type ProfileRow = {
+  id: string;
+  member_code: string;
+  name: string;
+  phone: string | null;
+  roles: Role[];
+  active_role: Role;
+  partner_categories: PartnerCategory[] | null;
+  status: UserStatus;
+  is_company_admin: boolean;
+  created_at: string;
+  companies: {
+    name: string;
+    business_number: string;
+    address: string | null;
+  } | null;
+};
+
+function toUser(profile: ProfileRow, email: string): User {
+  return {
+    id: profile.id,
+    memberCode: profile.member_code,
+    email,
+    name: profile.name,
+    company: profile.companies?.name ?? "",
+    businessNumber: profile.companies?.business_number ?? "",
+    roles: profile.roles,
+    activeRole: profile.active_role,
+    ...(profile.partner_categories?.length && { partnerCategories: profile.partner_categories }),
+    ...(profile.phone && { phone: profile.phone }),
+    ...(profile.companies?.address && { address: profile.companies.address }),
+    status: profile.status,
+    isCompanyAdmin: profile.is_company_admin,
+    createdAt: profile.created_at,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [supabase] = useState(() => createClient());
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // signup()이 자체적으로 signOut을 호출할 때, 그사이 onAuthStateChange가
+  // 끼어들어 잠깐 로그인된 것처럼 user를 세팅했다가 다시 지우는 깜빡임을 막는다.
+  const suppressAuthEvent = useRef(false);
+
+  const loadProfile = async (session: Session): Promise<User | null> => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(
+        "id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, created_at, companies(name, business_number, address)"
+      )
+      .eq("id", session.user.id)
+      .single();
+
+    if (error || !data) return null;
+    return toUser(data as unknown as ProfileRow, session.user.email ?? "");
+  };
 
   useEffect(() => {
-    const stored = localStorage.getItem("sonjobda_user");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && parsed.roles && parsed.activeRole) {
-        setUser(parsed);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) setUser(await loadProfile(session));
+      setIsLoading(false);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (suppressAuthEvent.current) return;
+      if (session) {
+        setUser(await loadProfile(session));
       } else {
-        localStorage.removeItem("sonjobda_user");
+        setUser(null);
       }
-    }
-    setIsLoading(false);
+    });
+
+    return () => listener.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email: string, password: string) => {
-    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const found = users.find(
-      (u: User & { password: string }) => u.email === email && u.password === password
-    );
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (!found) {
+    if (error) {
       throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
     }
 
-    if (!found.roles || !found.activeRole) {
-      throw new Error("계정 정보가 올바르지 않습니다. 다시 회원가입해주세요.");
+    const profile = await loadProfile(data.session);
+    if (!profile) {
+      await supabase.auth.signOut();
+      throw new Error("계정 정보가 올바르지 않습니다. 관리자에게 문의해주세요.");
     }
 
-    if (found.status === "pending") {
+    if (profile.status === "pending") {
+      await supabase.auth.signOut();
       throw new Error("관리자 승인 대기 중입니다. 승인 후 로그인할 수 있습니다.");
     }
 
-    if (found.status === "suspended") {
+    if (profile.status === "suspended") {
+      await supabase.auth.signOut();
       throw new Error("정지된 계정입니다. 관리자에게 문의해주세요.");
     }
 
-    const userData = { ...found };
-    delete (userData as { password?: string }).password;
-    setUser(userData);
-    localStorage.setItem("sonjobda_user", JSON.stringify(userData));
+    setUser(profile);
   };
 
   const signup = async (data: {
@@ -83,117 +148,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles: Role[];
     partnerCategories?: PartnerCategory[];
   }) => {
-    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-
-    if (users.some((u: { email: string }) => u.email === data.email)) {
-      throw new Error("이미 가입된 이메일입니다.");
-    }
-
-    // 회원 고유번호 생성
-    const lastSeq = users.reduce((max: number, u: { memberCode?: string }) => {
-      if (!u.memberCode) return max;
-      const num = parseInt(u.memberCode.split("-").pop() || "0", 10);
-      return num > max ? num : max;
-    }, 0);
-    const seq = String(lastSeq + 1).padStart(8, "0");
-    const roleCode = data.roles.includes("client") && data.roles.includes("partner") ? "CP" : data.roles.includes("client") ? "C" : "P";
-    const memberCode = `SJ-${roleCode}-${seq}`;
-
-    const newUser = {
-      id: crypto.randomUUID(),
-      memberCode,
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
-      name: data.name,
-      company: data.company,
-      businessNumber: data.businessNumber,
-      phone: data.phone,
-      ...(data.address?.trim() && { address: data.address.trim() }),
-      roles: data.roles,
-      activeRole: data.roles[0],
-      ...(data.partnerCategories?.length && { partnerCategories: data.partnerCategories }),
-      status: "pending" as const,
-      isCompanyAdmin: !users.some((u: { businessNumber: string }) => u.businessNumber === data.businessNumber),
-      createdAt: new Date().toISOString(),
-    };
+    });
 
-    users.push(newUser);
-    localStorage.setItem("sonjobda_users", JSON.stringify(users));
+    if (signUpError) {
+      if (signUpError.message.toLowerCase().includes("already registered")) {
+        throw new Error("이미 가입된 이메일입니다.");
+      }
+      throw new Error(signUpError.message);
+    }
 
-    // 가입 후 바로 로그인하지 않음 - 관리자 승인 대기
+    if (!signUpData.session) {
+      // Supabase 대시보드의 Confirm email이 켜져 있으면 여기로 온다.
+      throw new Error(
+        "회원가입 설정을 확인해주세요. (Supabase Authentication > Providers > Email > Confirm email을 꺼야 합니다)"
+      );
+    }
+
+    const { error: rpcError } = await supabase.rpc("complete_signup", {
+      p_name: data.name,
+      p_phone: data.phone,
+      p_business_number: data.businessNumber,
+      p_company_name: data.company,
+      p_address: data.address ?? "",
+      p_roles: data.roles,
+      p_active_role: data.roles[0],
+      p_partner_categories: data.partnerCategories ?? [],
+    });
+
+    // 가입 후 바로 로그인하지 않음 - 관리자 승인 대기.
+    // suppress 플래그로 onAuthStateChange의 잠깐 로그인 상태를 화면에 안 비친다.
+    suppressAuthEvent.current = true;
+    await supabase.auth.signOut();
+    suppressAuthEvent.current = false;
+
+    if (rpcError) {
+      throw new Error("회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
 
   const findEmailByPhone = async (name: string, phone: string) => {
-    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const normalizedPhone = phone.replace(/[^0-9]/g, "");
-    const found = users.find(
-      (u: { name: string; phone: string }) =>
-        u.name === name.trim() &&
-        u.phone.replace(/[^0-9]/g, "") === normalizedPhone
-    );
+    const { data, error } = await supabase.rpc("rpc_find_email_by_phone", {
+      p_name: name,
+      p_phone: phone,
+    });
 
-    if (!found) {
-      throw new Error(
-        "일치하는 회원 정보가 없습니다. 담당자 이름과 휴대폰 번호를 확인해주세요."
-      );
+    if (error || !data) {
+      throw new Error("일치하는 회원 정보가 없습니다. 담당자 이름과 휴대폰 번호를 확인해주세요.");
     }
-
-    return found.email as string;
+    return data as string;
   };
 
   const findEmailByEmail = async (name: string, email: string) => {
-    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const found = users.find(
-      (u: { name: string; email: string }) =>
-        u.name === name.trim() &&
-        u.email.toLowerCase() === email.trim().toLowerCase()
-    );
+    const { data, error } = await supabase.rpc("rpc_find_email_by_email", {
+      p_name: name,
+      p_email: email,
+    });
 
-    if (!found) {
-      throw new Error(
-        "일치하는 회원 정보가 없습니다. 담당자 이름과 이메일을 확인해주세요."
-      );
+    if (error || !data) {
+      throw new Error("일치하는 회원 정보가 없습니다. 담당자 이름과 이메일을 확인해주세요.");
     }
-
-    return found.email as string;
+    return data as string;
   };
 
-  const resetPassword = async (email: string, newPassword: string) => {
-    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const idx = users.findIndex(
-      (u: { email: string }) => u.email.toLowerCase() === email.trim().toLowerCase()
-    );
-
-    if (idx === -1) {
-      throw new Error("일치하는 회원 정보가 없습니다.");
+  const requestPasswordReset = async (name: string, phone: string) => {
+    const email = await findEmailByPhone(name, phone);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password/confirm`,
+    });
+    if (error) {
+      throw new Error("재설정 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.");
     }
-
-    users[idx].password = newPassword;
-    localStorage.setItem("sonjobda_users", JSON.stringify(users));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("sonjobda_user");
   };
 
-  const switchRole = () => {
+  const switchRole = async () => {
     if (!user || !user.roles || user.roles.length < 2) return;
     const newRole: Role = user.activeRole === "client" ? "partner" : "client";
-    const updated = { ...user, activeRole: newRole };
-    setUser(updated);
-    localStorage.setItem("sonjobda_user", JSON.stringify(updated));
 
-    const users = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const idx = users.findIndex((u: { id: string }) => u.id === user.id);
-    if (idx !== -1) {
-      users[idx].activeRole = newRole;
-      localStorage.setItem("sonjobda_users", JSON.stringify(users));
-    }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ active_role: newRole })
+      .eq("id", user.id);
+
+    if (error) return;
+    setUser({ ...user, activeRole: newRole });
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, findEmailByPhone, findEmailByEmail, resetPassword, logout, switchRole }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        login,
+        signup,
+        findEmailByPhone,
+        findEmailByEmail,
+        requestPasswordReset,
+        logout,
+        switchRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

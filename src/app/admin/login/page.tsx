@@ -7,7 +7,7 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 export default function AdminLoginPage() {
   const router = useRouter();
   const { login } = useAdminAuth();
-  const [form, setForm] = useState({ id: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      await login(form.id, form.password);
+      await login(form.email, form.password);
       router.push("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
@@ -49,15 +49,15 @@ export default function AdminLoginPage() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="adminId" className="block text-sm font-medium text-foreground">
-                관리자 ID
+              <label htmlFor="adminEmail" className="block text-sm font-medium text-foreground">
+                이메일
               </label>
               <input
-                type="text"
-                id="adminId"
-                value={form.id}
-                onChange={(e) => { setForm({ ...form, id: e.target.value }); setError(""); }}
-                placeholder="아이디를 입력하세요"
+                type="email"
+                id="adminEmail"
+                value={form.email}
+                onChange={(e) => { setForm({ ...form, email: e.target.value }); setError(""); }}
+                placeholder="admin@example.com"
                 className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
