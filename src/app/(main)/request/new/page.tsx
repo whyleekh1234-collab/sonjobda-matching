@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import type { MatchRequest } from "@/types/matching";
-import Link from "next/link";
 
 const serviceTypes = [
   { id: "cro", label: "CRO", desc: "임상시험 수탁기관 매칭", icon: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" },
@@ -416,6 +415,36 @@ export default function NewRequestPage() {
   const [printSites, setPrintSites] = useState("");
   const [printItems, setPrintItems] = useState<string[]>([]);
   const [printDeliveryAddress, setPrintDeliveryAddress] = useState("");
+
+  // 배송 장소 주소 검색 (카카오/다음 우편번호 서비스)
+  const openAddressSearch = () => {
+    type DaumPostcode = {
+      Postcode: new (opts: {
+        oncomplete: (data: { roadAddress: string; jibunAddress: string; address: string }) => void;
+      }) => { open: () => void };
+    };
+    const w = window as unknown as { daum?: DaumPostcode };
+    const run = () => {
+      if (!w.daum) return;
+      new w.daum.Postcode({
+        oncomplete: (data) => {
+          setPrintDeliveryAddress(data.roadAddress || data.address || data.jibunAddress);
+        },
+      }).open();
+    };
+    if (w.daum?.Postcode) { run(); return; }
+    const script = document.createElement("script");
+    script.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    script.onload = run;
+    document.body.appendChild(script);
+  };
+
+  // 소모품 위탁업무: 인쇄물 제작 유형이 아니면 "인쇄물 제작" 항목 제외
+  const supplyTasks =
+    supplyType === "print"
+      ? supplyTaskOptions
+      : supplyTaskOptions.filter((t) => t !== "인쇄물 제작 (ICF/CRF/라벨/스티커 등)");
+
   // 마케팅 대행 추가 정보
   const [mktType, setMktType] = useState("");
   const [mktIngredientName, setMktProductName] = useState("");
@@ -581,7 +610,6 @@ export default function NewRequestPage() {
       setPendingDraft(stored);
       setShowDraftModal(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -676,8 +704,6 @@ export default function NewRequestPage() {
     }
     return null;
   };
-
-  const canNext = () => !getValidationError();
 
   const handleNext = () => {
     const error = getValidationError();
@@ -819,9 +845,9 @@ export default function NewRequestPage() {
   };
 
   const stepLabels = [
-    { num: 1, title: "서비스\n유형", sub: "서비스\n종류 선택" },
-    { num: 2, title: "프로젝\n트 정보", sub: "프로젝트\n상세 정보" },
-    { num: 3, title: "요구\n사항", sub: "세부\n요구사항" },
+    { num: 1, title: "서비스 유형", sub: "서비스 종류 선택" },
+    { num: 2, title: "프로젝트 정보", sub: "프로젝트 상세 정보" },
+    { num: 3, title: "요구사항", sub: "세부 요구사항" },
     { num: 4, title: "검토", sub: "최종 확인" },
   ];
 
@@ -838,22 +864,24 @@ export default function NewRequestPage() {
         </div>
 
         {/* 스텝 인디케이터 */}
-        <div className="mt-8 flex items-start justify-between">
+        <div className="mt-8 flex justify-between">
           {stepLabels.map((s, i) => (
-            <div key={s.num} className="flex flex-1 flex-col items-center">
-              <div className="flex w-full items-center">
-                {i > 0 && <div className={`h-0.5 flex-1 ${step > i ? "bg-primary" : "bg-border"}`} />}
-                <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                  step > s.num ? "bg-primary text-white" : step === s.num ? "bg-primary text-white" : "bg-muted text-foreground/30 border border-border"
-                }`}>
-                  {step > s.num ? (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  ) : s.num}
-                </div>
-                {i < stepLabels.length - 1 && <div className={`h-0.5 flex-1 ${step > s.num ? "bg-primary" : "bg-border"}`} />}
+            <div key={s.num} className="relative flex flex-1 flex-col items-center px-1">
+              {/* 연결선: 원의 세로 중심(top-5)에 맞춰 다음 스텝 중심까지. absolute라 원/라벨 정렬에 영향 없음 */}
+              {i < stepLabels.length - 1 && (
+                <div className={`absolute left-1/2 top-5 h-0.5 w-full ${step > s.num ? "bg-primary" : "bg-border"}`} />
+              )}
+              {/* 원 (연결선 위에 표시) */}
+              <div className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
+                step >= s.num ? "bg-primary text-white" : "bg-muted text-foreground/30 border border-border"
+              }`}>
+                {step > s.num ? (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                ) : s.num}
               </div>
-              <p className={`mt-2 text-center text-xs font-medium whitespace-pre-line ${step >= s.num ? "text-primary" : "text-foreground/30"}`}>{s.title}</p>
-              <p className="text-center text-[10px] text-foreground/30 whitespace-pre-line">{s.sub}</p>
+              {/* 라벨: 원과 같은 컨테이너(items-center)라 원 정중앙 아래에 중앙 정렬 */}
+              <p className={`mt-2 text-center text-xs font-medium ${step >= s.num ? "text-primary" : "text-foreground/30"}`}>{s.title}</p>
+              <p className="text-center text-[10px] text-foreground/30">{s.sub}</p>
             </div>
           ))}
         </div>
@@ -1219,7 +1247,7 @@ export default function NewRequestPage() {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-foreground">공급 유형 *</label>
-                      <select value={supplyType} onChange={(e) => setSupplyType(e.target.value)}
+                      <select value={supplyType} onChange={(e) => { setSupplyType(e.target.value); if (e.target.value !== "print") setTasks((prev) => prev.filter((t) => t !== "인쇄물 제작 (ICF/CRF/라벨/스티커 등)")); }}
                         className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary">
                         <option value="">유형 선택</option>
                         {supplyTypeOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
@@ -1287,12 +1315,21 @@ export default function NewRequestPage() {
                             ))}
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-foreground">배송 장소</label>
-                          <input type="text" value={printDeliveryAddress} onChange={(e) => setPrintDeliveryAddress(e.target.value)}
-                            placeholder="예: 서울특별시 중구 퇴계로 131 신일빌딩 10층" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                        </div>
                       </>
+                    )}
+                    {supplyType && (
+                      <div>
+                        <label className="block text-sm font-medium text-foreground">배송 장소</label>
+                        <div className="mt-1 flex gap-2">
+                          <input type="text" value={printDeliveryAddress} onChange={(e) => setPrintDeliveryAddress(e.target.value)}
+                            placeholder="주소 검색을 눌러 주소를 입력하세요" className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                          <button type="button" onClick={openAddressSearch}
+                            className="flex-shrink-0 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted">
+                            주소 검색
+                          </button>
+                        </div>
+                        <p className="mt-1 text-xs text-foreground/40">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
+                      </div>
                     )}
                   </>
                 ) : serviceType === "marketing" ? (
@@ -1463,14 +1500,14 @@ export default function NewRequestPage() {
                     <label className="block text-sm font-medium text-foreground">위탁업무 *</label>
                     <label className="flex cursor-pointer items-center gap-1.5">
                       <input type="checkbox"
-                        checked={(() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTaskOptions : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions; return opts.length > 0 && opts.every((t) => tasks.includes(t)); })()}
-                        onChange={() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTaskOptions : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions; const allSelected = opts.every((t) => tasks.includes(t)); setTasks(allSelected ? tasks.filter((t) => !opts.includes(t)) : [...new Set([...tasks, ...opts])]); }}
+                        checked={(() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions; return opts.length > 0 && opts.every((t) => tasks.includes(t)); })()}
+                        onChange={() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions; const allSelected = opts.every((t) => tasks.includes(t)); setTasks(allSelected ? tasks.filter((t) => !opts.includes(t)) : [...new Set([...tasks, ...opts])]); }}
                         className="h-4 w-4 rounded border-border accent-primary" />
                       <span className="text-xs font-medium text-primary">전체 선택</span>
                     </label>
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2">
-                    {(serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTaskOptions : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions).map((task) => (
+                    {(serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions).map((task) => (
                       <label key={task} className="flex cursor-pointer items-center gap-2">
                         <input type="checkbox" checked={tasks.includes(task)} onChange={() => toggleTask(task)}
                           className="h-4 w-4 rounded border-border accent-primary" />

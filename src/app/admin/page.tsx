@@ -18,6 +18,7 @@ interface UserData {
   partnerCategories?: string[];
   phone?: string;
   businessNumber?: string;
+  address?: string;
   status: string;
   verified?: boolean;
   isCompanyAdmin?: boolean;
@@ -85,7 +86,11 @@ export default function AdminDashboard() {
     const storedUsers = localStorage.getItem("sonjobda_users");
     if (storedUsers) {
       const parsed = JSON.parse(storedUsers);
-      setUsers(parsed.map(({ password, ...rest }: UserData & { password?: string }) => rest));
+      setUsers(parsed.map((u: UserData & { password?: string }) => {
+        const rest = { ...u };
+        delete rest.password;
+        return rest;
+      }));
     }
     const storedInquiries = localStorage.getItem("sonjobda_inquiries");
     if (storedInquiries) setInquiries(JSON.parse(storedInquiries));
@@ -94,7 +99,7 @@ export default function AdminDashboard() {
     const storedRequests = localStorage.getItem("sonjobda_requests");
     if (storedRequests) {
       const reqs = JSON.parse(storedRequests);
-      // 기존 매칭 완료 건에 matchCode가 없으면 자동 부여
+      // 기존 매칭 성사 건에 matchCode가 없으면 자동 부여
       let changed = false;
       let lastMt = reqs.reduce((max: number, r: { matchCode?: string }) => {
         if (!r.matchCode) return max;
@@ -218,13 +223,6 @@ export default function AdminDashboard() {
     setInquiries(updated);
   };
 
-  // ─── 매칭 관리 ───
-  const updateMatchingStatus = (id: string, status: MatchingRequest["status"]) => {
-    const updated = matchings.map((m) => (m.id === id ? { ...m, status } : m));
-    localStorage.setItem("sonjobda_matchings", JSON.stringify(updated));
-    setMatchings(updated);
-  };
-
   // ─── 공지사항 ───
   const addNotice = () => {
     if (!noticeForm.title.trim() || !noticeForm.content.trim()) return;
@@ -274,9 +272,9 @@ export default function AdminDashboard() {
   const downloadCSV = (type: "users" | "matchings") => {
     let csv = "";
     if (type === "users") {
-      csv = "고유번호,이름,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,상태,검증\n";
+      csv = "고유번호,이름,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,기업주소,상태,검증\n";
       users.forEach((u) => {
-        csv += `"${u.memberCode || ""}","${u.name}","${u.company}","${u.email}","${u.roles?.join("/")}","${u.partnerCategories?.join("/") || ""}","${u.phone || ""}","${u.businessNumber || ""}","${u.status}","${u.verified ? "Y" : "N"}"\n`;
+        csv += `"${u.memberCode || ""}","${u.name}","${u.company}","${u.email}","${u.roles?.join("/")}","${u.partnerCategories?.join("/") || ""}","${u.phone || ""}","${u.businessNumber || ""}","${u.address || ""}","${u.status}","${u.verified ? "Y" : "N"}"\n`;
       });
     } else {
       csv = "프로젝트명,의뢰사,예산,상태,생성일\n";
@@ -299,8 +297,8 @@ export default function AdminDashboard() {
   const pendingUsers = users.filter((u) => u.status === "pending").length;
   const clientCount = users.filter((u) => u.roles?.includes("client")).length;
   const partnerCount = users.filter((u) => u.roles?.includes("partner")).length;
-  const activeMatchings = matchings.filter((m) => m.status === "matching" || m.status === "pending").length;
-  const completedMatchings = matchings.filter((m) => m.status === "completed" || m.status === "contracted").length;
+  const activeMatchings = allRequests.filter((r) => r.status === "pending" || r.status === "matched").length;
+  const completedMatchings = allRequests.filter((r) => r.status === "completed").length;
   const newInquiries = inquiries.filter((i) => i.status === "new").length;
 
   const tabs: { key: Tab; label: string; badge?: number }[] = [
@@ -320,9 +318,8 @@ export default function AdminDashboard() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <span className="text-xl font-bold text-primary">손잡다</span>
-              <span className="text-xl font-bold text-foreground">매칭</span>
+            <div className="flex items-center">
+              <span className="text-xl font-bold text-primary">손잡다매칭</span>
             </div>
             <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/50">관리자</span>
           </div>
@@ -851,7 +848,7 @@ export default function AdminDashboard() {
         {/* ════════════ 매칭관리 ════════════ */}
         {activeTab === "matched" && (() => {
           const matchedAll = allRequests.filter((r) => r.status === "matched" || r.status === "completed");
-          const [sortBy, setSortBy] = [matchingSortBy, setMatchingSortBy];
+          const sortBy = matchingSortBy;
           const matchedRequests = [...matchedAll].sort((a, b) => {
             let cmp = 0;
             if (sortBy === "matchCode") cmp = (a.matchCode || "").localeCompare(b.matchCode || "");
@@ -871,12 +868,12 @@ export default function AdminDashboard() {
           return (
           <div className="mt-8">
             <div className="mb-4">
-              <p className="text-sm text-foreground/50">최종 매칭 완료 {matchedRequests.length}건</p>
+              <p className="text-sm text-foreground/50">최종 매칭 성사 {matchedRequests.length}건</p>
             </div>
             {matchedRequests.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
                 <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
-                <h3 className="mt-4 text-lg font-semibold text-foreground/60">매칭 완료된 건이 없습니다</h3>
+                <h3 className="mt-4 text-lg font-semibold text-foreground/60">매칭 성사된 건이 없습니다</h3>
               </div>
             ) : (
               <div className="rounded-2xl border border-border bg-background">
@@ -1000,7 +997,6 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {[...inquiries].reverse().map((inq) => {
-                        const isOpen = inquiryReplyingTo === inq.id || selectedRequestDetail === `inq-${inq.id}`;
                         const inqTitle = (inq as { title?: string }).title || (inq.message ? inq.message.slice(0, 30) + (inq.message.length > 30 ? "..." : "") : "(내용 없음)");
                         return (
                           <React.Fragment key={inq.id}>
@@ -1165,7 +1161,6 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {[...adminNotifications].reverse().map((notif) => {
-                        const isOpen = adminReplyingTo === notif.id || selectedRequestDetail === `notif-${notif.id}`;
                         const targetInfo = notif.userId !== "admin"
                           ? `${users.find((u) => u.id === notif.userId)?.name || "-"} (${users.find((u) => u.id === notif.userId)?.company || "-"})`
                           : (() => { const match = notif.message.match(/\[(.+?)\s(.+?)님/); return match ? `${match[1]} ${match[2]}` : "-"; })();
@@ -1290,11 +1285,11 @@ export default function AdminDashboard() {
               <div className="rounded-2xl border border-border bg-background p-6">
                 <h4 className="text-sm font-medium text-foreground/50">매칭 현황</h4>
                 <div className="mt-4 space-y-3">
-                  <div className="flex justify-between text-sm"><span className="text-foreground/70">전체 매칭</span><span className="font-semibold">{matchings.length}건</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-foreground/70">대기중</span><span className="font-semibold">{matchings.filter(m => m.status === "pending").length}건</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-foreground/70">매칭중</span><span className="font-semibold text-blue-600">{matchings.filter(m => m.status === "matching").length}건</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-foreground/70">계약완료</span><span className="font-semibold text-green-600">{matchings.filter(m => m.status === "contracted").length}건</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-foreground/70">취소</span><span className="font-semibold text-red-500">{matchings.filter(m => m.status === "cancelled").length}건</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-foreground/70">전체 매칭</span><span className="font-semibold">{allRequests.length}건</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-foreground/70">진행중</span><span className="font-semibold">{allRequests.filter(r => r.status === "pending").length}건</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-foreground/70">매칭 성사</span><span className="font-semibold text-blue-600">{allRequests.filter(r => r.status === "matched").length}건</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-foreground/70">계약완료</span><span className="font-semibold text-green-600">{allRequests.filter(r => r.status === "completed").length}건</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-foreground/70">회수</span><span className="font-semibold text-red-500">{allRequests.filter(r => r.status === "cancelled").length}건</span></div>
                 </div>
               </div>
               <div className="rounded-2xl border border-border bg-background p-6">
@@ -1367,6 +1362,7 @@ export default function AdminDashboard() {
                 <InfoRow label="회사명" value={selectedUser.company} />
                 <InfoRow label="연락처" value={selectedUser.phone || "-"} />
                 <InfoRow label="사업자등록번호" value={selectedUser.businessNumber || "-"} />
+                <InfoRow label="기업주소" value={selectedUser.address || "-"} />
                 <InfoRow label="유형" value={selectedUser.roles?.map((r) => r === "client" ? "의뢰사" : "파트너사").join(", ") || "-"} />
                 <InfoRow label="상태" value={!selectedUser.status || selectedUser.status === "pending" ? "대기" : selectedUser.status === "approved" ? "활성" : selectedUser.status === "restricted" ? "제한" : "정지"} />
                 <InfoRow label="검증" value={selectedUser.verified ? "검증완료" : "미검증"} />
