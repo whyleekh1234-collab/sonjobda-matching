@@ -170,7 +170,8 @@ begin
   end if;
 
   update company_change_requests set
-    status      = case when p_approve then 'approved' else 'rejected' end,
+    -- case 결과는 text라 enum 컬럼에 그냥 넣으면 거부된다. 명시적으로 바꾼다.
+    status      = (case when p_approve then 'approved' else 'rejected' end)::change_request_status,
     reviewed_by = auth.uid(),
     reviewed_at = now(),
     review_note = nullif(trim(coalesce(p_note, '')), '')
