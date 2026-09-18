@@ -370,7 +370,56 @@ grant execute on function public.withdraw_request             to authenticated;
 grant execute on function public.extend_request_deadline      to authenticated;
 
 -- ════════════════════════════════════════════════════════════
--- 4. 실행 후 확인
+-- 4. 정책끼리 서로를 부르는 무한 재귀 끊기
+-- ════════════════════════════════════════════════════════════
+--
+-- 1단계 정책은 requests와 quotes가 서로를 조회한다.
+--   requests 읽기 → "내 회사가 견적 낸 의뢰인가?" → quotes 조회
+--   quotes 읽기  → "이 의뢰가 내 회사 것인가?"   → requests 조회
+-- 둘이 물고 물려서 42P17(infinite recursion)로 죽는다. 2단계에서
+-- profiles에 대해 막아둔 것과 같은 문제가 이번엔 두 테이블 사이에서 났다.
+--
+-- 해결도 같다. 교차 조회를 security definer 함수로 빼면 그 안에서는 RLS가
+-- 돌지 않아 고리가 끊긴다.
+
+create or replace function public.request_owner_company(p_request_id uuid)
+returns uuid language sql stable security definer set search_path = public as $$
+  select company_id from requests where id = p_request_id;
+$$;
+
+create or replace function public.my_company_quoted(p_request_id uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from quotes
+    where request_id = p_request_id and company_id = current_company_id()
+  );
+$$;
+
+grant execute on function public.request_owner_company to authenticated;
+grant execute on function public.my_company_quoted     to authenticated;
+
+-- 파트너사가 견적을 낸 의뢰는 마감 후에도 계속 보인다
+drop policy if exists requests_read_quoted on requests;
+create policy requests_read_quoted on requests
+  for select to authenticated
+  using (my_company_quoted(id));
+
+-- 견적은 제출한 파트너사와 그 의뢰의 의뢰사만 본다
+drop policy if exists quotes_read_own_or_client on quotes;
+create policy quotes_read_own_or_client on quotes
+  for select to authenticated
+  using (
+    company_id = current_company_id()
+    or request_owner_company(request_id) = current_company_id()
+  );
+
+-- 아래 둘은 insert/update 권한을 회수해 실제로는 도달하지 않지만,
+-- 남겨두면 나중에 권한을 되돌릴 때 같은 재귀가 되살아난다.
+drop policy if exists quotes_insert_partner on quotes;
+drop policy if exists quotes_update_own on quotes;
+
+-- ════════════════════════════════════════════════════════════
+-- 5. 실행 후 확인
 -- ════════════════════════════════════════════════════════════
 --   select routine_name from information_schema.routines
 --   where routine_schema = 'public'
