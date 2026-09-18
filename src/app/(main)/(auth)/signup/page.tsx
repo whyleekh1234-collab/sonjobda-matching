@@ -193,6 +193,22 @@ function SignupContent() {
     }
 
     try {
+      // 국세청에 등록된 번호인지, 폐업/휴업은 아닌지 확인한다.
+      // 초대로 들어온 경우는 이미 등록된 회사라 다시 묻지 않는다.
+      if (!inviteInfo) {
+        const res = await fetch("/api/business-number", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ businessNumber: form.businessNumber }),
+        });
+        const check = await res.json();
+        if (check.valid === false) {
+          setError(check.message ?? "사업자등록번호를 확인해주세요.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const { needsEmailConfirmation } = await signup({
         email: form.email,
         password: form.password,
