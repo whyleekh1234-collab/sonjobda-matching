@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 
 interface AdminAuthContextType {
   isAdmin: boolean;
+  // 관리자 화면은 "나에게 온 알림"과 "내가 보낸 알림"을 구분해야 한다.
+  adminId: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -17,6 +19,7 @@ const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [supabase] = useState(() => createClient());
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminId, setAdminId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAdmin = async (userId: string) => {
@@ -29,17 +32,24 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    const apply = async (userId: string | null) => {
+      if (!userId) {
+        setIsAdmin(false);
+        setAdminId(null);
+        return;
+      }
+      const ok = await checkAdmin(userId);
+      setIsAdmin(ok);
+      setAdminId(ok ? userId : null);
+    };
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) setIsAdmin(await checkAdmin(session.user.id));
+      await apply(session?.user.id ?? null);
       setIsLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        setIsAdmin(await checkAdmin(session.user.id));
-      } else {
-        setIsAdmin(false);
-      }
+      await apply(session?.user.id ?? null);
     });
 
     return () => listener.subscription.unsubscribe();
@@ -60,15 +70,17 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     }
 
     setIsAdmin(true);
+    setAdminId(data.user.id);
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
+    setAdminId(null);
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAdmin, isLoading, login, logout }}>
+    <AdminAuthContext.Provider value={{ isAdmin, adminId, isLoading, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );

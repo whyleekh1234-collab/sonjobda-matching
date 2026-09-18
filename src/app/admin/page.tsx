@@ -3,7 +3,28 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
-import type { Inquiry, MatchingRequest, Notice, Notification } from "@/types/auth";
+import {
+  listAllUsers,
+  listAllInquiries,
+  listAllNotices,
+  listAllNotifications,
+  updateUser as updateUserApi,
+  deleteUser as deleteUserApi,
+  replyInquiry,
+  editInquiryReply,
+  setInquiryStatus,
+  createNotice,
+  deleteNotice as deleteNoticeApi,
+  sendNotification as sendNotificationApi,
+  replyNotification,
+  setCompanyAdmin,
+  markAllMyNotificationsRead,
+  markNotificationRead as markNotificationReadApi,
+  type AdminInquiry as Inquiry,
+  type AdminNotification,
+} from "@/lib/data/admin";
+import { listPartnerRequests } from "@/lib/data/requests";
+import type { MatchingRequest, Notice } from "@/types/auth";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports";
 
@@ -50,7 +71,7 @@ const matchingStatusLabels: Record<string, { label: string; color: string }> = {
 };
 
 export default function AdminDashboard() {
-  const { isAdmin, isLoading, logout } = useAdminAuth();
+  const { isAdmin, adminId, isLoading, logout } = useAdminAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [users, setUsers] = useState<UserData[]>([]);
@@ -70,7 +91,7 @@ export default function AdminDashboard() {
     if (matchingSortBy === key) setMatchingSortDir(matchingSortDir === "asc" ? "desc" : "asc");
     else { setMatchingSortBy(key); setMatchingSortDir("asc"); }
   };
-  const [adminNotifications, setAdminNotifications] = useState<{ id: string; notifCode?: string; userId: string; message: string; read: boolean; createdAt: string; replies?: { from: string; company: string; message: string; createdAt: string }[] }[]>([]);
+  const [adminNotifications, setAdminNotifications] = useState<AdminNotification[]>([]);
   const [adminReplyText, setAdminReplyText] = useState("");
   const [inquiryReplyingTo, setInquiryReplyingTo] = useState<string | null>(null);
   const [inquiryReplyText, setInquiryReplyText] = useState("");
@@ -82,62 +103,27 @@ export default function AdminDashboard() {
   const [userFilterStatus, setUserFilterStatus] = useState<"all" | "approved" | "pending" | "restricted" | "suspended">("all");
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
-  const loadData = useCallback(() => {
-    const storedUsers = localStorage.getItem("sonjobda_users");
-    if (storedUsers) {
-      const parsed = JSON.parse(storedUsers);
-      setUsers(parsed.map((u: UserData & { password?: string }) => {
-        const rest = { ...u };
-        delete rest.password;
-        return rest;
-      }));
+  // 고유번호(MT-, NF-)를 화면에서 채워 넣던 코드는 사라졌다. 이제 DB
+  // 시퀀스가 부여하므로 빠진 번호를 나중에 메울 일이 없다.
+  const loadData = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const [userList, inquiryList, requestList, noticeList, notifList] = await Promise.all([
+        listAllUsers(),
+        listAllInquiries(),
+        listPartnerRequests(),
+        listAllNotices(),
+        listAllNotifications(),
+      ]);
+      setUsers(userList);
+      setInquiries(inquiryList);
+      setAllRequests(requestList);
+      setNotices(noticeList);
+      setAdminNotifications(notifList);
+    } catch (err) {
+      console.error(err);
     }
-    const storedInquiries = localStorage.getItem("sonjobda_inquiries");
-    if (storedInquiries) setInquiries(JSON.parse(storedInquiries));
-    const storedMatchings = localStorage.getItem("sonjobda_matchings");
-    if (storedMatchings) setMatchings(JSON.parse(storedMatchings));
-    const storedRequests = localStorage.getItem("sonjobda_requests");
-    if (storedRequests) {
-      const reqs = JSON.parse(storedRequests);
-      // 기존 매칭 성사 건에 matchCode가 없으면 자동 부여
-      let changed = false;
-      let lastMt = reqs.reduce((max: number, r: { matchCode?: string }) => {
-        if (!r.matchCode) return max;
-        const num = parseInt(r.matchCode.split("-")[1] || "0", 10);
-        return num > max ? num : max;
-      }, 0);
-      reqs.forEach((r: { status: string; matchCode?: string }) => {
-        if ((r.status === "matched" || r.status === "completed") && !r.matchCode) {
-          lastMt++;
-          r.matchCode = `MT-${String(lastMt).padStart(8, "0")}`;
-          changed = true;
-        }
-      });
-      if (changed) localStorage.setItem("sonjobda_requests", JSON.stringify(reqs));
-      setAllRequests(reqs);
-    }
-    const storedNotices = localStorage.getItem("sonjobda_notices");
-    if (storedNotices) setNotices(JSON.parse(storedNotices));
-    const storedNotifs = localStorage.getItem("sonjobda_notifications");
-    if (storedNotifs) {
-      const all = JSON.parse(storedNotifs);
-      let changed = false;
-      let maxNum = all.reduce((max: number, n: { notifCode?: string }) => {
-        if (!n.notifCode) return max;
-        const num = parseInt(n.notifCode.split("-")[1] || "0", 10);
-        return num > max ? num : max;
-      }, 0);
-      all.forEach((n: { notifCode?: string }) => {
-        if (!n.notifCode) {
-          maxNum++;
-          n.notifCode = `NF-${String(maxNum).padStart(8, "0")}`;
-          changed = true;
-        }
-      });
-      if (changed) localStorage.setItem("sonjobda_notifications", JSON.stringify(all));
-      setAdminNotifications(all);
-    }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) router.push("/admin/login");
@@ -154,118 +140,77 @@ export default function AdminDashboard() {
     return <div className="flex min-h-screen items-center justify-center"><div className="text-foreground/50">로딩 중...</div></div>;
   }
 
+  // 모든 쓰기는 운영자 자격을 서버에서 확인한 뒤 실행된다.
+  const run = async (fn: () => Promise<void>, successMessage?: string) => {
+    try {
+      await fn();
+      await loadData();
+      if (successMessage) alert(successMessage);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+    }
+  };
+
   // ─── 회원 관리 ───
   const updateUserField = (userId: string, field: string, value: unknown) => {
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const idx = allUsers.findIndex((u: { id: string }) => u.id === userId);
-    if (idx === -1) return;
-    allUsers[idx][field] = value;
-    localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
-    loadData();
+    const key =
+      field === "status" ? { status: value as string }
+      : field === "verified" ? { verified: value as boolean }
+      : field === "allowCategoryEdit" ? { allowCategoryEdit: value as boolean }
+      : null;
+    if (!key) return;
+    run(() => updateUserApi(userId, key));
   };
 
   const deleteUser = (userId: string) => {
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const filtered = allUsers.filter((u: { id: string }) => u.id !== userId);
-    localStorage.setItem("sonjobda_users", JSON.stringify(filtered));
-    // 해당 유저가 로그인 중이면 세션도 제거
-    const currentUser = localStorage.getItem("sonjobda_user");
-    if (currentUser && JSON.parse(currentUser).id === userId) {
-      localStorage.removeItem("sonjobda_user");
-    }
-    loadData();
+    run(() => deleteUserApi(userId));
   };
 
   // ─── 문의 관리 ───
   const replyToInquiry = (id: string) => {
     if (!inquiryReplyText.trim()) return;
-    const all = JSON.parse(localStorage.getItem("sonjobda_inquiries") || "[]");
-    const idx = all.findIndex((inq: { id: string }) => inq.id === id);
-    if (idx !== -1) {
-      if (!all[idx].replies) all[idx].replies = [];
-      all[idx].replies.push({ from: "관리자", message: inquiryReplyText, createdAt: new Date().toISOString() });
-      all[idx].status = "replied";
-      localStorage.setItem("sonjobda_inquiries", JSON.stringify(all));
-      setInquiries(all);
-    }
+    const text = inquiryReplyText;
     setInquiryReplyingTo(null);
     setInquiryReplyText("");
+    run(() => replyInquiry(id, text));
   };
 
   const updateInqReply = (inqId: string, replyIdx: number) => {
     if (!editInqReplyText.trim()) return;
-    const all = JSON.parse(localStorage.getItem("sonjobda_inquiries") || "[]");
-    const idx = all.findIndex((inq: { id: string }) => inq.id === inqId);
-    if (idx !== -1 && all[idx].replies?.[replyIdx]) {
-      all[idx].replies[replyIdx].message = editInqReplyText;
-      localStorage.setItem("sonjobda_inquiries", JSON.stringify(all));
-      setInquiries(all);
-    }
+    const text = editInqReplyText;
     setEditingInqReply(null);
     setEditInqReplyText("");
+    run(() => editInquiryReply(inqId, replyIdx, text));
   };
 
   const deleteInqReply = (inqId: string, replyIdx: number) => {
     if (!confirm("답변을 삭제하시겠습니까?")) return;
-    const all = JSON.parse(localStorage.getItem("sonjobda_inquiries") || "[]");
-    const idx = all.findIndex((inq: { id: string }) => inq.id === inqId);
-    if (idx !== -1 && all[idx].replies) {
-      all[idx].replies.splice(replyIdx, 1);
-      if (all[idx].replies.length === 0 && all[idx].status === "replied") all[idx].status = "read";
-      localStorage.setItem("sonjobda_inquiries", JSON.stringify(all));
-      setInquiries(all);
-    }
+    run(() => editInquiryReply(inqId, replyIdx, null));
   };
 
   const updateInquiryStatus = (id: string, status: "new" | "read" | "replied" | "closed") => {
-    const updated = inquiries.map((inq) => (inq.id === id ? { ...inq, status } : inq));
-    localStorage.setItem("sonjobda_inquiries", JSON.stringify(updated));
-    setInquiries(updated);
+    run(() => setInquiryStatus(id, status));
   };
 
   // ─── 공지사항 ───
   const addNotice = () => {
     if (!noticeForm.title.trim() || !noticeForm.content.trim()) return;
-    const notice: Notice = {
-      id: crypto.randomUUID(),
-      title: noticeForm.title,
-      content: noticeForm.content,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [...notices, notice];
-    localStorage.setItem("sonjobda_notices", JSON.stringify(updated));
-    setNotices(updated);
+    const { title, content } = noticeForm;
     setNoticeForm({ title: "", content: "" });
+    run(() => createNotice(title, content));
   };
 
   const deleteNotice = (id: string) => {
-    const updated = notices.filter((n) => n.id !== id);
-    localStorage.setItem("sonjobda_notices", JSON.stringify(updated));
-    setNotices(updated);
+    run(() => deleteNoticeApi(id));
   };
 
   // ─── 알림 발송 ───
   const sendNotification = () => {
     if (!notificationForm.userId || !notificationForm.message.trim()) return;
-    const stored = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    const lastNum = stored.reduce((max: number, n: { notifCode?: string }) => {
-      if (!n.notifCode) return max;
-      const num = parseInt(n.notifCode.split("-")[1] || "0", 10);
-      return num > max ? num : max;
-    }, 0);
-    const notification: Notification = {
-      id: crypto.randomUUID(),
-      notifCode: `NF-${String(lastNum + 1).padStart(8, "0")}`,
-      userId: notificationForm.userId,
-      message: notificationForm.message,
-      read: false,
-      createdAt: new Date().toISOString(),
-    };
-    stored.push(notification);
-    localStorage.setItem("sonjobda_notifications", JSON.stringify(stored));
+    const { userId, message } = notificationForm;
     setNotificationForm({ userId: "", message: "" });
     setShowNotificationModal(false);
-    alert("알림이 발송되었습니다.");
+    run(() => sendNotificationApi(userId, message), "알림이 발송되었습니다.");
   };
 
   // ─── 엑셀(CSV) 다운로드 ───
@@ -1130,14 +1075,10 @@ export default function AdminDashboard() {
         {activeTab === "notifications" && (
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-foreground/50">전체 알림 {adminNotifications.length}건 (읽지 않은 알림 {adminNotifications.filter((n) => n.userId === "admin" && !n.read).length}건)</p>
-              {adminNotifications.filter((n) => !n.read).length > 0 && (
-                <button onClick={() => {
-                  const all = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-                  all.forEach((n: { userId: string; read: boolean }) => { if (n.userId === "admin") n.read = true; });
-                  localStorage.setItem("sonjobda_notifications", JSON.stringify(all));
-                  loadData();
-                }} className="text-xs font-medium text-primary hover:underline">모두 읽음 처리</button>
+              <p className="text-sm text-foreground/50">전체 알림 {adminNotifications.length}건 (읽지 않은 알림 {adminNotifications.filter((n) => n.userId === adminId && !n.read).length}건)</p>
+              {adminNotifications.filter((n) => n.userId === adminId && !n.read).length > 0 && (
+                <button onClick={() => run(() => markAllMyNotificationsRead())}
+                  className="text-xs font-medium text-primary hover:underline">모두 읽음 처리</button>
               )}
             </div>
             {adminNotifications.length === 0 ? (
@@ -1161,23 +1102,23 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {[...adminNotifications].reverse().map((notif) => {
-                        const targetInfo = notif.userId !== "admin"
-                          ? `${users.find((u) => u.id === notif.userId)?.name || "-"} (${users.find((u) => u.id === notif.userId)?.company || "-"})`
-                          : (() => { const match = notif.message.match(/\[(.+?)\s(.+?)님/); return match ? `${match[1]} ${match[2]}` : "-"; })();
+                        // 보낸 사람/받는 사람이 컬럼으로 있어 메시지 본문을
+                        // 파싱할 필요가 없다.
+                        const counterpartId = notif.userId === adminId ? notif.fromUserId : notif.userId;
+                        const counterpart = users.find((u) => u.id === counterpartId);
+                        const targetInfo = counterpart ? `${counterpart.name} (${counterpart.company})` : "-";
                         return (
                           <React.Fragment key={notif.id}>
                             <tr onClick={() => {
-                              if (notif.userId === "admin" && !notif.read) {
-                                const all = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-                                const idx = all.findIndex((n: { id: string }) => n.id === notif.id);
-                                if (idx !== -1) { all[idx].read = true; localStorage.setItem("sonjobda_notifications", JSON.stringify(all)); loadData(); }
+                              if (notif.userId === adminId && !notif.read) {
+                                run(() => markNotificationReadApi(notif.id));
                               }
                               setSelectedRequestDetail(selectedRequestDetail === `notif-${notif.id}` ? null : `notif-${notif.id}`);
-                            }} className={`cursor-pointer border-b border-border last:border-0 hover:bg-muted/30 ${notif.userId === "admin" && !notif.read ? "bg-blue-50/50" : ""}`}>
+                            }} className={`cursor-pointer border-b border-border last:border-0 hover:bg-muted/30 ${notif.userId === adminId && !notif.read ? "bg-blue-50/50" : ""}`}>
                               <td className="px-4 py-3 text-xs font-mono text-foreground/50">{notif.notifCode || "-"}</td>
                               <td className="px-4 py-3">
-                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${notif.userId === "admin" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
-                                  {notif.userId === "admin" ? "받은 알림" : "보낸 알림"}
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${notif.userId === adminId ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                  {notif.userId === adminId ? "받은 알림" : "보낸 알림"}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-foreground/70">{notif.message.length > 40 ? notif.message.slice(0, 40) + "..." : notif.message}</td>
@@ -1203,52 +1144,27 @@ export default function AdminDashboard() {
                                       </div>
                                     ))}
                                     {/* 관리자 답변 입력 */}
-                                    {notif.userId === "admin" && (
+                                    {notif.userId === adminId && (
                                       <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
                                         <input type="text" value={adminReplyingTo === notif.id ? adminReplyText : ""} onChange={(e) => { setAdminReplyingTo(notif.id); setAdminReplyText(e.target.value); }}
                                           onFocus={() => { if (adminReplyingTo !== notif.id) { setAdminReplyingTo(notif.id); setAdminReplyText(""); } }}
                                           placeholder="답변을 입력하세요"
                                           onKeyDown={(e) => {
                                             if (e.key === "Enter" && adminReplyText.trim()) {
-                                              const all = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-                                              const origNotif = all.find((n: { id: string }) => n.id === notif.id);
-                                              if (origNotif) {
-                                                if (!origNotif.replies) origNotif.replies = [];
-                                                origNotif.replies.push({ from: "관리자", company: "손잡다매칭", message: adminReplyText, createdAt: new Date().toISOString() });
-                                              }
-                                              const match = notif.message.match(/\[(.+?)\s(.+?)님/);
-                                              if (match) {
-                                                const targetUser = users.find((u) => u.name === match[2] && u.company === match[1]);
-                                                if (targetUser) {
-                                                  all.push({ id: crypto.randomUUID(), userId: targetUser.id, message: `[관리자 답변] ${adminReplyText}`, read: false, createdAt: new Date().toISOString() });
-                                                }
-                                              }
-                                              localStorage.setItem("sonjobda_notifications", JSON.stringify(all));
+                                              const text = adminReplyText;
                                               setAdminReplyingTo(null);
                                               setAdminReplyText("");
-                                              loadData();
+                                              // 원본에 답변을 남기고, 보낸 사람에게 새 알림이 간다.
+                                              run(() => replyNotification(notif.id, text));
                                             }
                                           }}
                                           className="flex-1 rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                                         <button onClick={() => {
                                           if (!adminReplyText.trim() || adminReplyingTo !== notif.id) return;
-                                          const all = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-                                          const origNotif = all.find((n: { id: string }) => n.id === notif.id);
-                                          if (origNotif) {
-                                            if (!origNotif.replies) origNotif.replies = [];
-                                            origNotif.replies.push({ from: "관리자", company: "손잡다매칭", message: adminReplyText, createdAt: new Date().toISOString() });
-                                          }
-                                          const match = notif.message.match(/\[(.+?)\s(.+?)님/);
-                                          if (match) {
-                                            const targetUser = users.find((u) => u.name === match[2] && u.company === match[1]);
-                                            if (targetUser) {
-                                              all.push({ id: crypto.randomUUID(), userId: targetUser.id, message: `[관리자 답변] ${adminReplyText}`, read: false, createdAt: new Date().toISOString() });
-                                            }
-                                          }
-                                          localStorage.setItem("sonjobda_notifications", JSON.stringify(all));
+                                          const text = adminReplyText;
                                           setAdminReplyingTo(null);
                                           setAdminReplyText("");
-                                          loadData();
+                                          run(() => replyNotification(notif.id, text));
                                         }}
                                           className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary-dark">전송</button>
                                       </div>
@@ -1424,21 +1340,11 @@ export default function AdminDashboard() {
                   </button>
                 )}
                 <button onClick={() => {
-                  if (!selectedUser.isCompanyAdmin) {
-                    if (!confirm(`"${selectedUser.name}"을 회사관리자로 지정하시겠습니까?\n같은 회사의 기존 관리자는 자동 해제됩니다.`)) return;
-                    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-                    allUsers.forEach((u: { businessNumber?: string; isCompanyAdmin?: boolean }, i: number) => {
-                      if (u.businessNumber === selectedUser.businessNumber && u.isCompanyAdmin) allUsers[i].isCompanyAdmin = false;
-                    });
-                    const idx = allUsers.findIndex((u: { id: string }) => u.id === selectedUser.id);
-                    if (idx !== -1) allUsers[idx].isCompanyAdmin = true;
-                    localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
-                    loadData();
-                    setSelectedUser({ ...selectedUser, isCompanyAdmin: true });
-                  } else {
-                    updateUserField(selectedUser.id, "isCompanyAdmin", false);
-                    setSelectedUser({ ...selectedUser, isCompanyAdmin: false });
-                  }
+                  const next = !selectedUser.isCompanyAdmin;
+                  if (next && !confirm(`"${selectedUser.name}"을 회사관리자로 지정하시겠습니까?\n같은 회사의 기존 관리자는 자동 해제됩니다.`)) return;
+                  // 같은 회사의 기존 담당자 해제까지 서버가 한 번에 처리한다.
+                  run(() => setCompanyAdmin(selectedUser.id, next));
+                  setSelectedUser({ ...selectedUser, isCompanyAdmin: next });
                 }}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium ${selectedUser.isCompanyAdmin ? "bg-amber-50 text-amber-600 hover:bg-amber-100" : "bg-purple-50 text-purple-600 hover:bg-purple-100"}`}>
                   {selectedUser.isCompanyAdmin ? "회사관리자 해제" : "회사관리자 지정"}
