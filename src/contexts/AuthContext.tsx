@@ -19,7 +19,7 @@ interface AuthContextType {
     address?: string;
     roles: Role[];
     partnerCategories?: PartnerCategory[];
-  }) => Promise<void>;
+  }) => Promise<{ needsEmailConfirmation: boolean }>;
   findEmailByPhone: (name: string, phone: string) => Promise<string>;
   findEmailByEmail: (name: string, email: string) => Promise<string>;
   // 이름 + 전화번호로 본인을 확인한 뒤, 그 계정 이메일로 Supabase가 실제
@@ -115,6 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
+      // Confirm email이 켜진 상태에서 인증 전에 로그인하면 여기로 온다.
+      // 비밀번호 오류로 뭉뚱그리면 사용자가 원인을 못 찾는다.
+      if (/email not confirmed/i.test(error.message)) {
+        throw new Error("이메일 인증이 필요합니다. 가입 시 받은 메일의 링크를 눌러주세요.");
+      }
       throw new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
     }
 
@@ -148,45 +153,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles: Role[];
     partnerCategories?: PartnerCategory[];
   }) => {
+    // 폼 값을 계정 메타데이터로 넘긴다. 회사와 프로필 생성은 auth.users의
+    // on_auth_user_created 트리거가 같은 트랜잭션 안에서 처리한다.
+    // 이렇게 해야 Confirm email 설정(가입 직후 세션 유무)과 무관하게 동작하고,
+    // 계정만 생기고 프로필은 없는 껍데기가 남지 않는다.
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          phone: data.phone,
+          business_number: data.businessNumber,
+          company_name: data.company,
+          address: data.address ?? "",
+          roles: data.roles,
+          active_role: data.roles[0],
+          partner_categories: data.partnerCategories ?? [],
+        },
+      },
     });
 
     if (signUpError) {
-      if (signUpError.message.toLowerCase().includes("already registered")) {
+      if (/already\s*(been\s*)?registered/i.test(signUpError.message)) {
         throw new Error("이미 가입된 이메일입니다.");
       }
-      throw new Error(signUpError.message);
+      throw new Error("회원가입에 실패했습니다. 입력값을 확인하고 다시 시도해주세요.");
     }
 
-    if (!signUpData.session) {
-      // Supabase 대시보드의 Confirm email이 켜져 있으면 여기로 온다.
-      throw new Error(
-        "회원가입 설정을 확인해주세요. (Supabase Authentication > Providers > Email > Confirm email을 꺼야 합니다)"
-      );
+    // Confirm email이 꺼져 있으면 가입 직후 로그인 상태가 된다. 승인 전까지는
+    // 로그인 상태가 아니어야 하므로 바로 끊는다. suppress 플래그로 그사이
+    // onAuthStateChange가 화면에 잠깐 로그인된 모습을 비추는 걸 막는다.
+    if (signUpData.session) {
+      suppressAuthEvent.current = true;
+      await supabase.auth.signOut();
+      suppressAuthEvent.current = false;
     }
 
-    const { error: rpcError } = await supabase.rpc("complete_signup", {
-      p_name: data.name,
-      p_phone: data.phone,
-      p_business_number: data.businessNumber,
-      p_company_name: data.company,
-      p_address: data.address ?? "",
-      p_roles: data.roles,
-      p_active_role: data.roles[0],
-      p_partner_categories: data.partnerCategories ?? [],
-    });
-
-    // 가입 후 바로 로그인하지 않음 - 관리자 승인 대기.
-    // suppress 플래그로 onAuthStateChange의 잠깐 로그인 상태를 화면에 안 비친다.
-    suppressAuthEvent.current = true;
-    await supabase.auth.signOut();
-    suppressAuthEvent.current = false;
-
-    if (rpcError) {
-      throw new Error("회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.");
-    }
+    return { needsEmailConfirmation: !signUpData.session };
   };
 
   const findEmailByPhone = async (name: string, phone: string) => {

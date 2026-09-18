@@ -188,7 +188,7 @@ function SignupContent() {
     }
 
     try {
-      await signup({
+      const { needsEmailConfirmation } = await signup({
         email: form.email,
         password: form.password,
         name: form.name,
@@ -199,7 +199,11 @@ function SignupContent() {
         roles: form.roles,
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
       });
-      alert("회원가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.");
+      alert(
+        needsEmailConfirmation
+          ? "회원가입이 접수되었습니다.\n\n1. 방금 보낸 메일의 링크를 눌러 이메일을 인증해주세요.\n2. 관리자 승인 후 로그인할 수 있습니다."
+          : "회원가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다."
+      );
       router.push("/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "회원가입에 실패했습니다.");
