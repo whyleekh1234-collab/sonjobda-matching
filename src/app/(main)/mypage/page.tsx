@@ -4,6 +4,17 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyCompanyRequests, listPartnerRequests } from "@/lib/data/requests";
+import {
+  listCompanyMembers,
+  createCompanyInvite,
+  delegateCompanyAdmin,
+  setMemberStatus,
+  deleteMyAccount,
+  updateMyProfile,
+  updateMyPartnerCategories,
+  changeMyPassword,
+  requestCompanyInfoChange,
+} from "@/lib/data/notices";
 import type { PartnerCategory } from "@/types/auth";
 
 const allPartnerCategories: PartnerCategory[] = [
@@ -67,12 +78,8 @@ export default function MyPage() {
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
     setEditForm({ name: user.name, phone: user.phone || "" });
-    // 같은 회사 멤버 조회
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const members = allUsers
-      .filter((u: { company: string; businessNumber: string }) => u.businessNumber === user.businessNumber)
-      .map((u: { id: string; name: string; email: string; isCompanyAdmin?: boolean; status?: string }) => ({ id: u.id, name: u.name, email: u.email, isCompanyAdmin: u.isCompanyAdmin, status: u.status }));
-    setCompanyMembers(members);
+    // 같은 회사 멤버는 RLS가 허용하는 범위(같은 company_id)에서 조회된다.
+    listCompanyMembers(user.companyId).then(setCompanyMembers).catch(console.error);
   }, [user, router]);
 
   if (!user) return null;
@@ -82,119 +89,98 @@ export default function MyPage() {
   const myRequests = summary.myRequests;
   const submittedQuotes = summary.submittedQuotes;
 
-  const saveProfile = () => {
-    if (editForm.name.trim().length < 2) { alert("이름은 2자 이상 입력해주세요."); return; }
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const idx = allUsers.findIndex((u: { id: string }) => u.id === user.id);
-    if (idx !== -1) {
-      allUsers[idx].name = editForm.name;
-      allUsers[idx].phone = editForm.phone;
-      localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
-      const updated = { ...user, name: editForm.name, phone: editForm.phone };
-      localStorage.setItem("sonjobda_user", JSON.stringify(updated));
-      alert("프로필이 수정되었습니다. 새로고침 후 반영됩니다.");
-      setEditMode(false);
+  const run = async (fn: () => Promise<void>, successMessage?: string) => {
+    try {
+      await fn();
+      if (successMessage) alert(successMessage);
+      return true;
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '처리하지 못했습니다.');
+      return false;
     }
   };
 
-  const changePassword = () => {
-    if (!pwForm.current) { alert("현재 비밀번호를 입력해주세요."); return; }
-    if (pwForm.newPw.length < 8) { alert("새 비밀번호는 8자 이상이어야 합니다."); return; }
-    if (pwForm.newPw !== pwForm.confirm) { alert("새 비밀번호가 일치하지 않습니다."); return; }
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const idx = allUsers.findIndex((u: { id: string }) => u.id === user.id);
-    if (idx === -1) return;
-    if (allUsers[idx].password !== pwForm.current) { alert("현재 비밀번호가 올바르지 않습니다."); return; }
-    allUsers[idx].password = pwForm.newPw;
-    localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
-    setPwForm({ current: "", newPw: "", confirm: "" });
-    alert("비밀번호가 변경되었습니다.");
+  const saveProfile = async () => {
+    if (editForm.name.trim().length < 2) { alert('이름은 2자 이상 입력해주세요.'); return; }
+    const ok = await run(() => updateMyProfile(editForm.name, editForm.phone), '프로필이 수정되었습니다. 새로고침 후 반영됩니다.');
+    if (ok) setEditMode(false);
   };
 
-  const deleteAccount = () => {
+  // 비밀번호 확인은 Supabase가 세션으로 대신한다. 예전에는 저장된 평문과
+  // 비교했는데, 이제 비밀번호를 앱이 들고 있지 않다.
+  const changePassword = async () => {
+    if (pwForm.newPw.length < 8) { alert('새 비밀번호는 8자 이상이어야 합니다.'); return; }
+    if (pwForm.newPw !== pwForm.confirm) { alert('새 비밀번호가 일치하지 않습니다.'); return; }
+    const ok = await run(() => changeMyPassword(pwForm.newPw), '비밀번호가 변경되었습니다.');
+    if (ok) setPwForm({ current: '', newPw: '', confirm: '' });
+  };
+
+  const deleteAccount = async () => {
     if (!confirm("회원 탈퇴를 진행하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.")) return;
-    if (!confirm("정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const filtered = allUsers.filter((u: { id: string }) => u.id !== user.id);
-    localStorage.setItem("sonjobda_users", JSON.stringify(filtered));
-    logout();
-    alert("회원 탈퇴가 완료되었습니다.");
-    router.push("/");
+    if (!confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    const ok = await run(() => deleteMyAccount());
+    if (!ok) return;
+    await logout();
+    alert('회원 탈퇴가 완료되었습니다.');
+    router.push('/');
   };
 
   const isAdmin = user.isCompanyAdmin;
 
-  const reloadMembers = () => {
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    setCompanyMembers(allUsers
-      .filter((u: { businessNumber: string }) => u.businessNumber === user.businessNumber)
-      .map((u: { id: string; name: string; email: string; isCompanyAdmin?: boolean; status?: string }) => ({ id: u.id, name: u.name, email: u.email, isCompanyAdmin: u.isCompanyAdmin, status: u.status })));
+  const reloadMembers = async () => {
+    try {
+      setCompanyMembers(await listCompanyMembers(user.companyId));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const delegateAdmin = (memberId: string) => {
+  const delegateAdmin = async (memberId: string) => {
     if (!confirm("이 멤버에게 회사 관리자 권한을 위임하시겠습니까?\n본인의 관리자 권한은 해제됩니다.")) return;
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const myIdx = allUsers.findIndex((u: { id: string }) => u.id === user.id);
-    const targetIdx = allUsers.findIndex((u: { id: string }) => u.id === memberId);
-    if (myIdx !== -1) allUsers[myIdx].isCompanyAdmin = false;
-    if (targetIdx !== -1) allUsers[targetIdx].isCompanyAdmin = true;
-    localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
-    const updated = { ...user, isCompanyAdmin: false };
-    localStorage.setItem("sonjobda_user", JSON.stringify(updated));
-    reloadMembers();
-    alert("관리자 권한이 위임되었습니다.");
+    if (await run(() => delegateCompanyAdmin(memberId), "관리자 권한이 위임되었습니다.")) reloadMembers();
   };
 
-  const deactivateMember = (memberId: string) => {
+  const deactivateMember = async (memberId: string) => {
     if (!confirm("이 멤버를 비활성화하시겠습니까?")) return;
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const idx = allUsers.findIndex((u: { id: string }) => u.id === memberId);
-    if (idx !== -1) {
-      allUsers[idx].status = "suspended";
-      localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
+    if (await run(() => setMemberStatus(memberId, "suspended"), "멤버가 비활성화되었습니다.")) reloadMembers();
+  };
+
+  const activateMember = async (memberId: string) => {
+    if (await run(() => setMemberStatus(memberId, "approved"))) reloadMembers();
+  };
+
+  // 초대 링크에는 이메일이 아니라 토큰이 들어간다. 예전에는 이메일만 알면
+  // 누구나 그 회사로 가입할 수 있었다.
+  const sendInvite = async () => {
+    if (!inviteEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)) {
+      alert("올바른 이메일을 입력해주세요.");
+      return;
     }
-    reloadMembers();
-    alert("멤버가 비활성화되었습니다.");
-  };
-
-  const activateMember = (memberId: string) => {
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const idx = allUsers.findIndex((u: { id: string }) => u.id === memberId);
-    if (idx !== -1) {
-      allUsers[idx].status = "approved";
-      localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
+    try {
+      const invite = await createCompanyInvite(inviteEmail);
+      const inviteLink = `${window.location.origin}/signup?invite=${invite.token}`;
+      try {
+        await navigator.clipboard.writeText(inviteLink);
+        alert(
+          `초대 링크가 클립보드에 복사되었습니다.\n${invite.email}에게 직접 전달해주세요.\n\n링크는 14일 후 만료됩니다.\n※ 이메일 자동 발송은 6단계에서 연결합니다.`
+        );
+      } catch {
+        prompt("아래 링크를 복사하여 전달해주세요:", inviteLink);
+      }
+      setInviteEmail("");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "초대하지 못했습니다.");
     }
-    reloadMembers();
   };
 
-  const sendInvite = () => {
-    if (!inviteEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)) { alert("올바른 이메일을 입력해주세요."); return; }
-    const invites = JSON.parse(localStorage.getItem("sonjobda_invites") || "[]");
-    invites.push({ id: crypto.randomUUID(), email: inviteEmail, company: user.company, businessNumber: user.businessNumber, invitedBy: user.name, createdAt: new Date().toISOString() });
-    localStorage.setItem("sonjobda_invites", JSON.stringify(invites));
-    const inviteLink = `${window.location.origin}/signup?invite=${encodeURIComponent(inviteEmail)}`;
-    navigator.clipboard.writeText(inviteLink).then(() => {
-      alert(`초대 링크가 클립보드에 복사되었습니다.\n${inviteEmail}에게 직접 전달해주세요.\n\n※ 백엔드 구축 후 이메일 자동 발송으로 전환 예정`);
-    }).catch(() => {
-      prompt("아래 링크를 복사하여 전달해주세요:", inviteLink);
-    });
-    setInviteEmail("");
-  };
-
-  const submitCompanyInfoChange = () => {
-    if (!companyChangeRequest.trim()) { alert("변경 요구사항을 입력해주세요."); return; }
-    const notifications = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    notifications.push({
-      id: crypto.randomUUID(),
-      userId: "admin",
-      message: `[회사정보 변경 요청] ${user.company} (${user.businessNumber})\n요청자: ${user.name} (${user.email})\n\n요구사항:\n${companyChangeRequest}`,
-      read: false,
-      createdAt: new Date().toISOString(),
-    });
-    localStorage.setItem("sonjobda_notifications", JSON.stringify(notifications));
+  const submitCompanyInfoChange = async () => {
+    const ok = await run(
+      () => requestCompanyInfoChange(companyChangeRequest),
+      '회사 정보 변경이 요청되었습니다. 관리자 확인 후 반영됩니다.'
+    );
+    if (!ok) return;
     setShowCompanyChangeModal(false);
-    setCompanyChangeRequest("");
-    alert("회사 정보 변경이 요청되었습니다. 관리자 확인 후 반영됩니다.");
+    setCompanyChangeRequest('');
   };
 
   const statusLabel = !user.status || user.status === "pending" ? "승인 대기" : user.status === "approved" ? "활성" : user.status === "restricted" ? "제한" : "정지";
@@ -316,21 +302,14 @@ export default function MyPage() {
                           ))}
                         </div>
                         <div className="mt-3 flex gap-2">
-                          <button onClick={() => {
+                          <button onClick={async () => {
                             if (selectedCategories.length === 0) { alert("회사유형을 하나 이상 선택해주세요."); return; }
-                            const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-                            const idx = allUsers.findIndex((u: { id: string }) => u.id === user.id);
-                            if (idx !== -1) {
-                              allUsers[idx].partnerCategories = selectedCategories;
-                              allUsers[idx].allowCategoryEdit = false;
-                              localStorage.setItem("sonjobda_users", JSON.stringify(allUsers));
-                            }
+                            const ok = await run(
+                              () => updateMyPartnerCategories(selectedCategories),
+                              "회사유형이 수정되었습니다."
+                            );
+                            if (!ok) return;
                             setEditingCategories(false);
-                            // 관리자에게 알림
-                            const notifications = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-                            notifications.push({ id: crypto.randomUUID(), userId: "admin", message: `[회사유형 변경 완료] ${user.company} - ${user.name}님이 회사유형을 변경했습니다.\n변경: ${selectedCategories.join(", ")}`, read: false, createdAt: new Date().toISOString() });
-                            localStorage.setItem("sonjobda_notifications", JSON.stringify(notifications));
-                            alert("회사유형이 수정되었습니다.");
                             window.location.reload();
                           }}
                             className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark">저장</button>

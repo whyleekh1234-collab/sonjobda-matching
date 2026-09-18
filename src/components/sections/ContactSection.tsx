@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createInquiry } from "@/lib/data/notices";
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
@@ -11,20 +12,23 @@ export default function ContactSection() {
     type: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 랜딩의 상담 신청은 비회원도 쓴다. 로그인 없이 넣을 수 있게 열려 있고,
+  // 대신 넣을 수 있는 칸이 내용으로 제한돼 있다(처리 상태·답변은 운영자 몫).
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const inquiry = {
-      id: crypto.randomUUID(),
-      ...formData,
-      status: "new",
-      createdAt: new Date().toISOString(),
-    };
-    const inquiries = JSON.parse(localStorage.getItem("sonjobda_inquiries") || "[]");
-    inquiries.push(inquiry);
-    localStorage.setItem("sonjobda_inquiries", JSON.stringify(inquiries));
-    alert("상담 신청이 접수되었습니다. 빠른 시일 내에 연락드리겠습니다.");
-    setFormData({ company: "", name: "", email: "", phone: "", type: "", message: "" });
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await createInquiry(formData);
+      alert("상담 신청이 접수되었습니다. 빠른 시일 내에 연락드리겠습니다.");
+      setFormData({ company: "", name: "", email: "", phone: "", type: "", message: "" });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "접수하지 못했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (

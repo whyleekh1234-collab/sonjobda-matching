@@ -1,15 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  listMyNotifications,
+  listNotices,
+  listReadNoticeIds,
+  markNoticesRead,
+  markNotificationRead as markNotificationReadApi,
+  markAllNotificationsRead as markAllNotificationsReadApi,
+  replyToNotification,
+  editNotificationReply,
+  type NotificationReply,
+} from "@/lib/data/notices";
 import type { Notification, Notice } from "@/types/auth";
 
 export default function NotificationsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"notifications" | "notices">("notifications");
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<(Notification & { replies?: NotificationReply[] })[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [readNoticeIds, setReadNoticeIds] = useState<string[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -17,100 +28,77 @@ export default function NotificationsPage() {
   const [editingReply, setEditingReply] = useState<{ notifId: string; replyIdx: number } | null>(null);
   const [editReplyText, setEditReplyText] = useState("");
 
+  const reload = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [notifs, noticeList, readIds] = await Promise.all([
+        listMyNotifications(),
+        listNotices(),
+        listReadNoticeIds(),
+      ]);
+      setNotifications(notifs);
+      setNotices(noticeList);
+      setReadNoticeIds(readIds);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       router.push("/login");
       return;
     }
-    // 알림 로드
-    const storedNotifs = localStorage.getItem("sonjobda_notifications");
-    if (storedNotifs) {
-      const all: Notification[] = JSON.parse(storedNotifs);
-      setNotifications(all.filter((n) => n.userId === user.id));
+    reload();
+  }, [user, router, reload]);
+
+  const run = async (fn: () => Promise<void>, successMessage?: string) => {
+    try {
+      await fn();
+      await reload();
+      if (successMessage) alert(successMessage);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
     }
-    // 공지사항 로드
-    const storedNotices = localStorage.getItem("sonjobda_notices");
-    if (storedNotices) setNotices(JSON.parse(storedNotices));
-    // 읽은 공지 로드
-    const storedRead = localStorage.getItem(`sonjobda_notices_read_${user.id}`);
-    if (storedRead) setReadNoticeIds(JSON.parse(storedRead));
-  }, [user, router]);
-
-  const markNotificationRead = (id: string) => {
-    const all: Notification[] = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    const updated = all.map((n) => (n.id === id ? { ...n, read: true } : n));
-    localStorage.setItem("sonjobda_notifications", JSON.stringify(updated));
-    setNotifications(updated.filter((n) => n.userId === user?.id));
   };
 
-  const markAllNotificationsRead = () => {
-    const all: Notification[] = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    const updated = all.map((n) => (n.userId === user?.id ? { ...n, read: true } : n));
-    localStorage.setItem("sonjobda_notifications", JSON.stringify(updated));
-    setNotifications(updated.filter((n) => n.userId === user?.id));
-  };
+  const markNotificationRead = (id: string) => run(() => markNotificationReadApi(id));
+
+  const markAllNotificationsRead = () => run(() => markAllNotificationsReadApi());
 
   const markNoticeRead = (noticeId: string) => {
-    if (!user) return;
-    const updated = [...readNoticeIds, noticeId];
-    setReadNoticeIds(updated);
-    localStorage.setItem(`sonjobda_notices_read_${user.id}`, JSON.stringify(updated));
+    if (!user || readNoticeIds.includes(noticeId)) return;
+    setReadNoticeIds((prev) => [...prev, noticeId]);
+    markNoticesRead([noticeId], user.id).catch(console.error);
   };
 
   const markAllNoticesRead = () => {
     if (!user) return;
-    const allIds = notices.map((n) => n.id);
-    setReadNoticeIds(allIds);
-    localStorage.setItem(`sonjobda_notices_read_${user.id}`, JSON.stringify(allIds));
+    const unread = notices.map((n) => n.id).filter((id) => !readNoticeIds.includes(id));
+    if (unread.length === 0) return;
+    setReadNoticeIds(notices.map((n) => n.id));
+    markNoticesRead(unread, user.id).catch(console.error);
   };
 
   const sendReply = (notifId: string) => {
     if (!replyText.trim() || !user) return;
-    // 관리자에게 알림 발송
-    const all = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    all.push({
-      id: crypto.randomUUID(),
-      userId: "admin",
-      message: `[${user.company} ${user.name}님 답변] ${replyText}`,
-      read: false,
-      createdAt: new Date().toISOString(),
-    });
-    // 원본 알림에 답변 기록 추가
-    const notifIdx = all.findIndex((n: { id: string }) => n.id === notifId);
-    if (notifIdx !== -1) {
-      if (!all[notifIdx].replies) all[notifIdx].replies = [];
-      all[notifIdx].replies.push({ from: user.name, company: user.company, message: replyText, createdAt: new Date().toISOString() });
-    }
-    localStorage.setItem("sonjobda_notifications", JSON.stringify(all));
+    const text = replyText;
     setReplyingTo(null);
     setReplyText("");
-    // 새로고침
-    setNotifications(all.filter((n: Notification) => n.userId === user.id));
-    alert("답변이 전송되었습니다.");
+    run(() => replyToNotification(notifId, text), "답변이 전송되었습니다.");
   };
 
   const updateReply = (notifId: string, replyIdx: number) => {
     if (!editReplyText.trim() || !user) return;
-    const all = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    const notifIdx = all.findIndex((n: { id: string }) => n.id === notifId);
-    if (notifIdx !== -1 && all[notifIdx].replies?.[replyIdx]) {
-      all[notifIdx].replies[replyIdx].message = editReplyText;
-      localStorage.setItem("sonjobda_notifications", JSON.stringify(all));
-      setNotifications(all.filter((n: Notification) => n.userId === user.id));
-    }
+    const text = editReplyText;
     setEditingReply(null);
     setEditReplyText("");
+    run(() => editNotificationReply(notifId, replyIdx, text));
   };
 
   const deleteReply = (notifId: string, replyIdx: number) => {
     if (!confirm("답변을 삭제하시겠습니까?") || !user) return;
-    const all = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    const notifIdx = all.findIndex((n: { id: string }) => n.id === notifId);
-    if (notifIdx !== -1 && all[notifIdx].replies) {
-      all[notifIdx].replies.splice(replyIdx, 1);
-      localStorage.setItem("sonjobda_notifications", JSON.stringify(all));
-      setNotifications(all.filter((n: Notification) => n.userId === user.id));
-    }
+    run(() => editNotificationReply(notifId, replyIdx, null));
   };
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;

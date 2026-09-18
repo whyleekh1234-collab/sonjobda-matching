@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Building2, Handshake } from "lucide-react";
+import { getInviteByToken } from "@/lib/data/notices";
 import type { PartnerCategory } from "@/types/auth";
 
 const partnerCategories: PartnerCategory[] = [
@@ -46,6 +47,7 @@ function SignupContent() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inviteInfo, setInviteInfo] = useState<{ company: string; businessNumber: string; invitedBy: string } | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
 
   // 쿼리 파라미터로 전달된 카테고리 미리 선택 / 초대 링크 처리
   useEffect(() => {
@@ -57,28 +59,31 @@ function SignupContent() {
         partnerCategories: [category as PartnerCategory],
       }));
     }
-    const inviteEmail = searchParams.get("invite");
-    if (inviteEmail) {
-      setForm((prev) => ({ ...prev, email: decodeURIComponent(inviteEmail) }));
-      checkInvite(decodeURIComponent(inviteEmail));
+    // 초대 링크에는 토큰이 들어 있다. 토큰으로만 회사 정보를 확인할 수
+    // 있어서, 남의 이메일을 안다고 그 회사에 들어갈 수 없다.
+    const token = searchParams.get("invite");
+    if (token) {
+      setInviteToken(token);
+      getInviteByToken(token).then((invite) => {
+        if (!invite) {
+          setInviteToken(null);
+          setError("초대 링크가 유효하지 않거나 만료되었습니다.");
+          return;
+        }
+        setInviteInfo({
+          company: invite.companyName,
+          businessNumber: invite.businessNumber,
+          invitedBy: invite.invitedByName,
+        });
+        setForm((prev) => ({
+          ...prev,
+          email: invite.email,
+          company: invite.companyName,
+          businessNumber: invite.businessNumber,
+        }));
+      });
     }
   }, [searchParams]);
-
-  // 이메일 입력 시 초대 여부 확인
-  const checkInvite = (email: string) => {
-    const invites = JSON.parse(localStorage.getItem("sonjobda_invites") || "[]");
-    const invite = invites.find((inv: { email: string }) => inv.email.toLowerCase() === email.toLowerCase());
-    if (invite) {
-      setInviteInfo({ company: invite.company, businessNumber: invite.businessNumber, invitedBy: invite.invitedBy });
-      setForm((prev) => ({
-        ...prev,
-        company: invite.company,
-        businessNumber: invite.businessNumber,
-      }));
-    } else {
-      setInviteInfo(null);
-    }
-  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -197,6 +202,7 @@ function SignupContent() {
         phone: form.phone,
         address: form.address,
         roles: form.roles,
+        ...(inviteToken && { inviteToken }),
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
       });
       alert(
@@ -325,9 +331,9 @@ function SignupContent() {
                 required
                 value={form.email}
                 onChange={handleChange}
-                onBlur={(e) => checkInvite(e.target.value)}
+                readOnly={!!inviteInfo}
                 placeholder="example@company.com"
-                className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                className={`mt-1 w-full rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
               />
               {inviteInfo && (
                 <p className="mt-1 text-xs text-primary">{inviteInfo.invitedBy}님이 {inviteInfo.company}으로 초대했습니다. 회사명과 사업자등록번호가 자동 입력되었습니다.</p>

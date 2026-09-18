@@ -19,6 +19,7 @@ interface AuthContextType {
     address?: string;
     roles: Role[];
     partnerCategories?: PartnerCategory[];
+    inviteToken?: string;
   }) => Promise<{ needsEmailConfirmation: boolean }>;
   findEmailByPhone: (name: string, phone: string) => Promise<string>;
   findEmailByEmail: (name: string, email: string) => Promise<string>;
@@ -154,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     address?: string;
     roles: Role[];
     partnerCategories?: PartnerCategory[];
+    inviteToken?: string;
   }) => {
     // 폼 값을 계정 메타데이터로 넘긴다. 회사와 프로필 생성은 auth.users의
     // on_auth_user_created 트리거가 같은 트랜잭션 안에서 처리한다.
@@ -172,6 +174,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           roles: data.roles,
           active_role: data.roles[0],
           partner_categories: data.partnerCategories ?? [],
+          // 이미 등록된 회사에 합류하려면 이 토큰이 있어야 한다.
+          // 트리거가 검사하고, 없으면 가입 자체가 취소된다.
+          invite_token: data.inviteToken ?? "",
         },
       },
     });

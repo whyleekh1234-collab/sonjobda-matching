@@ -10,6 +10,7 @@ import {
   setQuoteStatusAsClient,
   acceptQuote,
 } from "@/lib/data/requests";
+import { listNotices, listMyNotifications } from "@/lib/data/notices";
 import MatchContactPanel from "@/components/dashboard/MatchContact";
 import { statusLabels } from "@/types/matching";
 import type { MatchRequest, QuoteStatus } from "@/types/matching";
@@ -43,13 +44,16 @@ export default function ClientDashboard() {
   useEffect(() => { reloadRequests(); }, [reloadRequests]);
 
   useEffect(() => {
-    const storedNotices = localStorage.getItem("sonjobda_notices");
-    if (storedNotices) setNotices(JSON.parse(storedNotices));
-    const storedNotifs = localStorage.getItem("sonjobda_notifications");
-    if (storedNotifs && user) {
-      const all: Notification[] = JSON.parse(storedNotifs);
-      setNotifications(all.filter((n) => n.userId === user.id));
-    }
+    if (!user) return;
+    let alive = true;
+    Promise.all([listNotices(), listMyNotifications()])
+      .then(([noticeList, notifs]) => {
+        if (!alive) return;
+        setNotices(noticeList);
+        setNotifications(notifs);
+      })
+      .catch(console.error);
+    return () => { alive = false; };
   }, [user]);
 
   // 임시저장 확인

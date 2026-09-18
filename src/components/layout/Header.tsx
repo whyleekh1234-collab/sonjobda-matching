@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Workflow } from "lucide-react";
-import type { Notification } from "@/types/auth";
+import { listMyNotifications, listNotices, listReadNoticeIds } from "@/lib/data/notices";
 
 const navItems = [
   { label: "서비스 소개", href: "/#services" },
@@ -27,25 +27,35 @@ export default function Header() {
 
   useEffect(() => {
     if (!user) return;
-    const calcUnread = () => {
-      let count = 0;
-      const stored = localStorage.getItem("sonjobda_notifications");
-      if (stored) {
-        const all: Notification[] = JSON.parse(stored);
-        count += all.filter((n) => n.userId === user.id && !n.read).length;
+    let alive = true;
+
+    const calcUnread = async () => {
+      try {
+        const [notifs, notices, readIds] = await Promise.all([
+          listMyNotifications(),
+          listNotices(),
+          listReadNoticeIds(),
+        ]);
+        if (!alive) return;
+        setUnreadCount(
+          notifs.filter((n) => !n.read).length +
+            notices.filter((n) => !readIds.includes(n.id)).length
+        );
+      } catch {
+        // 배지는 부가 정보다. 실패해도 헤더는 그대로 뜬다.
       }
-      const notices = localStorage.getItem("sonjobda_notices");
-      if (notices) {
-        const readNotices = JSON.parse(localStorage.getItem(`sonjobda_notices_read_${user.id}`) || "[]");
-        const allNotices = JSON.parse(notices);
-        count += allNotices.filter((n: { id: string }) => !readNotices.includes(n.id)).length;
-      }
-      setUnreadCount(count);
     };
+
     calcUnread();
     window.addEventListener("focus", calcUnread);
-    const interval = setInterval(calcUnread, 3000);
-    return () => { window.removeEventListener("focus", calcUnread); clearInterval(interval); };
+    // 예전에는 localStorage라 3초마다 훑어도 공짜였다. 이제는 매번 서버를
+    // 부르므로 간격을 늘린다. 화면으로 돌아올 때도 어차피 다시 센다.
+    const interval = setInterval(calcUnread, 60000);
+    return () => {
+      alive = false;
+      window.removeEventListener("focus", calcUnread);
+      clearInterval(interval);
+    };
   }, [user]);
 
   const canSwitch = user && user.roles && user.roles.length >= 2;

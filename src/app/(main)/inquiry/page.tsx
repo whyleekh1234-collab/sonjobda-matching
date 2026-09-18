@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Inquiry } from "@/types/auth";
+import { listMyInquiries, createInquiry, type InquiryWithExtras } from "@/lib/data/notices";
 
 const inquiryTypes = [
   { value: "general", label: "일반 문의" },
@@ -19,48 +19,49 @@ export default function InquiryPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"new" | "history">("new");
   const [form, setForm] = useState({ type: "", title: "", message: "" });
-  const [myInquiries, setMyInquiries] = useState<(Inquiry & { title?: string; replies?: { from: string; message: string; createdAt: string }[] })[]>([]);
+  const [myInquiries, setMyInquiries] = useState<InquiryWithExtras[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
+  const reload = useCallback(async () => {
     if (!user) return;
-    const all = JSON.parse(localStorage.getItem("sonjobda_inquiries") || "[]");
-    setMyInquiries(all.filter((inq: Inquiry) => inq.email === user.email).reverse());
+    try {
+      setMyInquiries(await listMyInquiries());
+    } catch (err) {
+      console.error(err);
+    }
   }, [user]);
 
-  const reload = () => {
-    if (!user) return;
-    const all = JSON.parse(localStorage.getItem("sonjobda_inquiries") || "[]");
-    setMyInquiries(all.filter((inq: Inquiry) => inq.email === user.email).reverse());
-  };
+  useEffect(() => { reload(); }, [reload]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || isSubmitting) return;
     if (!form.type) { alert("문의 유형을 선택해주세요."); return; }
     if (!form.title.trim()) { alert("제목을 입력해주세요."); return; }
     if (!form.message.trim()) { alert("문의 내용을 입력해주세요."); return; }
 
-    const inquiry = {
-      id: crypto.randomUUID(),
-      company: user.company,
-      name: user.name,
-      email: user.email,
-      phone: user.phone || "",
-      type: form.type,
-      title: form.title,
-      message: form.message,
-      status: "new" as const,
-      createdAt: new Date().toISOString(),
-    };
-
-    const all = JSON.parse(localStorage.getItem("sonjobda_inquiries") || "[]");
-    all.push(inquiry);
-    localStorage.setItem("sonjobda_inquiries", JSON.stringify(all));
-    setForm({ type: "", title: "", message: "" });
-    reload();
-    alert("문의가 접수되었습니다.");
-    setActiveTab("history");
+    setIsSubmitting(true);
+    try {
+      await createInquiry({
+        company: user.company,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        type: form.type,
+        title: form.title,
+        message: form.message,
+        profileId: user.id,
+      });
+      setForm({ type: "", title: "", message: "" });
+      await reload();
+      alert("문의가 접수되었습니다.");
+      setActiveTab("history");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "접수하지 못했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!user) return null;

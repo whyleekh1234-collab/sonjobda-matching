@@ -10,6 +10,11 @@ import {
   withdrawMyQuote,
   getAttachmentUrl,
 } from "@/lib/data/requests";
+import {
+  listNotices,
+  listMyNotifications,
+  markNotificationRead as markNotificationReadApi,
+} from "@/lib/data/notices";
 import MatchContactPanel from "@/components/dashboard/MatchContact";
 import { quoteStatusLabels, defaultTimeline } from "@/types/matching";
 import type { MatchRequest, Quote, QuoteStatus, TimelineItem } from "@/types/matching";
@@ -56,21 +61,26 @@ export default function PartnerDashboard() {
 
   useEffect(() => { loadRequests(); }, [loadRequests]);
 
-  useEffect(() => {
-    const storedNotices = localStorage.getItem("sonjobda_notices");
-    if (storedNotices) setNotices(JSON.parse(storedNotices));
-    const storedNotifs = localStorage.getItem("sonjobda_notifications");
-    if (storedNotifs && user) {
-      const all: Notification[] = JSON.parse(storedNotifs);
-      setNotifications(all.filter((n) => n.userId === user.id));
+  const loadNotices = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [noticeList, notifs] = await Promise.all([listNotices(), listMyNotifications()]);
+      setNotices(noticeList);
+      setNotifications(notifs);
+    } catch (err) {
+      console.error(err);
     }
   }, [user]);
 
-  const markNotificationRead = (id: string) => {
-    const all: Notification[] = JSON.parse(localStorage.getItem("sonjobda_notifications") || "[]");
-    const updated = all.map((n) => (n.id === id ? { ...n, read: true } : n));
-    localStorage.setItem("sonjobda_notifications", JSON.stringify(updated));
-    setNotifications(updated.filter((n) => n.userId === user?.id));
+  useEffect(() => { loadNotices(); }, [loadNotices]);
+
+  const markNotificationRead = async (id: string) => {
+    try {
+      await markNotificationReadApi(id);
+      await loadNotices();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 의뢰서에서 위탁업무 파싱하여 타임라인 생성
