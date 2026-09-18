@@ -306,8 +306,10 @@ create policy profiles_update_self on profiles
   using (id = auth.uid())
   with check (id = auth.uid());
 
--- 권한 상승 차단: 승인 상태와 운영자 플래그는 본인이 못 바꾼다.
--- 회원 승인은 5단계에서 서버 라우트로만 처리한다.
+-- 주의: 위 profiles_update_self는 "본인 행"까지만 제한한다. RLS 정책은 행
+-- 단위라 어떤 컬럼을 수정하는지는 통제하지 못한다. 즉 이 정책만으로는
+-- 회원이 자기 status나 is_platform_admin을 직접 바꿀 수 있다.
+-- 실제로 막는 것은 phase2_auth.sql의 컬럼 단위 grant다.
 create policy profiles_admin_write on profiles
   for all to authenticated
   using (is_platform_admin()) with check (is_platform_admin());

@@ -146,7 +146,30 @@ drop function if exists public.complete_signup(
 );
 
 -- ════════════════════════════════════════════════════════════
--- 3. 정리: 프로필 없이 남은 껍데기 계정 삭제
+-- 3. 권한 상승 차단: 수정 가능한 컬럼을 제한한다
+-- ════════════════════════════════════════════════════════════
+--
+-- RLS 정책은 행 단위라 컬럼을 가리지 못한다. profiles_update_self가
+-- "본인 행이면 수정 허용"만 정하고 있어서, 일반 회원이 아래 한 방으로
+-- 자기를 운영자로 만들 수 있었다. 실제로 뚫리는 것을 확인했다.
+--
+--   PATCH /rest/v1/profiles?id=eq.<본인 id>
+--   { "is_platform_admin": true, "status": "approved" }
+--
+-- 컬럼 단위 권한으로 막는다. PostgREST는 컬럼 권한을 그대로 존중한다.
+-- status와 is_platform_admin, is_company_admin, company_id, member_code는
+-- 이제 authenticated 권한으로는 아예 쓸 수 없다.
+--
+-- 운영자의 회원 승인은 5단계에서 서버 라우트 핸들러가 service_role 키로
+-- 처리한다. service_role은 이 제한을 받지 않는다.
+
+revoke update on public.profiles from authenticated;
+
+grant update (name, phone, active_role, partner_categories)
+  on public.profiles to authenticated;
+
+-- ════════════════════════════════════════════════════════════
+-- 4. 정리: 프로필 없이 남은 껍데기 계정 삭제
 -- ════════════════════════════════════════════════════════════
 --
 -- 트리거가 없던 동안 회원가입을 누르면 auth.users에만 행이 생기고 프로필은
@@ -158,7 +181,7 @@ delete from auth.users u
 where not exists (select 1 from profiles p where p.id = u.id);
 
 -- ════════════════════════════════════════════════════════════
--- 4. 실행 후 확인
+-- 5. 실행 후 확인
 -- ════════════════════════════════════════════════════════════
 --   select tgname from pg_trigger where tgname = 'on_auth_user_created';
 --
