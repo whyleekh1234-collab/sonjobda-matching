@@ -173,6 +173,7 @@ export default function PartnerDashboard() {
 
     setIsSaving(true);
     const uploaded = await uploadAttachmentIfAny(selectedRequest.id);
+    if (uploaded === null) { setIsSaving(false); return; }  // 첨부 실패 시 제출하지 않는다
     const ok = await writeQuote(selectedRequest.id, "quoted", { ...buildQuoteInput(), ...uploaded });
     setIsSaving(false);
     if (!ok) return;
@@ -194,6 +195,7 @@ export default function PartnerDashboard() {
     if (!user || !selectedRequest) return;
     setIsSaving(true);
     const uploaded = await uploadAttachmentIfAny(requestId);
+    if (uploaded === null) { setIsSaving(false); return; }
     const ok = await writeQuote(requestId, "reviewing", { ...buildQuoteInput(), ...uploaded });
     setIsSaving(false);
     if (!ok) return;
@@ -203,6 +205,10 @@ export default function PartnerDashboard() {
 
   // 첨부파일은 행에 base64로 담지 않고 Storage에 올린다. 5MB짜리 파일을
   // 문자열로 바꾸면 DB 행이 그만큼 부풀고 목록 조회까지 같이 느려진다.
+  //
+  // 업로드가 실패하면 null을 돌려준다. 예전에는 빈 객체를 돌려줘서 제출이
+  // 그대로 진행됐고, 첨부가 필수인데도 파일 없이 견적만 올라간 뒤
+  // "제출되었습니다"가 떴다.
   const uploadAttachmentIfAny = async (requestId: string) => {
     if (!attachment || !user) return {};
     try {
@@ -210,7 +216,7 @@ export default function PartnerDashboard() {
       return { attachmentPath: path, attachmentName: name };
     } catch (err) {
       alert(err instanceof Error ? err.message : "첨부파일 업로드에 실패했습니다.");
-      return {};
+      return null;
     }
   };
 

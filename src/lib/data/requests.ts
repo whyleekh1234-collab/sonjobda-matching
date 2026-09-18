@@ -280,12 +280,21 @@ export async function acceptQuote(quoteId: string): Promise<void> {
 
 const BUCKET = "quote-attachments";
 
+// Storage 키에는 한글을 쓸 수 없다(Invalid key로 거부된다). 실제 파일명은
+// 거의 다 한글이므로, 저장 경로는 안전한 문자로 만들고 원래 이름은 따로
+// 컬럼에 담는다. 화면에는 원래 이름이 그대로 보인다.
+function safeKey(name: string) {
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot + 1).replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) : "";
+  return ext ? `file.${ext}` : "file";
+}
+
 export async function uploadQuoteAttachment(
   companyId: string,
   requestId: string,
   file: File
 ): Promise<{ path: string; name: string }> {
-  const path = `${companyId}/${requestId}/${Date.now()}-${file.name}`;
+  const path = `${companyId}/${requestId}/${Date.now()}-${safeKey(file.name)}`;
   const { error } = await createClient().storage.from(BUCKET).upload(path, file, { upsert: true });
   if (error) throw new Error(error.message);
   return { path, name: file.name };
