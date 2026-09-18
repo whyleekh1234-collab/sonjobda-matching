@@ -17,7 +17,7 @@ import {
 import type { Notification, Notice } from "@/types/auth";
 
 export default function NotificationsPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"notifications" | "notices">("notifications");
   const [notifications, setNotifications] = useState<(Notification & { replies?: NotificationReply[] })[]>([]);
@@ -45,12 +45,15 @@ export default function NotificationsPage() {
   }, [user]);
 
   useEffect(() => {
+    // 세션 확인이 끝나기 전에는 판단하지 않는다. 확인 중에도 user는 잠깐
+    // null이라, 이걸 빼면 로그인한 사람도 로그인 화면으로 튕긴다.
+    if (isLoading) return;
     if (!user) {
       router.push("/login");
       return;
     }
     reload();
-  }, [user, router, reload]);
+  }, [user, router, reload, isLoading]);
 
   const run = async (fn: () => Promise<void>, successMessage?: string) => {
     try {
@@ -104,6 +107,13 @@ export default function NotificationsPage() {
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
   const unreadNoticeCount = notices.filter((n) => !readNoticeIds.includes(n.id)).length;
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-foreground/50">불러오는 중...</div>
+      </div>
+    );
+  }
   if (!user) return null;
 
   return (

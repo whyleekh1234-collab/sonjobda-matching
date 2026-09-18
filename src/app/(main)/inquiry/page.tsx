@@ -16,7 +16,7 @@ const inquiryTypes = [
 ];
 
 export default function InquiryPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<"new" | "history">("new");
   const [form, setForm] = useState({ type: "", title: "", message: "" });
   const [myInquiries, setMyInquiries] = useState<InquiryWithExtras[]>([]);
@@ -64,6 +64,13 @@ export default function InquiryPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-foreground/50">불러오는 중...</div>
+      </div>
+    );
+  }
   if (!user) return null;
 
   return (

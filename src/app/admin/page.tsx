@@ -23,6 +23,12 @@ import {
   type AdminInquiry as Inquiry,
   type AdminNotification,
 } from "@/lib/data/admin";
+import {
+  listAllChangeRequests,
+  reviewChangeRequest,
+  FIELD_LABELS,
+  type CompanyChangeRequest,
+} from "@/lib/data/changeRequests";
 import { listPartnerRequests } from "@/lib/data/requests";
 import type { MatchingRequest, Notice } from "@/types/auth";
 
@@ -92,6 +98,7 @@ export default function AdminDashboard() {
     else { setMatchingSortBy(key); setMatchingSortDir("asc"); }
   };
   const [adminNotifications, setAdminNotifications] = useState<AdminNotification[]>([]);
+  const [changeRequests, setChangeRequests] = useState<CompanyChangeRequest[]>([]);
   const [adminReplyText, setAdminReplyText] = useState("");
   const [inquiryReplyingTo, setInquiryReplyingTo] = useState<string | null>(null);
   const [inquiryReplyText, setInquiryReplyText] = useState("");
@@ -120,6 +127,15 @@ export default function AdminDashboard() {
       setAllRequests(requestList);
       setNotices(noticeList);
       setAdminNotifications(notifList);
+    } catch (err) {
+      console.error(err);
+    }
+
+    // 변경 요청은 따로 불러온다. 이것 하나가 실패해도 회원·의뢰·문의가
+    // 같이 사라지면 안 된다. Promise.all에 묶었다가 테이블이 없는 동안
+    // 관리자 화면 전체가 비는 일이 있었다.
+    try {
+      setChangeRequests(await listAllChangeRequests());
     } catch (err) {
       console.error(err);
     }
@@ -377,8 +393,67 @@ export default function AdminDashboard() {
             const matchStatus = userFilterStatus === "all" || u.status === userFilterStatus || (!u.status && userFilterStatus === "pending");
             return matchSearch && matchRole && matchStatus;
           });
+          const pendingChanges = changeRequests.filter((r) => r.status === "pending");
           return (
           <div className="mt-8">
+            {/* 회사 정보 변경 요청 */}
+            {pendingChanges.length > 0 && (
+              <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/40 p-6">
+                <h3 className="text-base font-bold text-foreground">
+                  회사 정보 변경 요청 {pendingChanges.length}건
+                </h3>
+                <p className="mt-1 text-xs text-foreground/50">
+                  승인하면 회사 정보에 그대로 반영되고 요청자에게 알림이 갑니다.
+                </p>
+                <div className="mt-4 space-y-3">
+                  {pendingChanges.map((r) => (
+                    <div key={r.id} className="rounded-xl border border-border bg-background p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-foreground">
+                          {r.companyName} <span className="font-normal text-foreground/50">· {r.requesterName}</span>
+                        </p>
+                        <span className="text-xs text-foreground/40">
+                          {new Date(r.createdAt).toLocaleString("ko-KR")}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 space-y-1 text-sm">
+                        {Object.entries(r.after).map(([key, value]) => (
+                          <p key={key}>
+                            <span className="text-foreground/40">{FIELD_LABELS[key] ?? key}</span>{" "}
+                            <span className="text-foreground/40 line-through">
+                              {String(r.before[key as keyof typeof r.before] ?? "-")}
+                            </span>{" "}
+                            → <span className="font-semibold text-foreground">{String(value)}</span>
+                          </p>
+                        ))}
+                      </div>
+
+                      {r.reason && (
+                        <p className="mt-2 rounded-lg bg-muted p-3 text-xs text-foreground/70">
+                          사유: {r.reason}
+                        </p>
+                      )}
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button onClick={() => run(() => reviewChangeRequest(r.id, true), "변경 내용이 반영되었습니다.")}
+                          className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary-dark">
+                          승인하고 반영
+                        </button>
+                        <button onClick={() => {
+                          const note = prompt("반려 사유를 입력하세요 (요청자에게 전달됩니다)");
+                          if (note === null) return;
+                          run(() => reviewChangeRequest(r.id, false, note), "반려 처리했습니다.");
+                        }}
+                          className="rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50">
+                          반려
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* 검색 + 필터 */}
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative flex-1 max-w-md">

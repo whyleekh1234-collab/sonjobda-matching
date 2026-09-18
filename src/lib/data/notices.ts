@@ -80,13 +80,6 @@ export async function editNotificationReply(
   if (error) throw new Error(error.message);
 }
 
-export async function requestCompanyInfoChange(message: string): Promise<void> {
-  const { error } = await createClient().rpc("request_company_info_change", {
-    p_message: message,
-  });
-  if (error) throw new Error(error.message);
-}
-
 // ── 공지 ────────────────────────────────────────────────────
 
 export async function listNotices(): Promise<Notice[]> {

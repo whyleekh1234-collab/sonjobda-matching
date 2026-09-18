@@ -13,8 +13,13 @@ import {
   updateMyProfile,
   updateMyPartnerCategories,
   changeMyPassword,
-  requestCompanyInfoChange,
 } from "@/lib/data/notices";
+import {
+  listMyChangeRequests,
+  submitChangeRequest,
+  FIELD_LABELS,
+  type CompanyChangeRequest,
+} from "@/lib/data/changeRequests";
 import type { PartnerCategory } from "@/types/auth";
 
 const allPartnerCategories: PartnerCategory[] = [
@@ -22,7 +27,7 @@ const allPartnerCategories: PartnerCategory[] = [
 ];
 
 export default function MyPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "password" | "company">("profile");
   const [editMode, setEditMode] = useState(false);
@@ -32,6 +37,8 @@ export default function MyPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [showCompanyChangeModal, setShowCompanyChangeModal] = useState(false);
   const [companyChangeRequest, setCompanyChangeRequest] = useState("");
+  const [changeForm, setChangeForm] = useState({ name: "", businessNumber: "", address: "" });
+  const [changeRequests, setChangeRequests] = useState<CompanyChangeRequest[]>([]);
   const [editingCategories, setEditingCategories] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<PartnerCategory[]>([]);
   const [summary, setSummary] = useState({
@@ -76,12 +83,23 @@ export default function MyPage() {
   }, [user]);
 
   useEffect(() => {
+    // 세션 확인이 끝나기 전에는 판단하지 않는다. 확인 중에도 user는 잠깐
+    // null이라, 이걸 빼면 로그인한 사람도 로그인 화면으로 튕긴다.
+    if (isLoading) return;
     if (!user) { router.push("/login"); return; }
     setEditForm({ name: user.name, phone: user.phone || "" });
     // 같은 회사 멤버는 RLS가 허용하는 범위(같은 company_id)에서 조회된다.
     listCompanyMembers(user.companyId).then(setCompanyMembers).catch(console.error);
-  }, [user, router]);
+    listMyChangeRequests().then(setChangeRequests).catch(console.error);
+  }, [user, router, isLoading]);
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-foreground/50">불러오는 중...</div>
+      </div>
+    );
+  }
   if (!user) return null;
 
   // 활동 요약
@@ -188,12 +206,27 @@ export default function MyPage() {
 
   const submitCompanyInfoChange = async () => {
     const ok = await run(
-      () => requestCompanyInfoChange(companyChangeRequest),
-      '회사 정보 변경이 요청되었습니다. 관리자 확인 후 반영됩니다.'
+      () => submitChangeRequest({
+        name: changeForm.name,
+        businessNumber: changeForm.businessNumber,
+        address: changeForm.address,
+        reason: companyChangeRequest,
+      }),
+      "회사 정보 변경이 요청되었습니다. 관리자 승인 후 반영됩니다."
     );
     if (!ok) return;
     setShowCompanyChangeModal(false);
-    setCompanyChangeRequest('');
+    setCompanyChangeRequest("");
+    setChangeForm({ name: "", businessNumber: "", address: "" });
+    loadChangeRequests();
+  };
+
+  const loadChangeRequests = async () => {
+    try {
+      setChangeRequests(await listMyChangeRequests());
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const statusLabel = !user.status || user.status === "pending" ? "승인 대기" : user.status === "approved" ? "활성" : user.status === "restricted" ? "제한" : "정지";
@@ -434,8 +467,47 @@ export default function MyPage() {
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-foreground/40">회사명</span><p className="mt-0.5 font-medium text-foreground">{user.company}</p></div>
                 <div><span className="text-foreground/40">사업자등록번호</span><p className="mt-0.5 font-medium text-foreground">{user.businessNumber}</p></div>
+                <div className="col-span-2"><span className="text-foreground/40">주소</span><p className="mt-0.5 font-medium text-foreground">{user.address || "-"}</p></div>
               </div>
               {isAdmin && <p className="mt-3 text-xs text-primary/60">회사 관리자로 지정되어 있습니다</p>}
+
+              {/* 변경 요청 이력 */}
+              {changeRequests.length > 0 && (
+                <div className="mt-5 border-t border-border pt-4">
+                  <h4 className="text-sm font-semibold text-foreground">변경 요청 내역</h4>
+                  <div className="mt-3 space-y-2">
+                    {changeRequests.map((r) => (
+                      <div key={r.id} className="rounded-lg border border-border p-3 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className={`rounded-full px-2 py-0.5 font-medium ${
+                            r.status === "pending" ? "bg-amber-100 text-amber-700"
+                            : r.status === "approved" ? "bg-emerald-100 text-emerald-700"
+                            : "bg-red-100 text-red-600"}`}>
+                            {r.status === "pending" ? "처리 대기" : r.status === "approved" ? "반영됨" : "반려됨"}
+                          </span>
+                          <span className="text-foreground/40">
+                            {new Date(r.createdAt).toLocaleDateString("ko-KR")}
+                          </span>
+                        </div>
+                        <div className="mt-2 space-y-1">
+                          {Object.entries(r.after).map(([key, value]) => (
+                            <p key={key} className="text-foreground/70">
+                              <span className="text-foreground/40">{FIELD_LABELS[key] ?? key}</span>{" "}
+                              <span className="line-through text-foreground/30">
+                                {String(r.before[key as keyof typeof r.before] ?? "-")}
+                              </span>{" "}
+                              → <span className="font-medium text-foreground">{String(value)}</span>
+                            </p>
+                          ))}
+                        </div>
+                        {r.reviewNote && (
+                          <p className="mt-2 text-foreground/50">관리자: {r.reviewNote}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 멤버 초대 - 회사 관리자만 */}
@@ -499,30 +571,51 @@ export default function MyPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCompanyChangeModal(false)}>
           <div className="mx-4 w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground">회사 정보 변경 요청</h3>
-            <p className="mt-1 text-sm text-foreground/50">변경이 필요한 내용을 작성해주세요. 관리자 확인 후 반영됩니다.</p>
-            <div className="mt-4 rounded-lg bg-muted p-3 text-sm">
-              <div className="flex gap-4">
-                <span className="text-foreground/40">회사명</span>
-                <span className="font-medium text-foreground">{user.company}</span>
+            <p className="mt-1 text-sm text-foreground/50">
+              바꿀 값을 직접 입력해주세요. 비워둔 항목은 그대로 유지됩니다. 관리자 승인 후 반영됩니다.
+            </p>
+
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-foreground/60">회사명</label>
+                <p className="mt-0.5 text-xs text-foreground/40">현재: {user.company}</p>
+                <input type="text" value={changeForm.name}
+                  onChange={(e) => setChangeForm({ ...changeForm, name: e.target.value })}
+                  placeholder="변경할 회사명"
+                  className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
               </div>
-              <div className="mt-1 flex gap-4">
-                <span className="text-foreground/40">사업자등록번호</span>
-                <span className="font-medium text-foreground">{user.businessNumber}</span>
+              <div>
+                <label className="block text-xs font-medium text-foreground/60">사업자등록번호</label>
+                <p className="mt-0.5 text-xs text-foreground/40">현재: {user.businessNumber}</p>
+                <input type="text" value={changeForm.businessNumber}
+                  onChange={(e) => setChangeForm({ ...changeForm, businessNumber: e.target.value })}
+                  placeholder="000-00-00000"
+                  className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                <p className="mt-1 text-xs text-amber-600">변경 시 국세청 검증을 다시 받아야 합니다.</p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-foreground/60">주소</label>
+                <p className="mt-0.5 text-xs text-foreground/40">현재: {user.address || "-"}</p>
+                <input type="text" value={changeForm.address}
+                  onChange={(e) => setChangeForm({ ...changeForm, address: e.target.value })}
+                  placeholder="변경할 주소"
+                  className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-foreground/60">변경 사유</label>
+                <textarea value={companyChangeRequest}
+                  onChange={(e) => setCompanyChangeRequest(e.target.value)} rows={3}
+                  placeholder="예: 법인명 변경으로 사업자등록증을 재발급받았습니다."
+                  className="mt-1 w-full resize-none rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
               </div>
             </div>
-            <textarea
-              value={companyChangeRequest}
-              onChange={(e) => setCompanyChangeRequest(e.target.value)}
-              rows={4}
-              placeholder="예: (주)000으로 변경요청합니다."
-              className="mt-4 w-full resize-none rounded-lg border border-border px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
+
             <div className="mt-4 flex gap-2">
               <button onClick={submitCompanyInfoChange}
                 className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
                 요청 보내기
               </button>
-              <button onClick={() => { setShowCompanyChangeModal(false); setCompanyChangeRequest(""); }}
+              <button onClick={() => { setShowCompanyChangeModal(false); setCompanyChangeRequest(""); setChangeForm({ name: "", businessNumber: "", address: "" }); }}
                 className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/60 transition-colors hover:bg-muted">
                 취소
               </button>
