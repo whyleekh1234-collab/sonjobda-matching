@@ -158,14 +158,27 @@ export default function MyPage() {
     }
     try {
       const invite = await createCompanyInvite(inviteEmail);
-      const inviteLink = `${window.location.origin}/signup?invite=${invite.token}`;
-      try {
-        await navigator.clipboard.writeText(inviteLink);
-        alert(
-          `초대 링크가 클립보드에 복사되었습니다.\n${invite.email}에게 직접 전달해주세요.\n\n링크는 14일 후 만료됩니다.\n※ 이메일 자동 발송은 6단계에서 연결합니다.`
-        );
-      } catch {
-        prompt("아래 링크를 복사하여 전달해주세요:", inviteLink);
+
+      // 메일 발송을 시도하고, 아직 연결 전이면 링크를 직접 전달하도록 돌려준다.
+      const res = await fetch("/api/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: invite.token }),
+      });
+      const data = await res.json();
+
+      if (data.sent) {
+        alert(`${invite.email}로 초대 메일을 보냈습니다.\n링크는 14일 후 만료됩니다.`);
+      } else {
+        const link = data.link ?? `${window.location.origin}/signup?invite=${invite.token}`;
+        try {
+          await navigator.clipboard.writeText(link);
+          alert(
+            `메일 발송이 아직 연결되지 않아 링크를 클립보드에 복사했습니다.\n${invite.email}에게 직접 전달해주세요.\n\n링크는 14일 후 만료됩니다.`
+          );
+        } catch {
+          prompt("아래 링크를 복사하여 전달해주세요:", link);
+        }
       }
       setInviteEmail("");
     } catch (err) {

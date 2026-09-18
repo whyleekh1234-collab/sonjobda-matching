@@ -2,28 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
-
 type Method = "phone" | "email";
 
-function maskEmail(email: string) {
-  const [local, domain] = email.split("@");
-  if (!domain) return email;
-  const visible = local.slice(0, Math.min(2, local.length));
-  return `${visible}${"*".repeat(Math.max(local.length - visible.length, 1))}@${domain}`;
-}
-
 export default function FindEmailPage() {
-  const { findEmailByPhone, findEmailByEmail } = useAuth();
-
   const [method, setMethod] = useState<Method>("phone");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
   const [code, setCode] = useState("");
-  const [sentCode, setSentCode] = useState<string | null>(null);
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [codeSent, setCodeSent] = useState(false);
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   const [error, setError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
@@ -36,24 +25,32 @@ export default function FindEmailPage() {
     setPhone("");
     setEmail("");
     setCode("");
-    setSentCode(null);
-    setPendingEmail(null);
+    setCodeSent(false);
+    setDevCode(null);
     setError("");
   };
 
-  // 인증번호 발송: 일치하는 회원이 있을 때만 발송
+  const call = async (payload: Record<string, unknown>) => {
+    const res = await fetch("/api/find-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method, name, phone, email, ...payload }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message ?? "요청에 실패했습니다.");
+    return data as { sent?: boolean; verified?: boolean; devCode?: string; maskedEmail?: string; reason?: string };
+  };
+
+  // 인증번호 발송. 코드는 서버가 만들고 메일로만 나간다.
   const handleSendCode = async () => {
     setError("");
     setIsBusy(true);
     try {
-      const found =
-        method === "phone"
-          ? await findEmailByPhone(name, phone)
-          : await findEmailByEmail(name, email);
-      const generated = String(Math.floor(100000 + Math.random() * 900000));
-      setSentCode(generated);
-      setPendingEmail(found);
+      const data = await call({ action: "send" });
+      setCodeSent(true);
       setCode("");
+      // 메일 발송이 아직 연결되지 않은 개발 환경에서만 코드가 내려온다.
+      setDevCode(data.devCode ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "인증번호 발송에 실패했습니다.");
     } finally {
@@ -61,16 +58,19 @@ export default function FindEmailPage() {
     }
   };
 
-  // 인증번호 확인
-  const handleVerify = (e: React.FormEvent) => {
+  // 인증번호 확인도 서버가 한다. 맞아야만 마스킹된 이메일이 내려온다.
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!sentCode || !pendingEmail) return;
-    if (code.trim() !== sentCode) {
-      setError("인증번호가 일치하지 않습니다.");
-      return;
+    setIsBusy(true);
+    try {
+      const data = await call({ action: "verify", code });
+      if (data.verified && data.maskedEmail) setResult(data.maskedEmail);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "인증에 실패했습니다.");
+    } finally {
+      setIsBusy(false);
     }
-    setResult(pendingEmail);
   };
 
   return (
@@ -94,9 +94,8 @@ export default function FindEmailPage() {
             <p className="text-sm text-foreground/60">
               회원님의 가입 이메일은 다음과 같습니다.
             </p>
-            <p className="mt-3 text-lg font-semibold text-foreground">
-              {maskEmail(result)}
-            </p>
+            {/* 서버가 이미 가려서 내려준다. 브라우저는 전체 주소를 받지 않는다. */}
+            <p className="mt-3 text-lg font-semibold text-foreground">{result}</p>
             <Link
               href="/login"
               className="mt-6 inline-block w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
@@ -139,12 +138,14 @@ export default function FindEmailPage() {
                 </div>
               )}
 
-              {sentCode && (
+              {codeSent && (
                 <div className="mb-4 rounded-lg bg-primary/5 px-4 py-3 text-sm text-foreground/70">
-                  인증번호가 발송되었습니다. 아래에 입력해주세요.
-                  <span className="ml-1 text-foreground/40">
-                    (데모용 코드: {sentCode})
-                  </span>
+                  인증번호를 메일로 보냈습니다. 아래에 입력해주세요.
+                  {devCode && (
+                    <span className="ml-1 text-amber-600">
+                      (메일 발송 미연결 — 개발용 코드: {devCode})
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -163,7 +164,7 @@ export default function FindEmailPage() {
                       setName(e.target.value);
                       setError("");
                     }}
-                    disabled={!!sentCode}
+                    disabled={codeSent}
                     placeholder="홍길동"
                     className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-muted disabled:text-foreground/50"
                   />
@@ -184,7 +185,7 @@ export default function FindEmailPage() {
                         setPhone(e.target.value);
                         setError("");
                       }}
-                      disabled={!!sentCode}
+                      disabled={codeSent}
                       placeholder="010-1234-5678"
                       className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-muted disabled:text-foreground/50"
                     />
@@ -203,7 +204,7 @@ export default function FindEmailPage() {
                         setEmail(e.target.value);
                         setError("");
                       }}
-                      disabled={!!sentCode}
+                      disabled={codeSent}
                       placeholder="example@company.com"
                       className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-muted disabled:text-foreground/50"
                     />
@@ -211,7 +212,7 @@ export default function FindEmailPage() {
                 )}
 
                 {/* 인증번호 입력 (발송 후 노출) */}
-                {sentCode && (
+                {codeSent && (
                   <div>
                     <label htmlFor="code" className="block text-sm font-medium text-foreground">
                       인증번호
@@ -233,7 +234,7 @@ export default function FindEmailPage() {
                 )}
               </div>
 
-              {!sentCode ? (
+              {!codeSent ? (
                 <button
                   type="button"
                   onClick={handleSendCode}
