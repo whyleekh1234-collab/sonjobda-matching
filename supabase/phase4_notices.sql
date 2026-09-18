@@ -165,6 +165,10 @@ $$;
 -- 이제 이미 등록된 회사에 합류하려면 유효한 초대 토큰이 있어야 한다.
 -- 새 회사를 만드는 첫 가입은 그대로 초대 없이 된다.
 
+-- 토큰은 gen_random_uuid 두 개를 이어 붙여 만든다. pgcrypto의
+-- gen_random_bytes를 쓰면 확장이 설치된 스키마(extensions)까지 search_path에
+-- 넣어야 하는데, security definer 함수의 search_path는 좁게 고정하는 게
+-- 안전하다. gen_random_uuid는 PostgreSQL에 기본 내장이라 그럴 필요가 없다.
 create or replace function public.create_company_invite(p_email text)
 returns company_invites
 language plpgsql
@@ -186,10 +190,13 @@ begin
     raise exception '올바른 이메일을 입력해주세요.';
   end if;
 
-  insert into company_invites (company_id, email, invited_by)
-  values (v_me.company_id, lower(trim(p_email)), auth.uid())
+  insert into company_invites (company_id, email, invited_by, token)
+  values (
+    v_me.company_id, lower(trim(p_email)), auth.uid(),
+    replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')
+  )
   on conflict (company_id, email) do update set
-    token       = encode(gen_random_bytes(24), 'hex'),
+    token       = replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''),
     invited_by  = auth.uid(),
     expires_at  = now() + interval '14 days',
     accepted_at = null
