@@ -16,6 +16,7 @@ export interface User {
   memberCode: string; // 회원 고유번호 (SJ-C-0001, SJ-P-0002, SJ-CP-0003)
   email: string;
   name: string;
+  companyId: string; // 소속 회사 id. 의뢰·견적의 소유는 회원이 아니라 회사 단위다.
   company: string;
   businessNumber: string;
   roles: Role[];

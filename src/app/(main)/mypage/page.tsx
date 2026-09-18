@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getMyRequests, getRequestsForPartner } from "@/lib/mock-data";
+import { listMyCompanyRequests, listPartnerRequests } from "@/lib/data/requests";
 import type { PartnerCategory } from "@/types/auth";
 
 const allPartnerCategories: PartnerCategory[] = [
@@ -23,6 +23,46 @@ export default function MyPage() {
   const [companyChangeRequest, setCompanyChangeRequest] = useState("");
   const [editingCategories, setEditingCategories] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<PartnerCategory[]>([]);
+  const [summary, setSummary] = useState({
+    myRequests: [] as { id: string }[],
+    receivedQuotes: 0,
+    submittedQuotes: 0,
+    partnerRequests: 0,
+  });
+
+  // 활동 요약은 서버에서 가져온다. 파트너로 겸업하지 않는 회원은 받은 의뢰
+  // 조회가 빈 배열로 돌아오므로 따로 분기하지 않는다.
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    (async () => {
+      try {
+        const [mine, partner] = await Promise.all([
+          listMyCompanyRequests(user.companyId),
+          user.partnerCategories?.length ? listPartnerRequests() : Promise.resolve([]),
+        ]);
+        if (!alive) return;
+        setSummary({
+          myRequests: mine,
+          partnerRequests: partner.length,
+          receivedQuotes: mine.reduce(
+            (sum, r) => sum + (r.quotes || []).filter((q) => q.status === "quoted").length,
+            0
+          ),
+          submittedQuotes: partner.filter((r) =>
+            (r.quotes || []).some(
+              (q) =>
+                q.companyId === user.companyId &&
+                ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status)
+            )
+          ).length,
+        });
+      } catch {
+        // 요약은 부가 정보다. 실패해도 마이페이지 자체는 열려야 한다.
+      }
+    })();
+    return () => { alive = false; };
+  }, [user]);
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
@@ -38,10 +78,9 @@ export default function MyPage() {
   if (!user) return null;
 
   // 활동 요약
-  const myRequests = getMyRequests(user.id);
-  const receivedQuotes = myRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "quoted").length, 0);
-  const partnerRequests = user.partnerCategories ? getRequestsForPartner(user.partnerCategories, user.businessNumber) : [];
-  const submittedQuotes = partnerRequests.filter((r) => (r.quotes || []).some((q) => q.partnerId === user.id && ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status))).length;
+  const receivedQuotes = summary.receivedQuotes;
+  const myRequests = summary.myRequests;
+  const submittedQuotes = summary.submittedQuotes;
 
   const saveProfile = () => {
     if (editForm.name.trim().length < 2) { alert("이름은 2자 이상 입력해주세요."); return; }
@@ -331,7 +370,7 @@ export default function MyPage() {
                 {user.roles?.includes("partner") && (
                   <>
                     <div className="rounded-lg bg-muted p-4 text-center">
-                      <p className="text-2xl font-bold text-primary">{partnerRequests.length}</p>
+                      <p className="text-2xl font-bold text-primary">{summary.partnerRequests}</p>
                       <p className="mt-1 text-xs text-foreground/50">받은 의뢰</p>
                     </div>
                     <div className="rounded-lg bg-muted p-4 text-center">

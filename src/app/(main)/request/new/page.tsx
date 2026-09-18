@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import type { MatchRequest } from "@/types/matching";
+import { createRequest, updateRequest, getRequest } from "@/lib/data/requests";
 
 const serviceTypes = [
   { id: "cro", label: "CRO", desc: "임상시험 수탁기관 매칭", icon: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" },
@@ -354,8 +354,17 @@ const priorityOptions = [
 ];
 
 export default function NewRequestPage() {
+  return (
+    <Suspense>
+      <NewRequestForm />
+    </Suspense>
+  );
+}
+
+function NewRequestForm() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
 
   // Step 1
@@ -463,6 +472,7 @@ export default function NewRequestPage() {
   const [monitoringCount, setMonitoringCount] = useState("");
   const [taskDetails, setTaskDetails] = useState<Record<string, string[]>>({});
   const [editRequestId, setEditRequestId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [pendingDraft, setPendingDraft] = useState<string | null>(null);
 
@@ -576,41 +586,41 @@ export default function NewRequestPage() {
     setTaskDetails((data.taskDetails as Record<string, string[]>) || {});
   };
 
-  // 페이지 진입 시 수정 모드 또는 임시저장 데이터 불러오기
+  // 페이지 진입 시 수정 모드 또는 임시저장 데이터 불러오기.
+  // 수정할 의뢰는 /request/new?edit=<id> 로 넘어온다.
   useEffect(() => {
-    // 수정 모드 체크
-    const editId = localStorage.getItem("sonjobda_edit_request");
-    if (editId) {
-      localStorage.removeItem("sonjobda_edit_request");
-      const allRequests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-      const req = allRequests.find((r: { id: string }) => r.id === editId);
-      if (req) {
-        setEditRequestId(editId);
-        if (req.formData) {
-          // 저장된 폼 데이터로 모든 필드 복원
-          applyFormData(req.formData);
-        } else {
-          // 폼 데이터가 없는 경우 description에서 파싱 (하위 호환)
-          const categoryMap: Record<string, string> = {
-            "CRO": "cro", "CMO/CDMO": "cmo-cdmo", "SMO": "smo", "RA/인허가": "ra", "임상시험 보험": "insurance", "소모품 공급": "supply", "마케팅 대행": "marketing",
-          };
-          setServiceType(categoryMap[req.category] || "");
-          setProjectName(req.title || "");
-          setBudget(req.budget || "");
-          setStartDate(req.deadline || "");
-        }
-        setStep(2); // 2단계부터 수정
-        return;
+    const editId = searchParams.get("edit");
+
+    if (!editId) {
+      const stored = localStorage.getItem(DRAFT_KEY);
+      if (stored) {
+        setPendingDraft(stored);
+        setShowDraftModal(true);
       }
+      return;
     }
 
-    // 임시저장 체크
-    const stored = localStorage.getItem(DRAFT_KEY);
-    if (stored) {
-      setPendingDraft(stored);
-      setShowDraftModal(true);
-    }
-  }, []);
+    let alive = true;
+    getRequest(editId).then((req) => {
+      if (!alive || !req) return;
+      setEditRequestId(editId);
+      if (req.formData) {
+        // 저장된 폼 데이터로 모든 필드 복원
+        applyFormData(req.formData);
+      } else {
+        // 폼 데이터가 없는 경우 description에서 파싱 (하위 호환)
+        const categoryMap: Record<string, string> = {
+          "CRO": "cro", "CMO/CDMO": "cmo-cdmo", "SMO": "smo", "RA/인허가": "ra", "임상시험 보험": "insurance", "소모품 공급": "supply", "마케팅 대행": "marketing",
+        };
+        setServiceType(categoryMap[req.category] || "");
+        setProjectName(req.title || "");
+        setBudget(req.budget || "");
+        setStartDate(req.deadline || "");
+      }
+      setStep(2); // 2단계부터 수정
+    });
+    return () => { alive = false; };
+  }, [searchParams]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -714,25 +724,14 @@ export default function NewRequestPage() {
     setStep(step + 1);
   };
 
-  const handleSubmit = () => {
-    if (!user) return;
+  const handleSubmit = async () => {
+    if (!user || isSubmitting) return;
     const categoryMap: Record<string, string> = {
       cro: "CRO", "cmo-cdmo": "CMO/CDMO", smo: "SMO", ra: "RA/인허가", insurance: "임상시험 보험", supply: "소모품 공급", marketing: "마케팅 대행",
     };
-    // 의뢰 고유번호 생성
-    const existingRequests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const lastRqNum = existingRequests.reduce((max: number, r: { requestCode?: string }) => {
-      if (!r.requestCode) return max;
-      const num = parseInt(r.requestCode.split("-")[1] || "0", 10);
-      return num > max ? num : max;
-    }, 0);
-    const requestCode = `RQ-${String(lastRqNum + 1).padStart(8, "0")}`;
-
-    const newRequest: MatchRequest = {
-      id: crypto.randomUUID(),
-      requestCode,
-      clientId: user.id,
-      clientCompany: user.company,
+    // 의뢰 고유번호(RQ-)는 DB 시퀀스가 붙인다. 예전처럼 기존 최대값+1로
+    // 만들면 두 회사가 동시에 제출할 때 같은 번호가 나온다.
+    const payload = {
       title: projectName,
       category: categoryMap[serviceType] || serviceType,
       description: [
@@ -815,32 +814,28 @@ export default function NewRequestPage() {
       ].filter(Boolean).join("\n"),
       budget,
       deadline: startDate,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      offers: [],
-      quotes: [],
       formData: getDraftData(),
     };
 
-    if (editRequestId) {
-      if (!confirm("수정된 견적 요청을 제출하시겠습니까?")) return;
-      const requests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-      const idx = requests.findIndex((r: { id: string }) => r.id === editRequestId);
-      if (idx !== -1) {
-        requests[idx] = { ...requests[idx], title: newRequest.title, category: newRequest.category, description: newRequest.description, budget: newRequest.budget, deadline: newRequest.deadline, formData: getDraftData() };
-        localStorage.setItem("sonjobda_requests", JSON.stringify(requests));
+    const confirmMessage = editRequestId
+      ? "수정된 견적 요청을 제출하시겠습니까?"
+      : "최종 견적을 제출하시겠습니까?\n파트너사가 견적을 확인한 이후에는 회수 및 수정이 불가능합니다.";
+    if (!confirm(confirmMessage)) return;
+
+    setIsSubmitting(true);
+    try {
+      if (editRequestId) {
+        await updateRequest(editRequestId, payload);
+      } else {
+        await createRequest(payload, user.companyId, user.id);
       }
       clearDraft();
-      alert("견적 요청이 수정되었습니다.");
+      alert(editRequestId ? "견적 요청이 수정되었습니다." : "견적요청이 제출되었습니다.");
       router.push("/dashboard/client");
-    } else {
-      if (!confirm("최종 견적을 제출하시겠습니까?\n파트너사가 견적을 확인한 이후에는 회수 및 수정이 불가능합니다.")) return;
-      const requests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-      requests.push(newRequest);
-      localStorage.setItem("sonjobda_requests", JSON.stringify(requests));
-      clearDraft();
-      alert("견적요청이 제출되었습니다.");
-      router.push("/dashboard/client");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "제출하지 못했습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -1,11 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getMyRequests } from "@/lib/mock-data";
+import {
+  listMyCompanyRequests,
+  withdrawRequest as withdrawRequestApi,
+  extendDeadline as extendDeadlineApi,
+  setQuoteStatusAsClient,
+  acceptQuote,
+} from "@/lib/data/requests";
+import MatchContactPanel from "@/components/dashboard/MatchContact";
 import { statusLabels } from "@/types/matching";
-import type { MatchRequest } from "@/types/matching";
+import type { MatchRequest, QuoteStatus } from "@/types/matching";
 import type { Notice, Notification } from "@/types/auth";
 import Link from "next/link";
 
@@ -23,11 +30,17 @@ export default function ClientDashboard() {
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<"all" | "client_reviewing" | "client_hold" | "accepted" | "client_rejected" | "not_selected" | "undecided">("all");
   const [requests, setRequests] = useState<MatchRequest[]>([]);
 
-  const reloadRequests = () => {
-    if (user) setRequests(getMyRequests(user.id));
-  };
+  const reloadRequests = useCallback(async () => {
+    if (!user) return;
+    try {
+      setRequests(await listMyCompanyRequests(user.companyId));
+    } catch (err) {
+      console.error(err);
+      alert("의뢰 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  }, [user]);
 
-  useEffect(() => { reloadRequests(); }, [user]);
+  useEffect(() => { reloadRequests(); }, [reloadRequests]);
 
   useEffect(() => {
     const storedNotices = localStorage.getItem("sonjobda_notices");
@@ -60,57 +73,49 @@ export default function ClientDashboard() {
     }
   };
 
+  // 서버가 거부한 이유(마감된 의뢰, 남의 회사 의뢰 등)를 그대로 보여준다.
+  const runAction = async (fn: () => Promise<void>, successMessage?: string) => {
+    try {
+      await fn();
+      await reloadRequests();
+      if (successMessage) alert(successMessage);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+    }
+  };
+
   const withdrawRequest = (id: string) => {
     if (!confirm("이 견적 요청을 회수하시겠습니까?\n회수된 요청은 파트너사에게 더 이상 노출되지 않습니다.")) return;
-    const allRequests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r: { id: string }) => r.id === id);
-    if (idx !== -1) {
-      allRequests[idx].status = "cancelled";
-      localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-      reloadRequests();
-    }
+    runAction(() => withdrawRequestApi(id));
   };
 
   const extendDeadline = (id: string) => {
     if (!confirm("마감일을 오늘 기준 5일 연장하시겠습니까?")) return;
-    const allRequests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r: { id: string }) => r.id === id);
-    if (idx !== -1) {
-      const newDeadline = new Date();
-      newDeadline.setDate(newDeadline.getDate() + 5);
-      allRequests[idx].deadline = newDeadline.toISOString().split("T")[0];
-      allRequests[idx].createdAt = new Date().toISOString();
-      localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-      reloadRequests();
-      alert("마감일이 연장되었습니다.");
+    runAction(() => extendDeadlineApi(id, 5), "마감일이 연장되었습니다.");
+  };
+
+  const markQuotesAsReviewing = async (quotes: { id: string; status: string }[]) => {
+    const fresh = quotes.filter((q) => q.status === "quoted");
+    if (fresh.length === 0) return;
+    try {
+      await Promise.all(fresh.map((q) => setQuoteStatusAsClient(q.id, "client_reviewing")));
+      await reloadRequests();
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const updateQuoteStatus = (requestId: string, quoteId: string, newStatus: string) => {
-    if (newStatus === "accepted" && !confirm("이 견적을 수락하시겠습니까?\n\n수락 시 다른 파트너사의 견적은 미결정 처리됩니다.\n이 작업은 되돌릴 수 없으며, 해당 업체에 회사명 및 연락처가 노출됩니다.")) return;
-    if (newStatus === "client_rejected" && !confirm("이 견적을 거절하시겠습니까?")) return;
-    const allRequests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r: { id: string }) => r.id === requestId);
-    if (idx !== -1 && allRequests[idx].quotes) {
-      if (newStatus === "accepted") {
-        // 매칭 관리번호 생성
-        const lastMtNum = allRequests.reduce((max: number, r: { matchCode?: string }) => {
-          if (!r.matchCode) return max;
-          const num = parseInt(r.matchCode.split("-")[1] || "0", 10);
-          return num > max ? num : max;
-        }, 0);
-        allRequests[idx].matchCode = `MT-${String(lastMtNum + 1).padStart(8, "0")}`;
-        allRequests[idx].status = "matched";
-        allRequests[idx].quotes = allRequests[idx].quotes.map((q: { id: string; status: string }) =>
-          q.id === quoteId ? { ...q, status: "accepted" } : ["quoted", "client_reviewing", "client_hold"].includes(q.status) ? { ...q, status: "not_selected" } : q
-        );
-      } else {
-        const qIdx = allRequests[idx].quotes.findIndex((q: { id: string }) => q.id === quoteId);
-        if (qIdx !== -1) allRequests[idx].quotes[qIdx].status = newStatus;
-      }
-      localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-      reloadRequests();
+    if (newStatus === "accepted") {
+      if (!confirm("이 견적을 수락하시겠습니까?\n\n수락 시 다른 파트너사의 견적은 미결정 처리됩니다.\n이 작업은 되돌릴 수 없으며, 해당 업체에 회사명 및 연락처가 노출됩니다.")) return;
+      // 견적 수락은 여러 행을 한 번에 바꾼다(고른 견적 수락, 나머지 미결정,
+      // 의뢰 마감, 매칭번호 부여). 중간에 끊기면 안 되므로 서버가 한
+      // 트랜잭션으로 처리한다.
+      runAction(() => acceptQuote(quoteId));
+      return;
     }
+    if (newStatus === "client_rejected" && !confirm("이 견적을 거절하시겠습니까?")) return;
+    runAction(() => setQuoteStatusAsClient(quoteId, newStatus as QuoteStatus));
   };
 
   // 통계
@@ -441,15 +446,10 @@ export default function ClientDashboard() {
                   <div key={req.id} id={`quote-card-${req.id}`} className="rounded-xl border border-border bg-surface shadow-card transition-shadow hover:shadow-md">
                     <button onClick={() => {
                       if (!isOpen) {
-                        // 펼칠 때 quoted 상태를 client_reviewing으로 변경
-                        const allReqs = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-                        const rIdx = allReqs.findIndex((r: { id: string }) => r.id === req.id);
-                        if (rIdx !== -1 && allReqs[rIdx].quotes) {
-                          let changed = false;
-                          allReqs[rIdx].quotes.forEach((q: { status: string }) => { if (q.status === "quoted") { q.status = "client_reviewing"; changed = true; } });
-                          if (changed) localStorage.setItem("sonjobda_requests", JSON.stringify(allReqs));
-                        }
-                        reloadRequests();
+                        // 펼쳐서 처음 확인하는 순간 quoted → client_reviewing.
+                        // 파트너사 쪽에서 "의뢰사가 확인함"으로 보이고, 이 시점
+                        // 이후로는 파트너사가 견적을 수정할 수 없다.
+                        markQuotesAsReviewing(req.quotes || []);
                       }
                       setOpenQuoteRequestId(isOpen ? null : req.id);
                     }} className="flex w-full items-center justify-between p-5 text-left">
@@ -478,7 +478,6 @@ export default function ClientDashboard() {
                         <div className="mt-4 space-y-3">
                           {quotes.map((quote) => {
                             const isQuoteOpen = expandedQuoteId === quote.id;
-                            const partnerUser = (() => { const all = JSON.parse(localStorage.getItem("sonjobda_users") || "[]"); return all.find((u: { id: string }) => u.id === quote.partnerId); })();
                             return (
                             <div key={quote.id} className={`rounded-xl border transition-shadow hover:shadow-md ${quote.status === "accepted" ? "border-primary bg-primary/5" : quote.status === "client_rejected" || quote.status === "not_selected" ? "border-border bg-muted/30" : "border-emerald-200 bg-surface"}`}>
                               <button onClick={() => setExpandedQuoteId(isQuoteOpen ? null : quote.id)} className="flex w-full items-center justify-between p-5 text-left">
@@ -486,7 +485,8 @@ export default function ClientDashboard() {
                                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground/60">{quote.partnerCompany.charAt(0)}</div>
                                   <div>
                                     <p className="break-all text-base font-semibold text-foreground">{quote.partnerCompany} {quote.quoteCode && <span className="ml-1 font-mono text-xs text-foreground/30">{quote.quoteCode}</span>}</p>
-                                    <p className="text-xs text-foreground/40">담당자: {partnerUser?.name || "-"} | 제출일: {new Date(quote.createdAt).toLocaleDateString("ko-KR")}</p>
+                                    {/* 담당자 이름은 매칭 성사 전에는 공개되지 않는다. 성사 후 아래 연락처 칸에 나온다. */}
+                                    <p className="text-xs text-foreground/40">제출일: {new Date(quote.createdAt).toLocaleDateString("ko-KR")}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -529,11 +529,10 @@ export default function ClientDashboard() {
                                 </div>
                               )}
 
-                              {/* 파트너사 유형 */}
+                              {/* 파트너사 유형 (견적 제출 시점의 값이 견적에 담겨 온다) */}
                               {(() => {
-                                const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-                                const partnerUser = allUsers.find((u: { id: string }) => u.id === quote.partnerId);
-                                return partnerUser?.partnerCategories?.length > 0 ? (
+                                const partnerUser = { partnerCategories: quote.partnerCategories };
+                                return partnerUser.partnerCategories?.length ? (
                                   <div className="mt-3">
                                     <p className="text-xs text-foreground/40">회사유형</p>
                                     <div className="mt-1 flex flex-wrap gap-1">
@@ -693,21 +692,9 @@ export default function ClientDashboard() {
                     <span>견적: {(req.quotes || []).filter((q) => q.status === "quoted").length}건</span>
                   </div>
                   {/* 파트너사 연락처 공개 */}
-                  {(() => {
-                    const acceptedQuote = (req.quotes || []).find((q) => q.status === "accepted");
-                    const partnerUser = acceptedQuote ? JSON.parse(localStorage.getItem("sonjobda_users") || "[]").find((u: { id: string }) => u.id === acceptedQuote.partnerId) : null;
-                    return acceptedQuote ? (
-                      <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                        <p className="mb-2 text-xs font-semibold text-blue-700">매칭 성사로 파트너사 연락처가 공개되었습니다</p>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-blue-900">
-                          <span>회사명: <span className="font-medium">{acceptedQuote.partnerCompany}</span></span>
-                          <span>담당자명: <span className="font-medium">{partnerUser?.name || "-"}</span></span>
-                          <span>이메일: <span className="font-medium">{partnerUser?.email || "-"}</span></span>
-                          <span>연락처: <span className="font-medium">{partnerUser?.phone || "-"}</span></span>
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
+                  {(req.quotes || []).some((q) => q.status === "accepted") && (
+                    <MatchContactPanel requestId={req.id} show="partner" />
+                  )}
                 </div>
               ))}
             </div>
@@ -828,10 +815,7 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
             <div className="mt-4 flex gap-2 border-t border-border pt-3">
               {canWithdraw && (
                 <>
-                  <button onClick={() => {
-                    localStorage.setItem("sonjobda_edit_request", request.id);
-                    window.location.href = "/request/new";
-                  }}
+                  <button onClick={() => { window.location.href = `/request/new?edit=${request.id}`; }}
                     className="rounded-lg border border-primary/30 px-4 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/5">
                     수정
                   </button>

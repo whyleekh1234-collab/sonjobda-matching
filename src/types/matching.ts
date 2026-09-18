@@ -48,8 +48,15 @@ export interface Quote {
   id: string;
   quoteCode?: string; // 견적 고유번호 (QT-0001)
   requestId: string;
-  partnerId: string;
+  // 견적의 주인은 회사다. 한 회사가 한 의뢰에 하나만 낼 수 있고, 같은 회사
+  // 담당자끼리는 서로의 견적을 이어서 다룬다. "내 견적"인지 볼 때는
+  // partnerId가 아니라 이 값을 user.companyId와 비교해야 한다.
+  companyId: string;
+  partnerId: string; // 마지막으로 제출/수정한 담당자
   partnerCompany: string;
+  // 제출 시점 파트너사의 회사유형. 의뢰사는 상대 회사의 프로필을 읽을 수
+  // 없어서(다른 회사라 막힌다) 견적에 같이 담아 둔다.
+  partnerCategories?: string[];
   // 견적 정보
   subjectCount?: string;
   siteCountCapital?: string;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import type { MatchRequest } from "@/types/matching";
+import { createRequest } from "@/lib/data/requests";
 
 const categories = [
   "CRO",
@@ -27,6 +27,7 @@ export default function NewRequestModal({ onClose }: Props) {
     budget: "",
     deadline: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -34,31 +35,31 @@ export default function NewRequestModal({ onClose }: Props) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || isSubmitting) return;
 
-    const newRequest: MatchRequest = {
-      id: crypto.randomUUID(),
-      clientId: user.id,
-      clientCompany: user.company,
-      title: form.title,
-      category: form.category,
-      description: form.description,
-      budget: form.budget || "협의",
-      deadline: form.deadline || "미정",
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      offers: [],
-      quotes: [],
-    };
-
-    const requests = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    requests.push(newRequest);
-    localStorage.setItem("sonjobda_requests", JSON.stringify(requests));
-
-    alert("매칭 요청이 등록되었습니다. 손잡다매칭에서 최적의 파트너를 찾아드리겠습니다.");
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await createRequest(
+        {
+          title: form.title,
+          category: form.category,
+          description: form.description,
+          budget: form.budget || "협의",
+          deadline: form.deadline,
+          formData: {},
+        },
+        user.companyId,
+        user.id
+      );
+      alert("매칭 요청이 등록되었습니다. 손잡다매칭에서 최적의 파트너를 찾아드리겠습니다.");
+      onClose();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "등록하지 못했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

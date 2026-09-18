@@ -36,6 +36,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 // localStorage에서 Supabase로 바꾸고 내보내는 모양은 유지한다.
 type ProfileRow = {
   id: string;
+  company_id: string;
   member_code: string;
   name: string;
   phone: string | null;
@@ -58,6 +59,7 @@ function toUser(profile: ProfileRow, email: string): User {
     memberCode: profile.member_code,
     email,
     name: profile.name,
+    companyId: profile.company_id,
     company: profile.companies?.name ?? "",
     businessNumber: profile.companies?.business_number ?? "",
     roles: profile.roles,
@@ -83,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, created_at, companies(name, business_number, address)"
+        "id, company_id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, created_at, companies(name, business_number, address)"
       )
       .eq("id", session.user.id)
       .single();

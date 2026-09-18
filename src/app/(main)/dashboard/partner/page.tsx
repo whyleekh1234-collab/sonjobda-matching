@@ -3,7 +3,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getRequestsForPartner } from "@/lib/mock-data";
+import {
+  listPartnerRequests,
+  upsertMyQuote,
+  uploadQuoteAttachment,
+  withdrawMyQuote,
+  getAttachmentUrl,
+} from "@/lib/data/requests";
+import MatchContactPanel from "@/components/dashboard/MatchContact";
 import { quoteStatusLabels, defaultTimeline } from "@/types/matching";
 import type { MatchRequest, Quote, QuoteStatus, TimelineItem } from "@/types/matching";
 import type { Notice, Notification } from "@/types/auth";
@@ -22,8 +29,9 @@ export default function PartnerDashboard() {
     amount: "", memo: "",
     expectedCra: "", monitoringPerSite: "", edcBrand: "",
   });
-  const [attachment, setAttachment] = useState<{ name: string; data: string } | null>(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [filterStatus, setFilterStatus] = useState<"all" | "closed" | QuoteStatus>("all");
   const [sentSortBy, setSentSortBy] = useState<"quoteCode" | "title" | "category" | "client" | "amount" | "status" | "date">("date");
   const [sentSortDir, setSentSortDir] = useState<"asc" | "desc">("desc");
@@ -33,11 +41,17 @@ export default function PartnerDashboard() {
   };
   const [activeSection, setActiveSection] = useState<"activity" | "received" | "sent" | "won">("activity");
 
-  const loadRequests = useCallback(() => {
-    if (!user || !user.partnerCategories) return;
-    if (user.status === "suspended") { setRequests([]); return; }
-    const all = getRequestsForPartner(user.partnerCategories, user.businessNumber);
-    setRequests(all);
+  // 어떤 의뢰가 보이는지는 서버가 정한다. 내 카테고리의 열린 의뢰와, 우리
+  // 회사가 견적을 낸 의뢰만 응답에 담겨 온다. 자기 회사가 올린 의뢰는
+  // 애초에 오지 않는다.
+  const loadRequests = useCallback(async () => {
+    if (!user) return;
+    try {
+      setRequests(await listPartnerRequests());
+    } catch (err) {
+      console.error(err);
+      setRequests([]);
+    }
   }, [user]);
 
   useEffect(() => { loadRequests(); }, [loadRequests]);
@@ -70,64 +84,64 @@ export default function PartnerDashboard() {
     return requestTasks.map((label) => ({ label, months: "", na: false }));
   };
 
-  // 해당 의뢰에 대한 내 견적 상태 확인
-  const getMyQuoteStatus = (request: MatchRequest): QuoteStatus => {
-    if (!user) return "new";
-    const myQuote = (request.quotes || []).find((q) => q.partnerId === user.id);
-    if (!myQuote) return "new";
-    return myQuote.status;
-  };
+  // 견적의 주인은 회사다. 같은 회사 담당자끼리는 하나의 견적을 이어서 다룬다.
+  const getMyQuote = (request: MatchRequest) =>
+    user ? (request.quotes || []).find((q) => q.companyId === user.companyId) : undefined;
 
-  // 같은 회사 동료가 이미 견적을 제출했는지 확인
+  const getMyQuoteStatus = (request: MatchRequest): QuoteStatus =>
+    getMyQuote(request)?.status ?? "new";
+
+  // 한 회사당 한 의뢰에 견적 하나라는 규칙은 DB의 유니크 제약이 지킨다.
+  // 동료가 먼저 낸 견적이 있으면 그게 곧 "내 회사 견적"이다.
   const hasCompanyQuote = (request: MatchRequest): boolean => {
-    if (!user) return false;
-    const allUsers = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-    const myBizNum = user.businessNumber;
-    return (request.quotes || []).some((q) => {
-      if (q.partnerId === user.id) return false;
-      const qUser = allUsers.find((u: { id: string }) => u.id === q.partnerId);
-      return qUser?.businessNumber === myBizNum && ["quoted", "client_reviewing", "accepted", "client_hold", "reviewing"].includes(q.status);
-    });
+    const mine = getMyQuote(request);
+    return !!mine && mine.partnerId !== user?.id &&
+      ["quoted", "client_reviewing", "accepted", "client_hold", "reviewing"].includes(mine.status);
   };
 
   // 총 예상시간 계산
   const totalMonths = quoteForm.timeline.reduce((sum, t) => sum + (parseFloat(t.months) || 0), 0);
 
-  // 견적 데이터 빌드 헬퍼
-  const buildQuote = (status: Quote["status"]): Quote => {
-    // 견적 고유번호 생성
-    const allReqs = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const lastQtNum = allReqs.reduce((max: number, r: { quotes?: { quoteCode?: string }[] }) => {
-      (r.quotes || []).forEach((q) => { if (q.quoteCode) { const num = parseInt(q.quoteCode.split("-")[1] || "0", 10); if (num > max) max = num; } });
-      return max;
-    }, 0);
-    const quoteCode = `QT-${String(lastQtNum + 1).padStart(8, "0")}`;
-    return {
-    id: crypto.randomUUID(),
-    quoteCode,
-    requestId: selectedRequest!.id,
-    partnerId: user!.id,
-    partnerCompany: user!.company,
-    subjectCount: quoteForm.subjectCount,
-    siteCountCapital: quoteForm.siteCountCapital,
-    siteCountLocal: quoteForm.siteCountLocal,
-    trialDuration: quoteForm.trialDuration,
-    perSubjectDuration: quoteForm.perSubjectDuration,
-    timeline: quoteForm.timeline,
+  // 견적 고유번호(QT-)는 DB 시퀀스가 붙인다. 예전처럼 기존 최대값+1로
+  // 만들면 두 회사가 동시에 제출할 때 같은 번호가 나온다.
+  const buildQuoteInput = () => ({
     amount: quoteForm.amount,
     duration: `${totalMonths}개월`,
     memo: quoteForm.memo,
-    attachmentName: attachment?.name,
-    attachmentData: attachment?.data,
-    expectedCra: quoteForm.expectedCra,
-    monitoringPerSite: quoteForm.monitoringPerSite,
-    edcBrand: quoteForm.edcBrand,
-    status,
-    createdAt: new Date().toISOString(),
-  };};
+    timeline: quoteForm.timeline,
+    details: {
+      subjectCount: quoteForm.subjectCount,
+      siteCountCapital: quoteForm.siteCountCapital,
+      siteCountLocal: quoteForm.siteCountLocal,
+      trialDuration: quoteForm.trialDuration,
+      perSubjectDuration: quoteForm.perSubjectDuration,
+      expectedCra: quoteForm.expectedCra,
+      monitoringPerSite: quoteForm.monitoringPerSite,
+      edcBrand: quoteForm.edcBrand,
+    },
+  });
+
+  // 제출·임시저장·거절·보류·재개가 전부 "내 회사 견적을 이 상태로 쓴다"라서
+  // 한 곳으로 모은다. 서버가 자기 회사 의뢰인지, 마감됐는지, 의뢰사가 이미
+  // 확인했는지를 검사하고 거부 사유를 그대로 돌려준다.
+  const writeQuote = async (
+    requestId: string,
+    status: QuoteStatus,
+    input: Parameters<typeof upsertMyQuote>[2] = {}
+  ) => {
+    try {
+      await upsertMyQuote(requestId, status, input);
+      setSelectedRequest(null);
+      await loadRequests();
+      return true;
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      return false;
+    }
+  };
 
   // 견적 제출
-  const submitQuote = () => {
+  const submitQuote = async () => {
     if (!user || !selectedRequest) return;
     // 업무범위 소요개월 체크
     const emptyTimeline = quoteForm.timeline.filter((t) => !t.months.trim());
@@ -136,98 +150,67 @@ export default function PartnerDashboard() {
     if (quoteForm.timeline.some((t) => t.label === "모니터링") && !quoteForm.monitoringPerSite.trim()) { alert("기관별 모니터링 횟수를 입력해주세요."); return; }
     // 견적금액 체크
     if (!quoteForm.amount.trim()) { alert("견적 금액을 입력해주세요."); return; }
-    // 첨부파일 체크
-    if (!attachment) { alert("견적서 파일을 첨부해주세요."); return; }
-    // 동일 사업자등록번호 중복 체크
-    const checkReqs: MatchRequest[] = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const checkIdx = checkReqs.findIndex((r) => r.id === selectedRequest.id);
-    if (checkIdx !== -1) {
-      const allUsersForCheck = JSON.parse(localStorage.getItem("sonjobda_users") || "[]");
-      const myBizNum = user.businessNumber;
-      const existingFromSameCompany = (checkReqs[checkIdx].quotes || []).find((q) => {
-        if (q.partnerId === user.id) return false;
-        const qUser = allUsersForCheck.find((u: { id: string }) => u.id === q.partnerId);
-        return qUser?.businessNumber === myBizNum && ["quoted", "client_reviewing", "accepted", "client_hold", "reviewing"].includes(q.status);
-      });
-      if (existingFromSameCompany) {
-        alert("동일 회사에서 이미 이 의뢰에 견적을 제출했습니다.\n한 회사당 하나의 견적만 제출할 수 있습니다.");
-        return;
-      }
+    // 첨부파일 체크 (이미 올려둔 게 있으면 다시 안 올려도 된다)
+    const existing = getMyQuote(selectedRequest);
+    if (!attachment && !existing?.attachmentName) { alert("견적서 파일을 첨부해주세요."); return; }
+    // 한 회사당 하나 규칙은 DB가 지킨다. 동료가 이미 낸 견적이 있으면 막는다.
+    if (hasCompanyQuote(selectedRequest)) {
+      alert("동일 회사에서 이미 이 의뢰에 견적을 제출했습니다.\n한 회사당 하나의 견적만 제출할 수 있습니다.");
+      return;
     }
 
     if (!confirm("최종 견적서를 제출하시겠습니까?\n의뢰사가 견적을 확인한 이후에는 수정 및 회수가 불가능합니다.")) return;
-    const quote = buildQuote("quoted");
 
-    const allRequests: MatchRequest[] = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r) => r.id === selectedRequest.id);
-    if (idx !== -1) {
-      if (!allRequests[idx].quotes) allRequests[idx].quotes = [];
-      // 기존 견적 있으면 교체 (본인 것만)
-      const existingIdx = allRequests[idx].quotes.findIndex((q) => q.partnerId === user.id);
-      if (existingIdx !== -1) {
-        allRequests[idx].quotes[existingIdx] = quote;
-      } else {
-        allRequests[idx].quotes.push(quote);
-      }
-      localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-    }
+    setIsSaving(true);
+    const uploaded = await uploadAttachmentIfAny(selectedRequest.id);
+    const ok = await writeQuote(selectedRequest.id, "quoted", { ...buildQuoteInput(), ...uploaded });
+    setIsSaving(false);
+    if (!ok) return;
 
     setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: [], amount: "", memo: "", expectedCra: "", monitoringPerSite: "", edcBrand: "" });
     setAttachment(null);
     setIsEditing(false);
-    setSelectedRequest(null);
-    loadRequests();
     alert("견적서가 제출되었습니다.");
   };
 
   // 의뢰 거절
-  const rejectRequest = (requestId: string) => {
+  const rejectRequest = async (requestId: string) => {
     if (!user || !confirm("이 의뢰를 거절하시겠습니까?")) return;
-
-    const quote: Quote = {
-      id: crypto.randomUUID(),
-      requestId,
-      partnerId: user.id,
-      partnerCompany: user.company,
-      amount: "",
-      duration: "",
-      memo: "거절",
-      status: "rejected",
-      createdAt: new Date().toISOString(),
-    };
-
-    const allRequests: MatchRequest[] = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r) => r.id === requestId);
-    if (idx !== -1) {
-      if (!allRequests[idx].quotes) allRequests[idx].quotes = [];
-      allRequests[idx].quotes.push(quote);
-      localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-    }
-
-    setSelectedRequest(null);
-    loadRequests();
+    await writeQuote(requestId, "rejected", { memo: "거절" });
   };
 
   // 임시저장
-  const saveDraft = (requestId: string) => {
+  const saveDraft = async (requestId: string) => {
     if (!user || !selectedRequest) return;
-    const draftQuote = buildQuote("reviewing");
-    draftQuote.requestId = requestId;
-    const allRequests: MatchRequest[] = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r) => r.id === requestId);
-    if (idx !== -1) {
-      if (!allRequests[idx].quotes) allRequests[idx].quotes = [];
-      const existingIdx = allRequests[idx].quotes.findIndex((q) => q.partnerId === user.id);
-      if (existingIdx !== -1) {
-        allRequests[idx].quotes[existingIdx] = draftQuote;
-      } else {
-        allRequests[idx].quotes.push(draftQuote);
-      }
-      localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-    }
+    setIsSaving(true);
+    const uploaded = await uploadAttachmentIfAny(requestId);
+    const ok = await writeQuote(requestId, "reviewing", { ...buildQuoteInput(), ...uploaded });
+    setIsSaving(false);
+    if (!ok) return;
     setIsEditing(false);
-    loadRequests();
     alert("임시저장되었습니다.");
+  };
+
+  // 첨부파일은 행에 base64로 담지 않고 Storage에 올린다. 5MB짜리 파일을
+  // 문자열로 바꾸면 DB 행이 그만큼 부풀고 목록 조회까지 같이 느려진다.
+  const uploadAttachmentIfAny = async (requestId: string) => {
+    if (!attachment || !user) return {};
+    try {
+      const { path, name } = await uploadQuoteAttachment(user.companyId, requestId, attachment);
+      return { attachmentPath: path, attachmentName: name };
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "첨부파일 업로드에 실패했습니다.");
+      return {};
+    }
+  };
+
+  // 첨부파일은 비공개 버킷에 있어 주소를 그대로 열 수 없다. 볼 때마다
+  // 짧게 유효한 서명 링크를 받아서 연다.
+  const openAttachment = async (path?: string) => {
+    if (!path) return;
+    const url = await getAttachmentUrl(path);
+    if (url) window.open(url, "_blank");
+    else alert("첨부파일을 열지 못했습니다.");
   };
 
   // 파일 첨부 핸들러
@@ -238,11 +221,7 @@ export default function PartnerDashboard() {
       alert("파일 크기는 5MB 이하만 가능합니다.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAttachment({ name: file.name, data: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+    setAttachment(file);
   };
 
   // 받은 의뢰 = 아직 열려 있는(pending) 의뢰. 숫자(stats)와 목록(filteredRequests)이 동일 집합을 사용한다.
@@ -260,55 +239,19 @@ export default function PartnerDashboard() {
   ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // 보류 처리
-  const holdRequest = (requestId: string) => {
-    if (!user) return;
-    const allRequests: MatchRequest[] = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r) => r.id === requestId);
-    if (idx !== -1) {
-      if (!allRequests[idx].quotes) allRequests[idx].quotes = [];
-      const existingIdx = allRequests[idx].quotes.findIndex((q) => q.partnerId === user.id);
-      const holdQuote: Quote = {
-        id: crypto.randomUUID(),
-        requestId,
-        partnerId: user.id,
-        partnerCompany: user.company,
-        amount: "",
-        duration: "",
-        memo: "보류",
-        status: "hold",
-        createdAt: new Date().toISOString(),
-      };
-      if (existingIdx !== -1) {
-        allRequests[idx].quotes[existingIdx] = holdQuote;
-      } else {
-        allRequests[idx].quotes.push(holdQuote);
-      }
-      localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-    }
-    setSelectedRequest(null);
-    loadRequests();
+  const holdRequest = async (requestId: string) => {
+    await writeQuote(requestId, "hold", { memo: "보류" });
   };
 
   // 보류→검토중 재전환
-  const resumeReview = (requestId: string) => {
-    if (!user) return;
-    const allRequests: MatchRequest[] = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-    const idx = allRequests.findIndex((r) => r.id === requestId);
-    if (idx !== -1 && allRequests[idx].quotes) {
-      const qIdx = allRequests[idx].quotes.findIndex((q) => q.partnerId === user.id);
-      if (qIdx !== -1) {
-        allRequests[idx].quotes[qIdx].status = "reviewing";
-        localStorage.setItem("sonjobda_requests", JSON.stringify(allRequests));
-      }
-    }
-    setSelectedRequest(null);
-    loadRequests();
+  const resumeReview = async (requestId: string) => {
+    await writeQuote(requestId, "reviewing");
   };
 
   // 보낸 견적: quoted 상태인 것
   const sentQuotes = requests.filter((r) => ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(getMyQuoteStatus(r)));
   // 매칭 성사: 매칭 성사된 요청 중 내 견적이 있는 것
-  const wonRequests = requests.filter((r) => (r.status === "matched" || r.status === "completed") && (r.quotes || []).some((q) => q.partnerId === user?.id && q.status === "accepted"));
+  const wonRequests = requests.filter((r) => (r.status === "matched" || r.status === "completed") && (r.quotes || []).some((q) => q.companyId === user?.companyId && q.status === "accepted"));
 
   const stats = {
     total: openRequests.length,
@@ -351,7 +294,7 @@ export default function PartnerDashboard() {
 
   // 견적 관련 활동
   requests.forEach((req) => {
-    (req.quotes || []).filter((q) => q.partnerId === user?.id).forEach((q) => {
+    (req.quotes || []).filter((q) => q.companyId === user?.companyId).forEach((q) => {
       if (q.status === "reviewing") {
         activities.push({ id: `draft-${q.id}`, type: "draft", title: `"${req.title}" 견적서를 임시저장했습니다`, detail: q.amount ? `금액: ${q.amount}` : "작성 중", date: q.createdAt, requestId: req.id });
       } else if (q.status === "quoted") {
@@ -493,11 +436,11 @@ export default function PartnerDashboard() {
                         onClick={() => {
                           if (req) {
                             setSelectedRequest(req);
-                            const myQuote = (req.quotes || []).find((q) => q.partnerId === user?.id);
+                            const myQuote = (req.quotes || []).find((q) => q.companyId === user?.companyId);
                             if (myQuote && myQuote.status === "reviewing") {
                               setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: myQuote.timeline || getTimelineFromRequest(req), amount: myQuote.amount, memo: myQuote.memo, expectedCra: myQuote.expectedCra || "", monitoringPerSite: myQuote.monitoringPerSite || "", edcBrand: myQuote.edcBrand || "" });
-                              if (myQuote.attachmentName) setAttachment({ name: myQuote.attachmentName, data: myQuote.attachmentData || "" });
-                              else setAttachment(null);
+                              // 이미 올라간 첨부는 서버에 있다. 다시 고르지 않으면 그대로 유지된다.
+                              setAttachment(null);
                             } else { setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: req ? getTimelineFromRequest(req) : [], amount: "", memo: "", expectedCra: "", monitoringPerSite: "", edcBrand: "" }); setAttachment(null); }
                           } else if (act.type === "notification") {
                             markNotificationRead(act.id.replace("notif-", ""));
@@ -564,7 +507,7 @@ export default function PartnerDashboard() {
                   return (
                     <div key={req.id} onClick={() => {
                       setSelectedRequest(req);
-                      const myQuote = (req.quotes || []).find((q) => q.partnerId === user?.id);
+                      const myQuote = (req.quotes || []).find((q) => q.companyId === user?.companyId);
                       if (myQuote && (myQuote.status === "reviewing" || myQuote.status === "quoted")) {
                         setQuoteForm({
                           subjectCount: myQuote.subjectCount || "", siteCountCapital: myQuote.siteCountCapital || "", siteCountLocal: myQuote.siteCountLocal || "",
@@ -573,8 +516,7 @@ export default function PartnerDashboard() {
                           amount: myQuote.amount, memo: myQuote.memo,
                           expectedCra: myQuote.expectedCra || "", monitoringPerSite: myQuote.monitoringPerSite || "", edcBrand: myQuote.edcBrand || "",
                         });
-                        if (myQuote.attachmentName) setAttachment({ name: myQuote.attachmentName, data: myQuote.attachmentData || "" });
-                        else setAttachment(null);
+                        setAttachment(null);
                       } else {
                         setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: getTimelineFromRequest(req), amount: "", memo: "", expectedCra: "", monitoringPerSite: "", edcBrand: "" });
                         setAttachment(null);
@@ -638,8 +580,8 @@ export default function PartnerDashboard() {
                       </thead>
                       <tbody>
                         {[...sentQuotes].sort((a, b) => {
-                          const aQ = (a.quotes || []).find((q) => q.partnerId === user?.id);
-                          const bQ = (b.quotes || []).find((q) => q.partnerId === user?.id);
+                          const aQ = (a.quotes || []).find((q) => q.companyId === user?.companyId);
+                          const bQ = (b.quotes || []).find((q) => q.companyId === user?.companyId);
                           let cmp = 0;
                           if (sentSortBy === "quoteCode") cmp = (aQ?.quoteCode || "").localeCompare(bQ?.quoteCode || "");
                           else if (sentSortBy === "title") cmp = a.title.localeCompare(b.title);
@@ -650,7 +592,7 @@ export default function PartnerDashboard() {
                           else if (sentSortBy === "date") cmp = new Date(aQ?.createdAt || 0).getTime() - new Date(bQ?.createdAt || 0).getTime();
                           return sentSortDir === "desc" ? -cmp : cmp;
                         }).map((req) => {
-                          const myQuote = (req.quotes || []).find((q) => q.partnerId === user?.id && ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status));
+                          const myQuote = (req.quotes || []).find((q) => q.companyId === user?.companyId && ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status));
                           const isOpen = selectedRequest?.id === req.id && activeSection === "sent";
                           const statusLabel = myQuote?.status === "accepted" ? "수락됨" : myQuote?.status === "client_reviewing" ? "의뢰사 검토중" : myQuote?.status === "client_rejected" ? "거절됨" : myQuote?.status === "not_selected" ? "미결정" : myQuote?.status === "client_hold" ? "의뢰사 보류" : "견적완료";
                           const statusColor = myQuote?.status === "accepted" ? "bg-primary/10 text-primary" : myQuote?.status === "client_reviewing" ? "bg-amber-100 text-amber-700" : myQuote?.status === "client_rejected" ? "bg-red-100 text-red-600" : myQuote?.status === "not_selected" ? "bg-gray-100 text-gray-500" : myQuote?.status === "client_hold" ? "bg-gray-100 text-gray-600" : "bg-emerald-100 text-emerald-700";
@@ -710,7 +652,7 @@ export default function PartnerDashboard() {
                                     )}
                                     {/* 첨부파일 */}
                                     {myQuote?.attachmentName && (
-                                      <button onClick={() => { if (myQuote.attachmentData) { const a = document.createElement("a"); a.href = myQuote.attachmentData; a.download = myQuote.attachmentName || "file"; a.click(); } }}
+                                      <button onClick={() => openAttachment(myQuote.attachmentData)}
                                         className="flex items-center gap-2 rounded-lg border border-border bg-surface p-3 text-primary/70 hover:border-primary hover:text-primary">
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                                         <span className="text-sm">{myQuote.attachmentName}</span>
@@ -723,21 +665,19 @@ export default function PartnerDashboard() {
                                           setSelectedRequest(req);
                                           if (myQuote) {
                                             setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: myQuote.timeline || getTimelineFromRequest(req), amount: myQuote.amount, memo: myQuote.memo, expectedCra: "", monitoringPerSite: "", edcBrand: "" });
-                                            if (myQuote.attachmentName) setAttachment({ name: myQuote.attachmentName, data: myQuote.attachmentData || "" });
-                                            else setAttachment(null);
+                                            setAttachment(null);
                                           }
                                           setIsEditing(true);
                                         }} className="rounded-lg border border-primary/30 px-4 py-2 text-xs font-medium text-primary hover:bg-primary/5">수정</button>
-                                        <button onClick={() => {
+                                        <button onClick={async () => {
                                           if (!confirm("제출한 견적서를 회수하시겠습니까?\n회수된 견적은 의뢰사에게 더 이상 노출되지 않습니다.")) return;
-                                          if (!user) return;
-                                          const allReqs: MatchRequest[] = JSON.parse(localStorage.getItem("sonjobda_requests") || "[]");
-                                          const ridx = allReqs.findIndex((r) => r.id === req.id);
-                                          if (ridx !== -1 && allReqs[ridx].quotes) {
-                                            allReqs[ridx].quotes = allReqs[ridx].quotes.filter((q) => !(q.partnerId === user.id && q.status === "quoted"));
-                                            localStorage.setItem("sonjobda_requests", JSON.stringify(allReqs));
+                                          try {
+                                            await withdrawMyQuote(req.id);
+                                            setSelectedRequest(null);
+                                            await loadRequests();
+                                          } catch (err) {
+                                            alert(err instanceof Error ? err.message : "회수하지 못했습니다.");
                                           }
-                                          loadRequests(); setSelectedRequest(null);
                                         }} className="rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50">견적 회수</button>
                                       </div>
                                     ) : (
@@ -773,7 +713,7 @@ export default function PartnerDashboard() {
                   <p className="mt-1 text-sm text-foreground/40">견적서를 제출하고 의뢰사의 선택을 기다려보세요.</p>
                 </div>
               ) : wonRequests.map((req) => {
-                const myQuote = (req.quotes || []).find((q) => q.partnerId === user?.id);
+                const myQuote = (req.quotes || []).find((q) => q.companyId === user?.companyId);
                 return (
                   <div key={req.id} onClick={() => setSelectedRequest(req)}
                     className="cursor-pointer rounded-xl border border-amber-200 bg-amber-50/50 p-5 transition-all hover:border-amber-400 hover:shadow-lg">
@@ -788,20 +728,7 @@ export default function PartnerDashboard() {
                       <span>예산: {req.budget}</span>
                     </div>
                     {/* 의뢰사 연락처 공개 */}
-                    {(() => {
-                      const clientUser = JSON.parse(localStorage.getItem("sonjobda_users") || "[]").find((u: { id: string }) => u.id === req.clientId);
-                      return (
-                        <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                          <p className="mb-2 text-xs font-semibold text-blue-700">매칭 성사로 의뢰사 연락처가 공개되었습니다</p>
-                          <div className="grid grid-cols-2 gap-2 text-xs text-blue-900">
-                            <span>회사명: <span className="font-medium">{req.clientCompany}</span></span>
-                            <span>담당자명: <span className="font-medium">{clientUser?.name || "-"}</span></span>
-                            <span>이메일: <span className="font-medium">{clientUser?.email || "-"}</span></span>
-                            <span>연락처: <span className="font-medium">{clientUser?.phone || "-"}</span></span>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                    <MatchContactPanel requestId={req.id} show="client" />
                   </div>
                 );
               })}
@@ -883,7 +810,7 @@ export default function PartnerDashboard() {
             {/* 견적 작성 or 제출 완료 상태 */}
             {(() => {
               const myStatus = getMyQuoteStatus(selectedRequest);
-              const myQuote = (selectedRequest.quotes || []).find((q) => q.partnerId === user?.id);
+              const myQuote = (selectedRequest.quotes || []).find((q) => q.companyId === user?.companyId);
 
               // 마감된 의뢰(매칭 성사/완료/회수)는 더 이상 견적을 제출할 수 없다.
               // 단, 이미 제출해 의뢰사 검토/수락/미결정 등으로 확정된 내 견적은 그대로 조회되게 둔다.
@@ -938,8 +865,7 @@ export default function PartnerDashboard() {
                         {myQuote.status === "quoted" && selectedRequest.status === "pending" && (
                           <button onClick={() => {
                             setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: myQuote.timeline || getTimelineFromRequest(selectedRequest), amount: myQuote.amount, memo: myQuote.memo, expectedCra: "", monitoringPerSite: "", edcBrand: "" });
-                            if (myQuote.attachmentName) setAttachment({ name: myQuote.attachmentName, data: myQuote.attachmentData || "" });
-                            else setAttachment(null);
+                            setAttachment(null);
                             setIsEditing(true);
                           }} className="rounded-lg border border-emerald-300 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">수정</button>
                         )}
@@ -992,7 +918,7 @@ export default function PartnerDashboard() {
                       )}
                       {/* 첨부파일 */}
                       {myQuote.attachmentName && (
-                        <button onClick={() => { if (myQuote.attachmentData) { const a = document.createElement("a"); a.href = myQuote.attachmentData; a.download = myQuote.attachmentName || "file"; a.click(); } }}
+                        <button onClick={() => openAttachment(myQuote.attachmentData)}
                           className="mt-3 flex w-full items-center gap-2 rounded-lg border border-emerald-200 bg-surface p-3 text-emerald-700 hover:bg-emerald-50">
                           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                           <div className="text-left">
