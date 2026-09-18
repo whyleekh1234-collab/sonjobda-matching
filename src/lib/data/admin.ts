@@ -20,6 +20,7 @@ export interface AdminUser {
   status: string;
   verified?: boolean;
   isCompanyAdmin?: boolean;
+  isPlatformAdmin?: boolean;
   allowCategoryEdit?: boolean;
   createdAt?: string;
 }
@@ -47,6 +48,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     partnerCategories: r.partner_categories ?? [],
     status: r.status,
     isCompanyAdmin: r.is_company_admin,
+    isPlatformAdmin: r.is_platform_admin,
     verified: r.verified,
     allowCategoryEdit: r.allow_category_edit,
     createdAt: r.created_at,

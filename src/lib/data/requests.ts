@@ -26,7 +26,7 @@ type QuoteRow = {
   quote_code: string | null;
   request_id: string;
   company_id: string;
-  submitted_by: string;
+  submitted_by: string | null;   // 담당자가 탈퇴하면 null. 견적 자체는 회사 것이라 남는다.
   amount: number | null;
   duration: string | null;
   memo: string | null;
@@ -44,7 +44,7 @@ type RequestRow = {
   request_code: string | null;
   match_code: string | null;
   company_id: string;
-  created_by: string;
+  created_by: string | null;     // 담당자가 탈퇴하면 null. 의뢰 자체는 회사 것이라 남는다.
   title: string;
   category: string;
   description: string | null;
@@ -75,7 +75,7 @@ function toQuote(row: QuoteRow): Quote {
     ...(row.quote_code && { quoteCode: row.quote_code }),
     requestId: row.request_id,
     companyId: row.company_id,
-    partnerId: row.submitted_by,
+    partnerId: row.submitted_by ?? "",
     partnerCompany: row.companies?.name ?? "",
     amount: formatAmount(row.amount),
     duration: row.duration ?? "",
@@ -102,7 +102,7 @@ function toRequest(row: RequestRow): MatchRequest {
     id: row.id,
     ...(row.request_code && { requestCode: row.request_code }),
     ...(row.match_code && { matchCode: row.match_code }),
-    clientId: row.created_by,
+    clientId: row.created_by ?? "",
     clientCompany: row.companies?.name ?? "",
     title: row.title,
     category: row.category,

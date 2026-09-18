@@ -122,7 +122,10 @@ export default function AdminDashboard() {
         listAllNotices(),
         listAllNotifications(),
       ]);
-      setUsers(userList);
+      // 운영자는 회원이 아니다. 계정 구조상 프로필을 갖고 있지만(권한 함수가
+      // 프로필을 전제로 한다) 회원 목록·통계·회원번호 체계에서는 빼야 한다.
+      // 손잡다메디칼 직원이 "의뢰사 회원"으로 세어지면 안 된다.
+      setUsers(userList.filter((u) => !u.isPlatformAdmin));
       setInquiries(inquiryList);
       setAllRequests(requestList);
       setNotices(noticeList);
