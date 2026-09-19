@@ -21,6 +21,18 @@ import type { MatchRequest, Quote, QuoteStatus, TimelineItem } from "@/types/mat
 import type { Notice, Notification } from "@/types/auth";
 import Greeting from "@/components/dashboard/Greeting";
 
+// request/new의 marketingTypeOptions와 같은 키를 쓴다.
+const MARKETING_TYPES = [
+  { key: "all", label: "전체" },
+  { key: "symposium", label: "심포지엄/세미나" },
+  { key: "webinar", label: "웨비나" },
+  { key: "booth", label: "학회 부스" },
+  { key: "cso", label: "CSO" },
+  { key: "patient", label: "환자유치" },
+  { key: "digital", label: "디지털" },
+  { key: "other", label: "기타" },
+];
+
 export default function PartnerDashboard() {
   const { user } = useAuth();
   const router = useRouter();
@@ -46,6 +58,7 @@ export default function PartnerDashboard() {
     else { setSentSortBy(key); setSentSortDir("asc"); }
   };
   const [activeSection, setActiveSection] = useState<"activity" | "received" | "sent" | "won">("activity");
+  const [mktFilter, setMktFilter] = useState<string>("all");
 
   // 어떤 의뢰가 보이는지는 서버가 정한다. 내 카테고리의 열린 의뢰와, 우리
   // 회사가 견적을 낸 의뢰가 온다. 우리 회사가 올린 의뢰도 같이 오는데
@@ -250,11 +263,19 @@ export default function PartnerDashboard() {
   );
 
   // 필터링 ("마감" 탭은 closedRequests, 나머지는 열린 의뢰를 견적상태별로)
+  // 마케팅 대행은 한 분야 안에 심포지엄·웨비나·CSO·환자유치처럼 서로 다른
+  // 업종이 섞여 있다. 분야를 쪼개는 대신 화면에서 유형으로 걸러 준다.
+  // 마케팅 의뢰가 하나도 없으면 칩 자체를 안 보여준다.
+  const mktTypeOf = (r: MatchRequest) => String((r.formData as Record<string, unknown> | undefined)?.mktType ?? "");
+  const hasMarketing = requests.some((r) => r.category === "마케팅 대행");
+
   const filteredRequests = (
     filterStatus === "closed"
       ? closedRequests
       : openRequests.filter((r) => filterStatus === "all" || getMyQuoteStatus(r) === filterStatus)
-  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  )
+    .filter((r) => mktFilter === "all" || (r.category === "마케팅 대행" && mktTypeOf(r) === mktFilter))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // 보류 처리
   const holdRequest = async (requestId: string) => {
@@ -505,6 +526,25 @@ export default function PartnerDashboard() {
                 </button>
               ))}
             </div>
+            {hasMarketing && (
+              <div className="mt-2 flex items-center gap-2 overflow-x-auto">
+                <span className="whitespace-nowrap text-xs text-foreground/40">마케팅 유형</span>
+                {MARKETING_TYPES.map((t) => {
+                  const count = t.key === "all"
+                    ? requests.filter((r) => r.category === "마케팅 대행").length
+                    : requests.filter((r) => r.category === "마케팅 대행" && mktTypeOf(r) === t.key).length;
+                  if (t.key !== "all" && count === 0) return null;
+                  return (
+                    <button key={t.key} onClick={() => setMktFilter(t.key)}
+                      className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                        mktFilter === t.key ? "border-primary bg-primary/10 text-primary" : "border-border bg-surface text-foreground/60 hover:bg-muted"
+                      }`}>
+                      {t.label} {count > 0 && <span className="ml-0.5 opacity-70">{count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="mt-4 space-y-4">
               {filteredRequests.length === 0 ? (
@@ -536,7 +576,12 @@ export default function PartnerDashboard() {
                       }
                     }} className="cursor-pointer rounded-xl border border-border bg-surface shadow-card p-5 transition-all hover:border-primary hover:shadow-lg">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">{req.category}</span>
+                        <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">
+                          {req.category}
+                          {req.category === "마케팅 대행" && mktTypeOf(req) && (
+                            <span className="text-foreground/40"> · {MARKETING_TYPES.find((t) => t.key === mktTypeOf(req))?.label ?? mktTypeOf(req)}</span>
+                          )}
+                        </span>
                         {closedLabel ? (
                           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">{closedLabel}</span>
                         ) : (
