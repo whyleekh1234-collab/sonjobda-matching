@@ -1082,7 +1082,7 @@ export default function PartnerDashboard() {
                         <label className="block text-sm font-medium text-foreground">EDC 브랜드</label>
                         <input type="text" value={quoteForm.edcBrand}
                           onChange={(e) => setQuoteForm({ ...quoteForm, edcBrand: e.target.value })}
-                          placeholder="예: Medidata Rave, CRScube" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                          placeholder="사용 예정 EDC 시스템" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                       </div>
                     )}
 

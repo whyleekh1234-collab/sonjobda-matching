@@ -72,7 +72,7 @@ export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
     { key: "site_network", label: "협력 기관(병원) 수", type: "number" },
     { key: "services", label: "제공 서비스", type: "multi",
       options: ["프로토콜 개발", "IRB/규제 제출", "모니터링", "데이터 관리(DM)", "통계", "메디컬 라이팅", "약물감시(PV)", "임상 물류"] },
-    { key: "edc", label: "사용 EDC", type: "text", placeholder: "예: Medidata Rave, Oracle, 자체 개발" },
+    { key: "edc", label: "사용 EDC", type: "text", placeholder: "예: 상용 EDC, 자체 개발" },
   ],
   "CMO/CDMO": [
     { key: "dosage_forms", label: "생산 가능 제형", type: "multi",
