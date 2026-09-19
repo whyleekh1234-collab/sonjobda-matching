@@ -260,6 +260,12 @@ export default function AdminDashboard() {
 
   // ─── 회원 관리 ───
   const updateUserField = (userId: string, field: string, value: unknown) => {
+    // 회사유형은 프로필 수정 함수(10단계)로 간다. 이해상충 트리거에 걸리면
+    // 서버 메시지가 그대로 알림으로 뜬다.
+    if (field === "partnerCategories") {
+      run(() => updateProfileAsAdmin(userId, { partnerCategories: value as string[] }));
+      return;
+    }
     const key =
       field === "status" ? { status: value as string }
       : field === "verified" ? { verified: value as boolean }
@@ -1576,8 +1582,9 @@ export default function AdminDashboard() {
                           onChange={() => {
                             const current = selectedUser.partnerCategories || [];
                             const updated = current.includes(cat) ? current.filter((c) => c !== cat) : [...current, cat];
-                            updateUserField(selectedUser.id, "partnerCategories", updated);
                             setSelectedUser({ ...selectedUser, partnerCategories: updated });
+                            run(() => updateProfileAsAdmin(selectedUser.id, { partnerCategories: updated }))
+                              .then(() => setUsers((prev) => { const u = prev.find((x) => x.id === selectedUser.id); if (u) setSelectedUser({ ...selectedUser, partnerCategories: u.partnerCategories }); return prev; }));
                           }}
                           className="h-4 w-4 rounded border-border accent-primary" />
                         <span className="text-sm text-foreground/70">{cat}</span>
