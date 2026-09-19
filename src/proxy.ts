@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/env";
+import { SITE_LOCK_COOKIE, hasSiteAccess, siteLockCode } from "@/lib/siteLock";
 
 // Supabase 세션 쿠키는 액세스 토큰이 만료되면(기본 1시간) 서버가 매 요청마다
 // 갱신해줘야 한다. 이걸 안 하면 로그인이 슬며시 끊긴다. 요청 경로 보호도
@@ -13,6 +14,19 @@ import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/env";
 const PROTECTED_PREFIXES = ["/dashboard", "/mypage"];
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 비공개 운영 중이면 접속 코드부터 확인한다. 코드 입력 화면과 그 제출
+  // 경로만 열어 둔다. 검색엔진도 색인하지 못하게 막는다.
+  if (siteLockCode()) {
+    const isGate = pathname === "/gate" || pathname === "/api/gate";
+    if (!isGate && !(await hasSiteAccess(request.cookies.get(SITE_LOCK_COOKIE)?.value))) {
+      const gate = new URL("/gate", request.url);
+      if (pathname !== "/") gate.searchParams.set("next", pathname);
+      return NextResponse.redirect(gate);
+    }
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl(), supabasePublishableKey(), {
@@ -36,8 +50,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-
   const needsUser = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
   if (needsUser && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -58,6 +70,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  if (siteLockCode()) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
   return response;
 }
 
