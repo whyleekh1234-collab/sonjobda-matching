@@ -47,17 +47,27 @@ export const REGIONS = ["국내", "일본", "중국", "아시아(기타)", "미�
 
 export const CERTIFICATIONS = ["KGCP", "ICH-GCP", "GMP", "KGMP", "ISO 9001", "ISO 13485", "ISO 27001", "CAP/CLIA", "기타"];
 
-// 분야별 추가 항목. key는 extra에 저장되는 이름.
+// 분야별 항목. key는 extra에 저장되는 이름. column이 있으면 extra가 아니라
+// 프로필 컬럼(therapeuticAreas 등)에 저장되는 공통 항목을 그 분야 카드에서
+// 물어본다는 뜻이다 — 질환영역·Phase·지역은 임상 분야(CRO·SMO)에서만 의미가 있다.
 export type ExtraField = {
   key: string;
   label: string;
   type: "text" | "number" | "multi";
   options?: string[];
   placeholder?: string;
+  column?: "therapeuticAreas" | "phases" | "regions";
 };
+
+const CLINICAL_COMMON: ExtraField[] = [
+  { key: "therapeuticAreas", label: "전문 질환영역", type: "multi", options: THERAPEUTIC_AREAS, column: "therapeuticAreas" },
+  { key: "phases", label: "경험 단계", type: "multi", options: PHASES, column: "phases" },
+  { key: "regions", label: "수행 지역", type: "multi", options: REGIONS, column: "regions" },
+];
 
 export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
   "CRO": [
+    ...CLINICAL_COMMON,
     { key: "cra_count", label: "보유 CRA 수", type: "number" },
     { key: "site_network", label: "협력 기관(병원) 수", type: "number" },
     { key: "services", label: "제공 서비스", type: "multi",
@@ -71,6 +81,7 @@ export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
     { key: "gmp_scope", label: "GMP 인증 범위", type: "text", placeholder: "예: MFDS, FDA, EU-GMP" },
   ],
   "SMO": [
+    ...CLINICAL_COMMON,
     { key: "crc_count", label: "보유 CRC 수", type: "number" },
     { key: "site_count", label: "관리 실시기관 수", type: "number" },
     { key: "site_regions", label: "실시기관 지역", type: "multi", options: ["수도권", "충청", "영남", "호남", "강원/제주"] },
@@ -91,24 +102,38 @@ export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
       options: ["심포지엄/세미나", "웨비나", "학회 부스", "CSO(영업대행)", "환자유치 프로그램", "데이터 구독", "디지털 마케팅"] },
     { key: "annual_events", label: "연간 행사 수행 건수", type: "number" },
   ],
-  "임상시험 보험": [],
+  "임상시험 보험": [
+    { key: "insurers", label: "제휴 보험사", type: "text", placeholder: "예: ○○화재, △△손보" },
+    { key: "coverage", label: "가입 가능 범위", type: "multi", options: ["국내 임상", "다국가 임상", "의료기기 임상", "IIT"] },
+  ],
 };
+
+// 분야별 카드의 작성률
+export function categoryCompleteness(p: Omit<PartnerProfile, "companyId">, category: string): number {
+  const fields = EXTRA_FIELDS[category] ?? [];
+  if (fields.length === 0) return 100;
+  const done = fields.filter((f) => {
+    const v = f.column ? p[f.column] : p.extra[f.key];
+    return Array.isArray(v) ? v.length > 0 : String(v ?? "").trim().length > 0;
+  }).length;
+  return Math.round((done / fields.length) * 100);
+}
 
 // 프로필이 얼마나 채워졌는지. 파트너에게 동기를 주고, 나중에 추천 순위에도 쓴다.
 export function profileCompleteness(p: Omit<PartnerProfile, "companyId">, categories: string[]): number {
   const checks: boolean[] = [
     p.intro.trim().length > 0,
-    p.therapeuticAreas.length > 0,
-    p.phases.length > 0,
-    p.regions.length > 0,
     p.employees !== null,
     p.annualProjects !== null,
     p.certifications.length > 0,
     p.trackRecord.trim().length > 0,
   ];
+  const seen = new Set<string>();
   for (const cat of categories) {
     for (const f of EXTRA_FIELDS[cat] ?? []) {
-      const v = p.extra[f.key];
+      if (seen.has(f.key)) continue; // CRO·SMO 둘 다면 질환영역은 한 번만 센다
+      seen.add(f.key);
+      const v = f.column ? p[f.column] : p.extra[f.key];
       checks.push(Array.isArray(v) ? v.length > 0 : String(v ?? "").trim().length > 0);
     }
   }

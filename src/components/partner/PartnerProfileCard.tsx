@@ -43,34 +43,44 @@ export default function PartnerProfileCard({
       </div>
 
       {open && (
-        <div className="mt-3 space-y-3 border-t border-border pt-3">
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
-            {[
-              ["전문 질환영역", profile.therapeuticAreas.join(", ")],
-              ["경험 단계", profile.phases.join(", ")],
-              ["수행 지역", profile.regions.join(", ")],
-              ["직원 수", profile.employees !== null ? `${profile.employees.toLocaleString()}명` : ""],
-              ["연간 수행 과제", profile.annualProjects !== null ? `${profile.annualProjects}건` : ""],
-              ["인증", profile.certifications.join(", ")],
-              ...extraFields.map((f) => {
-                const v = profile.extra[f.key];
-                return [f.label, Array.isArray(v) ? v.join(", ") : String(v ?? "")] as [string, string];
-              }),
-            ].filter(([, v]) => v).map(([k, v]) => (
-              <div key={k}>
-                <dt className="text-foreground/40">{k}</dt>
-                <dd className="mt-0.5 break-keep text-foreground">{v}</dd>
-              </div>
-            ))}
-          </dl>
+        <div className="mt-3 space-y-4 border-t border-border pt-3">
+          <Section title="회사 소개" rows={[
+            ["직원 수", profile.employees !== null ? `${profile.employees.toLocaleString()}명` : ""],
+            ["연간 수행 과제", profile.annualProjects !== null ? `${profile.annualProjects}건` : ""],
+            ["보유 인증", profile.certifications.join(", ")],
+          ]} />
+          {categories.map((cat) => (
+            <Section key={cat} title={`${cat} 역량`} rows={(EXTRA_FIELDS[cat] ?? []).map((f) => {
+              const v = f.column ? profile[f.column] : profile.extra[f.key];
+              return [f.label, Array.isArray(v) ? v.join(", ") : String(v ?? "")] as [string, string];
+            })} />
+          ))}
           {profile.trackRecord && (
             <div>
-              <p className="text-xs text-foreground/40">대표 실적</p>
+              <p className="text-xs font-semibold text-foreground/50">대표 실적</p>
               <p className="mt-1 whitespace-pre-line text-xs text-foreground/80">{profile.trackRecord}</p>
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function Section({ title, rows }: { title: string; rows: [string, string][] }) {
+  const filled = rows.filter(([, v]) => v);
+  if (filled.length === 0) return null;
+  return (
+    <div>
+      <p className="text-xs font-semibold text-foreground/50">{title}</p>
+      <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
+        {filled.map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-foreground/40">{k}</dt>
+            <dd className="mt-0.5 break-keep text-foreground">{v}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
