@@ -945,7 +945,7 @@ export default function AdminDashboard() {
                                                   {/* 업무범위 */}
                                                   {(quote as { timeline?: { label: string; months: string }[] }).timeline?.filter((t) => t.months).length ? (
                                                     <div className="mt-3">
-                                                      <p className="text-xs text-foreground/40">업무범위 및 소요개월</p>
+                                                      <p className="text-xs text-foreground/40">업무범위 및 업무진행 소요개월(계약기간)</p>
                                                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                                                         {(quote as { timeline?: { label: string; months: string }[] }).timeline!.filter((t) => t.months).map((t, ti) => (
                                                           <span key={ti} className="rounded-md border border-border bg-muted/50 px-2 py-1 text-xs">

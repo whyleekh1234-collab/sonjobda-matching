@@ -530,7 +530,7 @@ export default function ClientDashboard() {
                               {/* 업무범위 요약 */}
                               {quote.timeline && quote.timeline.length > 0 && (
                                 <div className="mt-3">
-                                  <p className="text-xs text-foreground/40">업무범위 및 소요개월</p>
+                                  <p className="text-xs text-foreground/40">업무범위 및 업무진행 소요개월(계약기간)</p>
                                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                                     {quote.timeline.filter((t: { months: string }) => t.months).map((t: { label: string; months: string }, ti: number) => (
                                       <span key={ti} className="rounded-md border border-border bg-muted/50 px-2 py-1 text-xs">
