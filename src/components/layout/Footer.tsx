@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// 통신판매업 신고번호. 실제 번호를 받으면 여기 한 곳만 바꾸면 된다.
+// 형식 예: 2026-경기남양주-0000
+const MAIL_ORDER_REG_NO = "신고번호 입력 예정";
+
 const linkColumns = [
   {
     heading: "서비스",
@@ -31,6 +35,7 @@ const legalLinks = [
   // 개인정보처리방침은 다른 항목보다 눈에 띄게 두는 것이 국내 관례다.
   { label: "개인정보처리방침", href: "/privacy", emphasis: true },
   { label: "이용약관", href: "/terms" },
+  { label: "서비스운영정책", href: "/policy" },
   { label: "정보보호정책", href: "/security" },
 ];
 
@@ -106,12 +111,24 @@ export default function Footer() {
               <dd className="text-foreground/70">501-87-03457</dd>
             </div>
             <div className="flex gap-1.5">
+              <dt>통신판매업신고</dt>
+              <dd className="text-foreground/70">{MAIL_ORDER_REG_NO}</dd>
+            </div>
+            <div className="flex gap-1.5">
               <dt>주소</dt>
               <dd className="text-foreground/70">
                 경기도 남양주시 별내3로 322, 4층 403호 (별내동, 스카이프라자)
               </dd>
             </div>
           </dl>
+
+          {/* 통신판매중개자 고지. 플랫폼은 거래의 당사자가 아니라는 법적 고지로,
+              중개 플랫폼은 관례적으로 사업자 정보 바로 아래에 둔다. */}
+          <p className="mt-4 max-w-4xl text-xs leading-relaxed text-foreground/45">
+            (주) 손잡다메디칼은 통신판매중개자로서 통신판매의 당사자가 아니며, 위수탁사가
+            제공하는 서비스에 대한 이행, 계약사항 등과 관련한 의무와 책임은 거래당사자에게
+            있습니다.
+          </p>
         </div>
 
         {/* 하단: 저작권 + 약관 */}
