@@ -60,6 +60,25 @@ interface UserData {
 // 하나로 통일했다. 호버 강조는 globals.css의 전역 규칙이 맡는다.
 const ACTION_BTN =
   "rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900";
+// 회원 목록 행의 작은 동작 버튼. 같은 톤, 작은 크기.
+const ROW_BTN =
+  "rounded bg-slate-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-slate-900";
+
+// 회원 유형 표시. 색 대신 채움/테두리로 구분한다 — 의뢰사는 채운 배지,
+// 파트너사는 테두리 배지. 색약이어도, 흑백 인쇄해도 구분된다.
+function RoleBadge({ role }: { role: string }) {
+  const partner = role === "partner";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+      partner
+        ? "border border-slate-400 bg-transparent text-slate-700"
+        : "border border-slate-700 bg-slate-700 text-white"
+    }`}>
+      <span className="text-[10px] opacity-70">{partner ? "P" : "C"}</span>
+      {partner ? "파트너사" : "의뢰사"}
+    </span>
+  );
+}
 
 const typeLabels: Record<string, string> = {
   general: "일반 문의",
@@ -588,11 +607,7 @@ export default function AdminDashboard() {
                         <td className="px-4 py-3 text-foreground/70">{user.company}</td>
                         <td className="px-4 py-3">
                           <div className="flex gap-1">
-                            {user.roles?.map((role) => (
-                              <span key={role} className={`rounded-full px-2 py-0.5 text-xs font-medium ${role === "partner" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
-                                {role === "client" ? "의뢰사" : "파트너사"}
-                              </span>
-                            ))}
+                            {user.roles?.map((role) => <RoleBadge key={role} role={role} />)}
                           </div>
                         </td>
                         <td className="px-4 py-3">
@@ -605,23 +620,23 @@ export default function AdminDashboard() {
                         <td className="px-4 py-3">
                           <div className="flex gap-1">
                             {(user.status === "pending" || !user.status) && (
-                              <button onClick={() => updateUserField(user.id, "status", "approved")} className="rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50">승인</button>
+                              <button onClick={() => updateUserField(user.id, "status", "approved")} className={ROW_BTN}>승인</button>
                             )}
                             {(user.status === "suspended" || user.status === "restricted") && (
-                              <button onClick={() => updateUserField(user.id, "status", "approved")} className="rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50">해제</button>
+                              <button onClick={() => updateUserField(user.id, "status", "approved")} className={ROW_BTN}>해제</button>
                             )}
                             {(user.status === "approved" || user.status === "pending" || !user.status) && (
                               <button onClick={() => { if (confirm(`"${user.name}" 회원을 제한하시겠습니까?\n제한된 회원은 조회만 가능합니다.`)) updateUserField(user.id, "status", "restricted"); }}
-                                className="rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50">제한</button>
+                                className={ROW_BTN}>제한</button>
                             )}
                             {(user.status === "approved" || user.status === "restricted" || user.status === "pending" || !user.status) && (
                               <button onClick={() => { if (confirm(`"${user.name}" 회원을 정지하시겠습니까?\n정지된 회원은 로그인할 수 없습니다.`)) updateUserField(user.id, "status", "suspended"); }}
-                                className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">정지</button>
+                                className={ROW_BTN}>정지</button>
                             )}
                             <button onClick={() => { setNotificationForm({ userId: user.id, message: "" }); setShowNotificationModal(true); }}
-                              className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50">알림</button>
+                              className={ROW_BTN}>알림</button>
                             <button onClick={() => { if (confirm(`"${user.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`) && confirm(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) deleteUser(user.id); }}
-                              className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">삭제</button>
+                              className={ROW_BTN}>삭제</button>
                           </div>
                         </td>
                       </tr>
