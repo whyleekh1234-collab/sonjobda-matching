@@ -1,4 +1,5 @@
 import Link from "next/link";
+import EmailCollectionNotice from "./EmailCollectionNotice";
 
 // 통신판매업 신고번호. 실제 번호를 받으면 여기 한 곳만 바꾸면 된다.
 // 형식 예: 2026-경기남양주-0000
@@ -149,7 +150,9 @@ export default function Footer() {
                 </Link>
               </li>
             ))}
-            <li className="text-foreground/40">이메일 무단수집거부</li>
+            <li>
+              <EmailCollectionNotice />
+            </li>
           </ul>
         </div>
       </div>
