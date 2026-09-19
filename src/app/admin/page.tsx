@@ -1355,7 +1355,7 @@ export default function AdminDashboard() {
       {/* ════════════ 알림 발송 모달 ════════════ */}
       {showNotificationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowNotificationModal(false)}>
-          <div className="mx-4 w-full max-w-md rounded-2xl bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="mx-4 w-full max-w-xl rounded-2xl bg-background p-8 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-foreground">알림 발송</h3>
             <div className="mt-4 space-y-3">
               <div>
@@ -1384,9 +1384,9 @@ export default function AdminDashboard() {
       {/* ════════════ 회원 상세보기 모달 ════════════ */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setSelectedUser(null); setUserEdit(null); }}>
-          <div className="mx-4 w-full max-w-lg rounded-2xl bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="mx-4 max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-background p-8 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-foreground">{userEdit ? "회원 정보 수정" : "회원 상세 정보"}</h3>
+              <h3 className="text-2xl font-bold text-foreground">{userEdit ? "회원 정보 수정" : "회원 상세 정보"}</h3>
               <div className="flex items-center gap-2">
                 {!userEdit && (
                   <button onClick={() => setUserEdit({
@@ -1466,8 +1466,8 @@ export default function AdminDashboard() {
               </form>
             ) : (
             <>
-            <div className="mt-5 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="mt-6 space-y-6">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                 <InfoRow label="회원번호" value={selectedUser.memberCode || "-"} />
                 <InfoRow label="회원명" value={selectedUser.name} />
                 <InfoRow label="이메일" value={selectedUser.email} />
@@ -1484,9 +1484,9 @@ export default function AdminDashboard() {
               {selectedUser.roles?.includes("partner") && (
                 <div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-foreground/40">회사유형 (파트너 카테고리)</p>
+                    <p className="text-sm text-foreground/40">회사유형 (파트너 카테고리)</p>
                   </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {["CRO", "CMO/CDMO", "SMO", "RA/인허가", "임상시험 보험", "소모품 공급", "마케팅 대행"].map((cat) => (
                       <label key={cat} className="flex cursor-pointer items-center gap-2">
                         <input type="checkbox" checked={(selectedUser.partnerCategories || []).includes(cat)}
@@ -1497,33 +1497,35 @@ export default function AdminDashboard() {
                             setSelectedUser({ ...selectedUser, partnerCategories: updated });
                           }}
                           className="h-4 w-4 rounded border-border accent-primary" />
-                        <span className="text-xs text-foreground/70">{cat}</span>
+                        <span className="text-sm text-foreground/70">{cat}</span>
                       </label>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-            <div className="mt-6 flex justify-between border-t border-border pt-4">
-              <div className="flex gap-2">
+            {/* 버튼은 왼쪽(상태·권한)과 오른쪽(알림·삭제)으로 나뉜다. 좁으면
+                줄을 바꾸되 버튼 하나가 가운데서 갈라지진 않는다. */}
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+              <div className="flex flex-wrap gap-2">
                 {(selectedUser.status === "pending" || !selectedUser.status) && (
                   <button onClick={() => { updateUserField(selectedUser.id, "status", "approved"); setSelectedUser({ ...selectedUser, status: "approved" }); }}
-                    className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-600 hover:bg-green-100">승인</button>
+                    className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100">승인</button>
                 )}
                 {(selectedUser.status === "suspended" || selectedUser.status === "restricted") && (
                   <button onClick={() => { updateUserField(selectedUser.id, "status", "approved"); setSelectedUser({ ...selectedUser, status: "approved" }); }}
-                    className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-600 hover:bg-green-100">해제</button>
+                    className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100">해제</button>
                 )}
                 {selectedUser.status === "approved" && (
                   <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 제한하시겠습니까?`)) { updateUserField(selectedUser.id, "status", "restricted"); setSelectedUser({ ...selectedUser, status: "restricted" }); } }}
-                    className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-100">제한</button>
+                    className="rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-600 hover:bg-amber-100">제한</button>
                 )}
                 {(selectedUser.status === "approved" || selectedUser.status === "restricted") && (
                   <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 정지하시겠습니까?`)) { updateUserField(selectedUser.id, "status", "suspended"); setSelectedUser({ ...selectedUser, status: "suspended" }); } }}
-                    className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-100">정지</button>
+                    className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-100">정지</button>
                 )}
                 <button onClick={() => { updateUserField(selectedUser.id, "verified", !selectedUser.verified); setSelectedUser({ ...selectedUser, verified: !selectedUser.verified }); }}
-                  className="rounded-lg bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10">
+                  className="rounded-lg bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10">
                   {selectedUser.verified ? "검증 해제" : "검증 승인"}
                 </button>
                 {selectedUser.roles?.includes("partner") && (
@@ -1531,7 +1533,7 @@ export default function AdminDashboard() {
                     updateUserField(selectedUser.id, "allowCategoryEdit", !selectedUser.allowCategoryEdit);
                     setSelectedUser({ ...selectedUser, allowCategoryEdit: !selectedUser.allowCategoryEdit });
                   }}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium ${selectedUser.allowCategoryEdit ? "bg-orange-50 text-orange-600 hover:bg-orange-100" : "bg-teal-50 text-teal-600 hover:bg-teal-100"}`}>
+                    className={`rounded-lg px-4 py-2 text-sm font-medium ${selectedUser.allowCategoryEdit ? "bg-orange-50 text-orange-600 hover:bg-orange-100" : "bg-teal-50 text-teal-600 hover:bg-teal-100"}`}>
                     {selectedUser.allowCategoryEdit ? "회사유형 수정 잠금" : "회사유형 수정 허용"}
                   </button>
                 )}
@@ -1542,15 +1544,15 @@ export default function AdminDashboard() {
                   run(() => setCompanyAdmin(selectedUser.id, next));
                   setSelectedUser({ ...selectedUser, isCompanyAdmin: next });
                 }}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${selectedUser.isCompanyAdmin ? "bg-amber-50 text-amber-600 hover:bg-amber-100" : "bg-purple-50 text-purple-600 hover:bg-purple-100"}`}>
+                  className={`rounded-lg px-4 py-2 text-sm font-medium ${selectedUser.isCompanyAdmin ? "bg-amber-50 text-amber-600 hover:bg-amber-100" : "bg-purple-50 text-purple-600 hover:bg-purple-100"}`}>
                   {selectedUser.isCompanyAdmin ? "회사관리자 해제" : "회사관리자 지정"}
                 </button>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => { setNotificationForm({ userId: selectedUser.id, message: "" }); setShowNotificationModal(true); setSelectedUser(null); }}
-                  className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100">알림 발송</button>
+                  className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100">알림 발송</button>
                 <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`) && confirm(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) { deleteUser(selectedUser.id); setSelectedUser(null); } }}
-                  className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-100">삭제</button>
+                  className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-100">삭제</button>
               </div>
             </div>
             </>
@@ -1565,8 +1567,8 @@ export default function AdminDashboard() {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-foreground/40">{label}</p>
-      <p className="mt-0.5 text-sm font-medium text-foreground">{value}</p>
+      <p className="text-sm text-foreground/40">{label}</p>
+      <p className="mt-1 break-keep text-base font-medium text-foreground">{value}</p>
     </div>
   );
 }

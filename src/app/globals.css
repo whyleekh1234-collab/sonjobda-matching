@@ -70,3 +70,15 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+/* 버튼 공통 호버: 운영·관리자 화면 전체에서 마우스가 닿으면 테두리가
+   또렷해지고 글자가 진해진다. 어떤 버튼이 눌리는지 한눈에 보이게. */
+button:not(:disabled):hover,
+a[role="button"]:hover {
+  box-shadow: 0 0 0 2px var(--primary);
+  font-weight: 600;
+}
+/* 버튼 글자는 줄 중간에서 꺾이지 않는다. "제 한"처럼 두 글자가 갈라져 보이던 문제. */
+button {
+  white-space: nowrap;
+}
