@@ -218,6 +218,39 @@ const csoTaskOptions = [
   "설명회/심포지엄 지원",
 ];
 
+// 웨비나 위탁업무. 오프라인 행사와 달리 장소·장비 대신 플랫폼·송출이 핵심이다.
+const webinarTaskOptions = [
+  "기획/운영 (연자 섭외·프로그램 구성)",
+  "플랫폼 세팅 (Zoom/Webex/자체 플랫폼)",
+  "송출/기술 지원 (스튜디오·촬영·음향)",
+  "디자인 (초청장/슬라이드 템플릿)",
+  "TM/SMS/이메일 (참석자 모집·안내)",
+  "사전등록 페이지 제작",
+  "녹화/편집 (다시보기 제공)",
+  "Q&A·설문 운영",
+  "참석 데이터 리포팅",
+];
+
+// 환자유치 프로그램 위탁업무. 병의원 대상으로 환자 모집·관리를 대행하는 일.
+const patientTaskOptions = [
+  "프로그램 기획 (대상 질환·목표 설정)",
+  "온라인 광고 운영 (검색/SNS/디스플레이)",
+  "콘텐츠 제작 (블로그/영상/카드뉴스)",
+  "랜딩페이지/예약 시스템 제작",
+  "콜센터/상담 운영",
+  "환자 DB 관리 (리마인드·재방문)",
+  "제휴 채널 개발 (커뮤니티/기업/보험)",
+  "성과 분석/리포팅 (유입·전환)",
+];
+
+// 마케팅 유형에 따라 위탁업무 목록이 달라진다.
+function marketingTasksFor(mktType: string) {
+  if (mktType === "cso") return csoTaskOptions;
+  if (mktType === "webinar") return webinarTaskOptions;
+  if (mktType === "patient") return patientTaskOptions;
+  return marketingTaskOptions;
+}
+
 // 소모품 공급 유형
 const supplyTypeOptions = [
   { value: "print", label: "인쇄물 제작 (ICF/CRF/라벨 등)" },
@@ -1497,14 +1530,14 @@ function NewRequestForm() {
                     <label className="block text-sm font-medium text-foreground">위탁업무 *</label>
                     <label className="flex cursor-pointer items-center gap-1.5">
                       <input type="checkbox"
-                        checked={(() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions; return opts.length > 0 && opts.every((t) => tasks.includes(t)); })()}
-                        onChange={() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions; const allSelected = opts.every((t) => tasks.includes(t)); setTasks(allSelected ? tasks.filter((t) => !opts.includes(t)) : [...new Set([...tasks, ...opts])]); }}
+                        checked={(() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions; return opts.length > 0 && opts.every((t) => tasks.includes(t)); })()}
+                        onChange={() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions; const allSelected = opts.every((t) => tasks.includes(t)); setTasks(allSelected ? tasks.filter((t) => !opts.includes(t)) : [...new Set([...tasks, ...opts])]); }}
                         className="h-4 w-4 rounded border-border accent-primary" />
                       <span className="text-xs font-medium text-primary">전체 선택</span>
                     </label>
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2">
-                    {(serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? (mktType === "cso" ? csoTaskOptions : marketingTaskOptions) : generalTaskOptions).map((task) => (
+                    {(serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions).map((task) => (
                       <label key={task} className="flex cursor-pointer items-center gap-2">
                         <input type="checkbox" checked={tasks.includes(task)} onChange={() => toggleTask(task)}
                           className="h-4 w-4 rounded border-border accent-primary" />
