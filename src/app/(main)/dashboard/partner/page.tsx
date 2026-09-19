@@ -101,6 +101,11 @@ export default function PartnerDashboard() {
   };
 
   // 의뢰서에서 위탁업무 파싱하여 타임라인 생성
+  // 의뢰사명은 매칭 성사 전엔 서버가 아예 안 준다(14단계 RLS). 빈 값이면
+  // 비공개로 표시한다. 개별 연락으로 플랫폼을 우회하는 걸 막기 위한 규칙.
+  const clientLabel = (r: MatchRequest) => r.clientCompany || "의뢰사 비공개";
+  const clientHint = (r: MatchRequest) => (r.clientCompany ? "" : " (매칭 성사 후 공개)");
+
   const getTimelineFromRequest = (request: MatchRequest): TimelineItem[] => {
     // 보험 의뢰는 업무범위/소요개월 개념이 없으므로 빈 목록
     if (request.category === "임상시험 보험") return [];
@@ -336,7 +341,7 @@ export default function PartnerDashboard() {
 
   // 의뢰 수신
   requests.forEach((req) => {
-    activities.push({ id: `recv-${req.id}`, type: "received", title: `"${req.title}" 의뢰를 받았습니다`, detail: `${req.clientCompany} | ${req.category}`, date: req.createdAt, requestId: req.id });
+    activities.push({ id: `recv-${req.id}`, type: "received", title: `"${req.title}" 의뢰를 받았습니다`, detail: `${clientLabel(req)} | ${req.category}`, date: req.createdAt, requestId: req.id });
   });
 
   // 견적 관련 활동
@@ -347,16 +352,16 @@ export default function PartnerDashboard() {
       } else if (q.status === "quoted") {
         activities.push({ id: `submit-${q.id}`, type: "submitted", title: `"${req.title}" 견적서를 제출했습니다`, detail: `금액: ${q.amount}${q.attachmentName ? " | 첨부: " + q.attachmentName : ""}`, date: q.createdAt, requestId: req.id });
       } else if (q.status === "rejected") {
-        activities.push({ id: `reject-${q.id}`, type: "rejected", title: `"${req.title}" 의뢰를 거절했습니다`, detail: req.clientCompany, date: q.createdAt, requestId: req.id });
+        activities.push({ id: `reject-${q.id}`, type: "rejected", title: `"${req.title}" 의뢰를 거절했습니다`, detail: clientLabel(req), date: q.createdAt, requestId: req.id });
       } else if (q.status === "hold") {
-        activities.push({ id: `hold-${q.id}`, type: "hold", title: `"${req.title}" 의뢰를 보류했습니다`, detail: req.clientCompany, date: q.createdAt, requestId: req.id });
+        activities.push({ id: `hold-${q.id}`, type: "hold", title: `"${req.title}" 의뢰를 보류했습니다`, detail: clientLabel(req), date: q.createdAt, requestId: req.id });
       }
     });
   });
 
   // 매칭 성사
   wonRequests.forEach((req) => {
-    activities.push({ id: `won-${req.id}`, type: "won", title: `"${req.title}" 수주에 성공했습니다`, detail: `${req.clientCompany} | 예산: ${req.budget}`, date: req.createdAt, requestId: req.id });
+    activities.push({ id: `won-${req.id}`, type: "won", title: `"${req.title}" 수주에 성공했습니다`, detail: `${clientLabel(req)} | 예산: ${req.budget}`, date: req.createdAt, requestId: req.id });
   });
 
   // 알림
@@ -599,7 +604,7 @@ export default function PartnerDashboard() {
                       </div>
                       <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
                       <div className="mt-1 flex flex-wrap gap-4 text-xs text-foreground/50">
-                        <span className="inline-flex items-center gap-1.5 break-all">의뢰사: <CompanyLogo path={req.clientLogo} name={req.clientCompany} size={18} />{req.clientCompany}</span>
+                        <span className="inline-flex items-center gap-1.5 break-all">의뢰사: {req.clientCompany && <CompanyLogo path={req.clientLogo} name={req.clientCompany} size={18} />}{clientLabel(req)}</span>
                         <span>예산: {req.budget}</span>
                         <span>마감: {req.deadline === "미정" ? "미정" : new Date(req.deadline).toLocaleDateString("ko-KR")}</span>
                       </div>
@@ -668,7 +673,7 @@ export default function PartnerDashboard() {
                                 <td className="px-4 py-3 text-left font-mono text-xs text-foreground/50">{myQuote?.quoteCode || "-"}</td>
                                 <td className="px-4 py-3 text-center font-medium text-foreground">{req.title}</td>
                                 <td className="px-4 py-3 text-center"><span className="rounded-lg bg-muted px-2 py-0.5 text-xs text-foreground/60">{req.category}</span></td>
-                                <td className="px-4 py-3 text-center break-all text-foreground/70">{req.clientCompany}</td>
+                                <td className="px-4 py-3 text-center break-all text-foreground/70">{clientLabel(req)}</td>
                                 <td className="px-4 py-3 text-right font-semibold text-primary">{myQuote?.amount || "-"}원</td>
                                 <td className="px-4 py-3 text-center"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>{statusLabel}</span></td>
                                 <td className="px-4 py-3 text-center text-xs text-foreground/50">{myQuote ? new Date(myQuote.createdAt).toLocaleDateString("ko-KR") : "-"}</td>
@@ -789,7 +794,7 @@ export default function PartnerDashboard() {
                     </div>
                     <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
                     <div className="mt-1 flex flex-wrap gap-4 text-xs text-foreground/50">
-                      <span className="inline-flex items-center gap-1.5">의뢰사: <CompanyLogo path={req.clientLogo} name={req.clientCompany} size={18} />{req.clientCompany}</span>
+                      <span className="inline-flex items-center gap-1.5">의뢰사: {req.clientCompany && <CompanyLogo path={req.clientLogo} name={req.clientCompany} size={18} />}{clientLabel(req)}</span>
                       <span>견적금액: <span className="font-medium text-foreground">{myQuote?.amount}</span></span>
                       <span>예산: {req.budget}</span>
                     </div>
@@ -829,7 +834,11 @@ export default function PartnerDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-xl border border-border p-4 overflow-hidden">
                   <p className="text-sm text-foreground/40">의뢰사</p>
-                  <p className="mt-1 flex items-center gap-2 text-base font-semibold text-foreground break-words"><CompanyLogo path={selectedRequest.clientLogo} name={selectedRequest.clientCompany} size={32} />{selectedRequest.clientCompany}</p>
+                  <p className="mt-1 flex items-center gap-2 text-base font-semibold text-foreground break-words">
+                    {selectedRequest.clientCompany && <CompanyLogo path={selectedRequest.clientLogo} name={selectedRequest.clientCompany} size={32} />}
+                    {clientLabel(selectedRequest)}
+                    {!selectedRequest.clientCompany && <span className="text-xs font-normal text-foreground/40">{clientHint(selectedRequest).trim()}</span>}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-border p-4">
                   <p className="text-sm text-foreground/40">예산</p>
