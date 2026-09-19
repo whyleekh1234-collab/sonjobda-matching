@@ -46,7 +46,10 @@ grant select on partner_profiles to authenticated;
 grant insert (company_id, intro, therapeutic_areas, phases, regions, employees,
               annual_projects, certifications, track_record, extra, updated_by)
   on partner_profiles to authenticated;
-grant update (intro, therapeutic_areas, phases, regions, employees,
+-- upsert(insert … on conflict do update)는 update 목록에 company_id도
+-- 넣어서 보낸다. 권한이 없으면 저장 자체가 거부된다. RLS의 with check가
+-- 다른 회사로 바꾸는 건 막으므로 컬럼 권한은 열어도 안전하다.
+grant update (company_id, intro, therapeutic_areas, phases, regions, employees,
               annual_projects, certifications, track_record, extra, updated_by, updated_at)
   on partner_profiles to authenticated;
 
