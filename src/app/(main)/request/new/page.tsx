@@ -951,9 +951,20 @@ function NewRequestForm() {
                 {serviceTypes.map((type) => {
                   const blocked = blockedTypes.includes(type.id);
                   return (
-                  <button key={type.id} disabled={blocked} onClick={() => setServiceType(type.id)}
+                  <button key={type.id} aria-disabled={blocked}
+                    onClick={() => {
+                      if (blocked) {
+                        alert(`서비스운영정책 제3조 ⑤에 따라 등록할 수 없습니다.
+
+귀사는 "${type.label}" 분야의 파트너사로 등록되어 있습니다. 파트너사가 같은 분야의 의뢰를 등록하면 경쟁 파트너사의 견적 내용을 열람할 수 있어 이해상충이 발생하므로, 이 분야의 의뢰 등록은 제한됩니다.
+
+다른 분야의 의뢰는 등록하실 수 있습니다.`);
+                        return;
+                      }
+                      setServiceType(type.id);
+                    }}
                     className={`flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-                      blocked ? "cursor-not-allowed border-border bg-muted/40 opacity-50"
+                      blocked ? "cursor-not-allowed border-border bg-muted/40 opacity-60"
                       : serviceType === type.id ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
                     }`}>
                     <div className={`mt-0.5 rounded-lg p-2 ${serviceType === type.id ? "bg-primary/10 text-primary" : "bg-muted text-foreground/40"}`}>
