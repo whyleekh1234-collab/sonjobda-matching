@@ -29,6 +29,7 @@ const MARKETING_TYPES = [
   { key: "booth", label: "학회 부스" },
   { key: "cso", label: "CSO" },
   { key: "patient", label: "환자유치" },
+  { key: "data", label: "데이터 구독" },
   { key: "digital", label: "디지털" },
   { key: "other", label: "기타" },
 ];

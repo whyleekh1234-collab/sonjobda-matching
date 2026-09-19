@@ -200,6 +200,7 @@ const marketingTypeOptions = [
   { value: "booth", label: "학회 부스 운영" },
   { value: "cso", label: "CSO(영업대행)" },
   { value: "patient", label: "환자유치 프로그램" },
+  { value: "data", label: "데이터 구독 (UBIST/IQVIA 등)" },
   { value: "digital", label: "디지털 마케팅" },
   { value: "other", label: "기타" },
 ];
@@ -250,11 +251,24 @@ const patientTaskOptions = [
   "성과 분석/리포팅 (유입·전환)",
 ];
 
+// 데이터 구독 위탁업무. 처방·매출 데이터를 사서 보는 일이라 행사 대행과는
+// 결이 다르다. 파트너는 UBIST·IQVIA 같은 데이터 벤더나 그 리셀러다.
+const dataTaskOptions = [
+  "처방 데이터 구독 (UBIST 등)",
+  "매출/유통 데이터 구독 (IQVIA 등)",
+  "시장 분석 리포트 (시장 규모·경쟁 현황)",
+  "커스텀 데이터 추출/가공",
+  "대시보드/BI 구축",
+  "정기 리포팅 (월간·분기)",
+  "데이터 활용 교육",
+];
+
 // 마케팅 유형에 따라 위탁업무 목록이 달라진다.
 function marketingTasksFor(mktType: string) {
   if (mktType === "cso") return csoTaskOptions;
   if (mktType === "webinar") return webinarTaskOptions;
   if (mktType === "patient") return patientTaskOptions;
+  if (mktType === "data") return dataTaskOptions;
   return marketingTaskOptions;
 }
 
