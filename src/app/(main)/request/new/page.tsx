@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { createRequest, updateRequest, getRequest } from "@/lib/data/requests";
+import { createRequest, updateRequest, getRequest, getCompanyPartnerCategories } from "@/lib/data/requests";
 
 const serviceTypes = [
   { id: "cro", label: "CRO", desc: "임상시험 수탁기관 매칭", icon: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" },
@@ -185,6 +185,12 @@ const insuranceTaskOptions = [
   "보험 갱신",
   "피험자 보상 관리",
 ];
+
+// 파트너 분야명 → 서비스 유형 id
+const CATEGORY_TO_TYPE: Record<string, string> = {
+  "CRO": "cro", "CMO/CDMO": "cmo-cdmo", "SMO": "smo", "RA/인허가": "ra",
+  "임상시험 보험": "insurance", "소모품 공급": "supply", "마케팅 대행": "marketing",
+};
 
 // 마케팅 대행 유형
 const marketingTypeOptions = [
@@ -398,6 +404,17 @@ export default function NewRequestPage() {
 
 function NewRequestForm() {
   const { user } = useAuth();
+
+  // 이해상충: 우리 회사가 파트너사로 등록한 분야의 의뢰는 못 올린다.
+  // 회사 기준(멤버 전체 합집합)이라 서버에 묻는다. 서버 트리거가 최종
+  // 문지기고, 여기서는 애초에 못 고르게 해서 헛수고를 막는다.
+  const [blockedTypes, setBlockedTypes] = useState<string[]>([]);
+  useEffect(() => {
+    if (!user?.companyId) return;
+    getCompanyPartnerCategories(user.companyId)
+      .then((cats) => setBlockedTypes(cats.map((c) => CATEGORY_TO_TYPE[c]).filter(Boolean)))
+      .catch(() => setBlockedTypes([]));
+  }, [user?.companyId]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
@@ -924,21 +941,31 @@ function NewRequestForm() {
             <div>
               <h2 className="text-lg font-bold text-foreground">서비스 유형 선택</h2>
               <p className="mt-1 text-sm text-foreground/50">필요한 서비스 유형을 선택해주세요</p>
+              {blockedTypes.length > 0 && (
+                <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-700">
+                  귀사가 파트너사로 등록한 분야({blockedTypes.map((t) => serviceTypes.find((s) => s.id === t)?.label).join(", ")})의
+                  의뢰는 이해상충 방지를 위해 등록할 수 없습니다. (서비스운영정책 제3조)
+                </p>
+              )}
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {serviceTypes.map((type) => (
-                  <button key={type.id} onClick={() => setServiceType(type.id)}
+                {serviceTypes.map((type) => {
+                  const blocked = blockedTypes.includes(type.id);
+                  return (
+                  <button key={type.id} disabled={blocked} onClick={() => setServiceType(type.id)}
                     className={`flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-                      serviceType === type.id ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
+                      blocked ? "cursor-not-allowed border-border bg-muted/40 opacity-50"
+                      : serviceType === type.id ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
                     }`}>
                     <div className={`mt-0.5 rounded-lg p-2 ${serviceType === type.id ? "bg-primary/10 text-primary" : "bg-muted text-foreground/40"}`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={type.icon} /></svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{type.label}</p>
+                      <p className="text-sm font-semibold text-foreground">{type.label}{blocked && <span className="ml-2 text-xs font-normal text-amber-600">등록 불가</span>}</p>
                       <p className="mt-0.5 break-keep text-xs text-foreground/50">{type.desc}</p>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

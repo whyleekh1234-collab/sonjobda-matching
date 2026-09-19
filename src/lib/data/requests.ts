@@ -342,3 +342,13 @@ export async function getMatchContacts(requestId: string): Promise<MatchContact[
     phone: r.phone,
   }));
 }
+
+// 회사가 파트너사로 등록한 분야(멤버 합집합). 의뢰 등록 화면에서 같은
+// 분야를 못 고르게 하는 데 쓴다. 강제는 DB 트리거가 한다(11단계).
+export async function getCompanyPartnerCategories(companyId: string): Promise<string[]> {
+  const { data, error } = await createClient().rpc("company_partner_categories", {
+    p_company_id: companyId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as string[];
+}
