@@ -85,7 +85,9 @@ a[role="button"][class*="rounded"]:not([class*="rounded-full"]):hover {
 button[class*="rounded-full"]:not([class*="bg-primary"]):not(:disabled):hover {
   filter: brightness(0.93);
 }
-/* 버튼 글자는 줄 중간에서 꺾이지 않는다. "제 한"처럼 두 글자가 갈라져 보이던 문제. */
-button {
+/* 버튼 글자는 줄 중간에서 꺾이지 않는다. "제 한"처럼 두 글자가 갈라져
+   보이던 문제. 단, 카드처럼 안에 문단(p)이 들어 있는 큰 버튼은 예외 —
+   거기까지 nowrap이 번지면 설명글이 잘린다. */
+button:not(:has(p, h1, h2, h3, h4)) {
   white-space: nowrap;
 }

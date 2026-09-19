@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
+import { breakAfterSlash } from "@/lib/text";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { createRequest, updateRequest, getRequest, getCompanyPartnerCategories } from "@/lib/data/requests";
@@ -974,7 +975,7 @@ function NewRequestForm() {
                     </div>
                     <div>
                       <p className={`text-sm font-semibold text-foreground ${blocked ? "" : "group-hover:text-primary"}`}>{type.label}{blocked && <span className="ml-2 text-xs font-normal text-amber-600">등록 불가</span>}</p>
-                      <p className="mt-0.5 break-keep text-xs text-foreground/50">{type.desc}</p>
+                      <p className="mt-0.5 break-keep text-xs text-foreground/50">{breakAfterSlash(type.desc)}</p>
                     </div>
                   </button>
                   );

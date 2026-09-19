@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { breakAfterSlash } from "@/lib/text";
 import { FlaskConical, Factory, ClipboardList, FileCheck2, ShieldCheck, Package, Megaphone } from "lucide-react";
 
 const services = [
@@ -278,7 +279,7 @@ export default function ServicesSection() {
                       </span>
                       <div>
                         <p className="text-sm font-semibold text-foreground">{cat.label}</p>
-                        <p className="break-keep text-xs text-foreground-muted">{cat.desc}</p>
+                        <p className="break-keep text-xs text-foreground-muted">{breakAfterSlash(cat.desc)}</p>
                       </div>
                     </div>
                     );

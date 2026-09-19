@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { breakAfterSlash } from "@/lib/text";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   FlaskConical,
@@ -112,7 +113,7 @@ export default function HeroSection() {
                   </span>
                   <div>
                     <p className="text-base font-bold tracking-tight text-foreground">{cat.label}</p>
-                    <p className="mt-1 break-keep text-sm leading-snug text-foreground-muted">{cat.desc}</p>
+                    <p className="mt-1 break-keep text-sm leading-snug text-foreground-muted">{breakAfterSlash(cat.desc)}</p>
                   </div>
                   <ArrowRight
                     className={`absolute right-4 top-5 h-4 w-4 text-foreground/20 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100 ${cat.arrow}`}
