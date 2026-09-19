@@ -508,6 +508,9 @@ export default function ClientDashboard() {
                               </button>
 
                               {isQuoteOpen && (<div className="border-t border-border px-5 pb-5 pt-4">
+                              {/* 왼쪽: 견적 내용 / 오른쪽: 파트너 역량. 역량은 접지 않고 항상 보인다. */}
+                              <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+                              <div className="lg:col-span-3">
                               {/* 견적 핵심 정보 */}
                               <div className="mt-4 grid grid-cols-3 gap-3">
                                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-center">
@@ -553,9 +556,6 @@ export default function ClientDashboard() {
                                 ) : null;
                               })()}
 
-                              {/* 파트너사 회사 역량 */}
-                              <PartnerProfileCard profile={partnerProfiles[quote.companyId]} categories={quote.partnerCategories ?? []} />
-
                               {/* 모니터링/EDC */}
                               {(quote.expectedCra || quote.monitoringPerSite || quote.edcBrand) && (
                                 <div className="mt-3 grid grid-cols-3 gap-3">
@@ -599,6 +599,12 @@ export default function ClientDashboard() {
                                   </div>
                                 </button>
                               )}
+
+                              </div>
+                              <aside className="lg:col-span-2">
+                                <PartnerProfileCard profile={partnerProfiles[quote.companyId]} categories={quote.partnerCategories ?? []} expanded />
+                              </aside>
+                              </div>
 
                               {/* 마감일 + 수락/거절/보류 */}
                               {(quote.status === "client_reviewing" || quote.status === "client_hold") && req.status === "pending" && (

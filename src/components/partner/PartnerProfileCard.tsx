@@ -8,38 +8,47 @@ import { EXTRA_FIELDS, type PartnerProfile } from "@/lib/data/partnerProfiles";
 // 매칭 전 비공개 원칙은 그대로다.
 
 export default function PartnerProfileCard({
-  profile, categories,
-}: { profile: PartnerProfile | null | undefined; categories: string[] }) {
-  const [open, setOpen] = useState(false);
+  profile, categories, expanded = false,
+}: { profile: PartnerProfile | null | undefined; categories: string[]; expanded?: boolean }) {
+  const [toggled, setToggled] = useState(false);
+  const open = expanded || toggled;
 
   if (!profile) {
     return (
-      <p className="mt-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-foreground/40">
-        이 파트너사는 아직 회사 역량을 등록하지 않았습니다.
-      </p>
+      <div className={`rounded-xl border border-dashed border-border px-4 py-5 text-center ${expanded ? "h-full" : "mt-2"}`}>
+        <p className="text-xs font-semibold text-foreground/50">파트너사 역량</p>
+        <p className="mt-1 text-xs text-foreground/40">이 파트너사는 아직 회사 역량을 등록하지 않았습니다.</p>
+      </div>
     );
   }
 
   const tags = [...profile.therapeuticAreas.slice(0, 3), ...profile.phases.slice(0, 3), ...profile.certifications.slice(0, 2)];
-  const extraFields = categories.flatMap((c) => EXTRA_FIELDS[c] ?? []);
 
   return (
-    <div className="mt-2 rounded-lg border border-border bg-muted/40 p-3">
+    <div className={`rounded-xl border p-4 ${expanded ? "h-full border-primary/20 bg-primary/[0.03]" : "mt-2 border-border bg-muted/40"}`}>
+      {expanded && (
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary/70">파트너사 역량</p>
+          {profile.verifiedAt && <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">운영자 확인</span>}
+        </div>
+      )}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          {profile.intro && <p className="break-keep text-sm font-medium text-foreground">{profile.intro}</p>}
+          {profile.intro && <p className="break-keep text-sm font-semibold text-foreground">{profile.intro}</p>}
           {tags.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {tags.map((t) => <span key={t} className="rounded-full bg-background px-2 py-0.5 text-[11px] text-foreground/60">{t}</span>)}
             </div>
           )}
         </div>
-        <div className="flex flex-shrink-0 items-center gap-2">
-          {profile.verifiedAt && <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">확인됨</span>}
-          <button type="button" onClick={() => setOpen(!open)} className="text-xs font-medium text-primary hover:underline">
-            {open ? "접기" : "역량 보기"}
-          </button>
-        </div>
+        {!expanded && (
+          <div className="flex flex-shrink-0 items-center gap-2">
+            {profile.verifiedAt && <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">확인됨</span>}
+            <button type="button" onClick={() => setToggled(!toggled)} className="text-xs font-medium text-primary hover:underline">
+              {toggled ? "접기" : "역량 보기"}
+            </button>
+          </div>
+        )}
       </div>
 
       {open && (
