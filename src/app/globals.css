@@ -71,12 +71,14 @@ html {
   scroll-behavior: smooth;
 }
 
-/* 버튼 공통 호버: 운영·관리자 화면 전체에서 마우스가 닿으면 테두리가
-   또렷해지고 글자가 진해진다. 어떤 버튼이 눌리는지 한눈에 보이게. */
-button:not(:disabled):hover,
-a[role="button"]:hover {
+/* 버튼 공통 호버: 마우스가 닿으면 파란 테두리가 사각을 다 두른다.
+   모서리가 둥근 "상자형" 버튼에만 건다 — 탭이나 글자만 있는 링크형
+   버튼에 두르면 글자 양옆에만 선이 뜨는 것처럼 보여 어색하다. 그런
+   버튼은 각자 밑줄·색 변화로 호버를 표현한다. 글자 굵기는 바꾸지
+   않는다(너비가 변해 옆 요소가 흔들린다). */
+button[class*="rounded"]:not(:disabled):not([aria-disabled="true"]):hover,
+a[role="button"][class*="rounded"]:hover {
   box-shadow: 0 0 0 2px var(--primary);
-  font-weight: 600;
 }
 /* 버튼 글자는 줄 중간에서 꺾이지 않는다. "제 한"처럼 두 글자가 갈라져 보이던 문제. */
 button {

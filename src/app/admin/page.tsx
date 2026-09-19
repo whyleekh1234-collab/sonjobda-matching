@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import {
   listAllUsers,
@@ -361,9 +360,10 @@ export default function AdminDashboard() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center transition-opacity hover:opacity-70" title="메인 화면으로">
+            <button type="button" onClick={() => { setActiveTab("overview"); window.scrollTo({ top: 0 }); }}
+              className="flex items-center transition-opacity hover:opacity-70" title="관리자 첫 화면으로">
               <span className="text-xl font-bold text-primary">손잡다매칭</span>
-            </Link>
+            </button>
             <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/50">관리자</span>
           </div>
           <div className="flex items-center gap-3">
@@ -398,7 +398,7 @@ export default function AdminDashboard() {
           <nav className="flex gap-6">
             {tabs.map((tab) => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`relative whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:text-foreground"}`}>
+                className={`relative whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:border-primary/40 hover:text-primary"}`}>
                 {tab.label}
                 {tab.badge ? <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">{tab.badge}</span> : null}
               </button>
