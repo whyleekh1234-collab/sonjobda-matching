@@ -19,6 +19,9 @@ const roleLabels = {
   partner: { label: "파트너사", color: "bg-emerald-100 text-emerald-700", switchTo: "의뢰사로 전환" },
 };
 
+// 알림 페이지가 읽음 처리한 뒤 헤더 배지를 바로 다시 세게 하는 신호.
+export const UNREAD_CHANGED_EVENT = "sonjobda:unread-changed";
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -48,12 +51,14 @@ export default function Header() {
 
     calcUnread();
     window.addEventListener("focus", calcUnread);
+    window.addEventListener(UNREAD_CHANGED_EVENT, calcUnread);
     // 예전에는 localStorage라 3초마다 훑어도 공짜였다. 이제는 매번 서버를
     // 부르므로 간격을 늘린다. 화면으로 돌아올 때도 어차피 다시 센다.
     const interval = setInterval(calcUnread, 60000);
     return () => {
       alive = false;
       window.removeEventListener("focus", calcUnread);
+      window.removeEventListener(UNREAD_CHANGED_EVENT, calcUnread);
       clearInterval(interval);
     };
   }, [user]);

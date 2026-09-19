@@ -105,7 +105,13 @@ export default function PartnerDashboard() {
     if (request.category === "임상시험 보험") return [];
     const lines = (request.description || "").split("\n");
     const tasksLine = lines.find((l) => l.startsWith("위탁업무:"));
-    if (!tasksLine) return defaultTimeline.map((t) => ({ ...t }));
+    // 위탁업무가 없으면 CRO·SMO만 기본 임상 업무 목록을 쓴다. 다른 분야에
+    // Planning·IND·IRB가 뜨면 안 된다 — 빈 목록으로 두고 파트너가 적는다.
+    if (!tasksLine) {
+      return request.category === "CRO" || request.category === "SMO"
+        ? defaultTimeline.map((t) => ({ ...t }))
+        : [];
+    }
     const requestTasks = tasksLine.split(": ").slice(1).join(": ").split(", ").map((t) => t.trim());
     return requestTasks.map((label) => ({ label, months: "", na: false }));
   };

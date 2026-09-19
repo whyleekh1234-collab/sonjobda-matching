@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { UNREAD_CHANGED_EVENT } from "@/components/layout/Header";
 import {
   listMyNotifications,
   listNotices,
@@ -65,14 +66,18 @@ export default function NotificationsPage() {
     }
   };
 
-  const markNotificationRead = (id: string) => run(() => markNotificationReadApi(id));
+  // 읽음 처리하면 헤더 배지에도 알린다. 헤더는 따로 세고 있어서 이 신호가
+  // 없으면 1분 뒤에나 줄어든다.
+  const notifyHeader = () => window.dispatchEvent(new Event(UNREAD_CHANGED_EVENT));
 
-  const markAllNotificationsRead = () => run(() => markAllNotificationsReadApi());
+  const markNotificationRead = (id: string) => run(() => markNotificationReadApi(id)).then(notifyHeader);
+
+  const markAllNotificationsRead = () => run(() => markAllNotificationsReadApi()).then(notifyHeader);
 
   const markNoticeRead = (noticeId: string) => {
     if (!user || readNoticeIds.includes(noticeId)) return;
     setReadNoticeIds((prev) => [...prev, noticeId]);
-    markNoticesRead([noticeId], user.id).catch(console.error);
+    markNoticesRead([noticeId], user.id).then(notifyHeader).catch(console.error);
   };
 
   const markAllNoticesRead = () => {
@@ -80,7 +85,7 @@ export default function NotificationsPage() {
     const unread = notices.map((n) => n.id).filter((id) => !readNoticeIds.includes(id));
     if (unread.length === 0) return;
     setReadNoticeIds(notices.map((n) => n.id));
-    markNoticesRead(unread, user.id).catch(console.error);
+    markNoticesRead(unread, user.id).then(notifyHeader).catch(console.error);
   };
 
   const sendReply = (notifId: string) => {
