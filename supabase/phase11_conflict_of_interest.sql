@@ -38,16 +38,29 @@ create trigger requests_conflict_of_interest
 -- 운영자가 바꿀 때 걸린다.
 create or replace function public.block_conflicting_partner_category()
 returns trigger language plpgsql security definer set search_path = public as $$
-declare v_cat text;
+declare v_cat text; v_added text[];
 begin
   if not ('partner' = any (new.roles)) then
     return new;
   end if;
+  -- 이번에 새로 추가되는 분야만 본다. 이미 갖고 있던 분야는 (규칙 이전
+  -- 데이터든 뭐든) 그대로 둔다 — 안 그러면 이름만 고쳐도 저장이 막힌다.
+  if tg_op = 'UPDATE' then
+    select coalesce(array_agg(c), '{}') into v_added
+    from unnest(new.partner_categories) c
+    where not (c = any (coalesce(old.partner_categories, '{}')));
+  else
+    v_added := new.partner_categories;
+  end if;
+  if cardinality(v_added) = 0 then
+    return new;
+  end if;
+
   select r.category into v_cat
   from requests r
   where r.company_id = new.company_id
     and r.status = 'pending'
-    and r.category = any (new.partner_categories)
+    and r.category = any (v_added)
   limit 1;
   if v_cat is not null then
     raise exception '귀사가 현재 의뢰를 진행 중인 분야(%)는 파트너 분야로 등록할 수 없습니다. 해당 의뢰를 회수하거나 마감한 뒤 다시 시도해 주세요.', v_cat;
