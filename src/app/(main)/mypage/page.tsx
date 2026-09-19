@@ -57,7 +57,7 @@ export default function MyPage() {
       try {
         const [mine, partner] = await Promise.all([
           listMyCompanyRequests(user.companyId),
-          user.partnerCategories?.length ? listPartnerRequests() : Promise.resolve([]),
+          user.partnerCategories?.length ? listPartnerRequests(user.companyId) : Promise.resolve([]),
         ]);
         if (!alive) return;
         setSummary({

@@ -19,6 +19,7 @@ import MatchContactPanel from "@/components/dashboard/MatchContact";
 import { quoteStatusLabels, defaultTimeline } from "@/types/matching";
 import type { MatchRequest, Quote, QuoteStatus, TimelineItem } from "@/types/matching";
 import type { Notice, Notification } from "@/types/auth";
+import Greeting from "@/components/dashboard/Greeting";
 
 export default function PartnerDashboard() {
   const { user } = useAuth();
@@ -47,12 +48,13 @@ export default function PartnerDashboard() {
   const [activeSection, setActiveSection] = useState<"activity" | "received" | "sent" | "won">("activity");
 
   // 어떤 의뢰가 보이는지는 서버가 정한다. 내 카테고리의 열린 의뢰와, 우리
-  // 회사가 견적을 낸 의뢰만 응답에 담겨 온다. 자기 회사가 올린 의뢰는
-  // 애초에 오지 않는다.
+  // 회사가 견적을 낸 의뢰가 온다. 우리 회사가 올린 의뢰도 같이 오는데
+  // (의뢰사 화면용 권한), 파트너 화면에선 빼야 한다 — 자기 의뢰에 견적을
+  // 낼 수는 없으니 보여줄 이유가 없다.
   const loadRequests = useCallback(async () => {
     if (!user) return;
     try {
-      setRequests(await listPartnerRequests());
+      setRequests(await listPartnerRequests(user?.companyId));
     } catch (err) {
       console.error(err);
       setRequests([]);
@@ -365,12 +367,7 @@ export default function PartnerDashboard() {
         )}
 
         {/* 상단 */}
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">파트너사 대시보드</h1>
-          <p className="mt-1 text-sm text-foreground/60">
-            {user?.company}에 들어온 의뢰를 확인하고 견적서를 제출하세요.
-          </p>
-        </div>
+        <Greeting name={user?.name} company={`${user?.company ?? ""} 파트너사 대시보드`} />
 
         {/* 메인 카드 3개 */}
         <div className="sticky top-[108px] z-30 mt-8 grid grid-cols-1 gap-4 bg-muted pb-4 sm:grid-cols-3">

@@ -136,11 +136,16 @@ export async function listMyCompanyRequests(companyId: string): Promise<MatchReq
 }
 
 // 파트너사 대시보드: 볼 수 있는 의뢰 전부 (RLS가 범위를 정한다)
-export async function listPartnerRequests(): Promise<MatchRequest[]> {
-  const { data, error } = await createClient()
+// 파트너사로서 보는 의뢰 목록. RLS가 "내 분야의 열린 의뢰 + 내 회사 의뢰"를
+// 내주는데, 뒤쪽은 의뢰사 화면 몫이다. 겸업 회사가 자기 의뢰를 파트너
+// 화면에서 보면 안 되므로 excludeCompanyId로 걸러낸다. 운영자는 안 넘긴다.
+export async function listPartnerRequests(excludeCompanyId?: string): Promise<MatchRequest[]> {
+  let q = createClient()
     .from("requests")
     .select(REQUEST_SELECT)
     .order("created_at", { ascending: false });
+  if (excludeCompanyId) q = q.neq("company_id", excludeCompanyId);
+  const { data, error } = await q;
 
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as RequestRow[]).map(toRequest);

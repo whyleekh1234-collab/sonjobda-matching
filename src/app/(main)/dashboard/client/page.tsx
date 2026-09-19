@@ -16,6 +16,7 @@ import { statusLabels } from "@/types/matching";
 import type { MatchRequest, QuoteStatus } from "@/types/matching";
 import type { Notice, Notification } from "@/types/auth";
 import Link from "next/link";
+import Greeting from "@/components/dashboard/Greeting";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
 
@@ -233,10 +234,7 @@ export default function ClientDashboard() {
 
         {/* 상단 */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">의뢰사 대시보드</h1>
-            <p className="mt-1 text-sm text-foreground/60">{user?.company}에서 등록한 의뢰를 관리하세요.</p>
-          </div>
+          <Greeting name={user?.name} company={`${user?.company ?? ""} 의뢰사 대시보드`} />
           {user?.status !== "restricted" && user?.status !== "suspended" && (
             <Link href="/request/new"
               className="flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
