@@ -28,7 +28,7 @@ export async function uploadCompanyLogo(companyId: string, file: File): Promise<
   const path = `${companyId}/logo-${Date.now()}.${ext}`;
   const supabase = createClient();
 
-  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true, contentType: file.type });
+  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type });
   if (upErr) throw new Error("로고를 올리지 못했습니다: " + upErr.message);
 
   const { error: rpcErr } = await supabase.rpc("set_my_company_logo", { p_path: path });
