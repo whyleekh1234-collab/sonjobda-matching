@@ -17,6 +17,8 @@ import type { MatchRequest, QuoteStatus } from "@/types/matching";
 import type { Notice, Notification } from "@/types/auth";
 import Link from "next/link";
 import Greeting from "@/components/dashboard/Greeting";
+import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
+import { listPartnerProfiles, type PartnerProfile } from "@/lib/data/partnerProfiles";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
 
@@ -31,11 +33,16 @@ export default function ClientDashboard() {
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<"all" | "client_reviewing" | "client_hold" | "accepted" | "client_rejected" | "not_selected" | "undecided">("all");
   const [requests, setRequests] = useState<MatchRequest[]>([]);
+  // 견적을 낸 파트너사들의 역량 프로필. 회사 id → 프로필.
+  const [partnerProfiles, setPartnerProfiles] = useState<Record<string, PartnerProfile>>({});
 
   const reloadRequests = useCallback(async () => {
     if (!user) return;
     try {
-      setRequests(await listMyCompanyRequests(user.companyId));
+      const list = await listMyCompanyRequests(user.companyId);
+      setRequests(list);
+      const ids = [...new Set(list.flatMap((r) => (r.quotes ?? []).map((q) => q.companyId)).filter(Boolean))] as string[];
+      listPartnerProfiles(ids).then(setPartnerProfiles).catch(console.error);
     } catch (err) {
       console.error(err);
       alert("의뢰 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -545,6 +552,9 @@ export default function ClientDashboard() {
                                   </div>
                                 ) : null;
                               })()}
+
+                              {/* 파트너사 회사 역량 */}
+                              <PartnerProfileCard profile={partnerProfiles[quote.companyId]} categories={quote.partnerCategories ?? []} />
 
                               {/* 모니터링/EDC */}
                               {(quote.expectedCra || quote.monitoringPerSite || quote.edcBrand) && (

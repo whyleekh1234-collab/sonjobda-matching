@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyCompanyRequests, listPartnerRequests } from "@/lib/data/requests";
+import PartnerProfileEditor from "@/components/partner/PartnerProfileEditor";
 import {
   listCompanyMembers,
   createCompanyInvite,
@@ -375,6 +376,11 @@ export default function MyPage() {
                 )}
               </div>
             </div>
+
+            {/* 회사 역량 (파트너사) */}
+            {user.roles?.includes("partner") && user.companyId && (
+              <PartnerProfileEditor companyId={user.companyId} categories={user.partnerCategories ?? []} />
+            )}
 
             {/* 활동 요약 */}
             <div className="rounded-xl border border-border bg-surface shadow-card p-6">

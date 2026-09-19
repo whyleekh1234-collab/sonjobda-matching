@@ -32,6 +32,8 @@ import {
   type CompanyChangeRequest,
 } from "@/lib/data/changeRequests";
 import { listPartnerRequests } from "@/lib/data/requests";
+import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile } from "@/lib/data/partnerProfiles";
+import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import type { MatchingRequest, Notice } from "@/types/auth";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports";
@@ -184,6 +186,14 @@ export default function AdminDashboard() {
   const [userFilterStatus, setUserFilterStatus] = useState<"all" | "approved" | "pending" | "restricted" | "suspended">("all");
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   // 회원 상세 모달의 "정보 수정" 폼. null이면 보기 모드.
+  // 선택한 회원 회사의 파트너 프로필(있으면). 운영자가 보고 확인 표시를 한다.
+  const [selectedProfile, setSelectedProfile] = useState<PartnerProfile | null | undefined>(undefined);
+  useEffect(() => {
+    if (!selectedUser?.companyId || !selectedUser.roles?.includes("partner")) { setSelectedProfile(undefined); return; }
+    let alive = true;
+    getPartnerProfile(selectedUser.companyId).then((p) => alive && setSelectedProfile(p)).catch(() => alive && setSelectedProfile(null));
+    return () => { alive = false; };
+  }, [selectedUser?.companyId, selectedUser?.roles]);
   const [userEdit, setUserEdit] = useState<{
     name: string; phone: string; company: string; businessNumber: string; address: string;
   } | null>(null);
@@ -1574,6 +1584,25 @@ export default function AdminDashboard() {
                       </label>
                     ))}
                   </div>
+                </div>
+              )}
+              {selectedUser.roles?.includes("partner") && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-foreground/40">회사 역량 (파트너 프로필)</p>
+                    {selectedProfile && (
+                      <button type="button" onClick={async () => {
+                        const next = !selectedProfile.verifiedAt;
+                        await run(() => verifyPartnerProfile(selectedProfile.companyId, next), next ? "운영자 확인 표시를 했습니다." : "확인 표시를 해제했습니다.");
+                        setSelectedProfile({ ...selectedProfile, verifiedAt: next ? new Date().toISOString() : null });
+                      }} className={ROW_BTN}>
+                        {selectedProfile.verifiedAt ? "확인 해제" : "운영자 확인"}
+                      </button>
+                    )}
+                  </div>
+                  {selectedProfile === undefined
+                    ? <p className="mt-2 text-xs text-foreground/40">불러오는 중…</p>
+                    : <PartnerProfileCard profile={selectedProfile} categories={selectedUser.partnerCategories ?? []} />}
                 </div>
               )}
             </div>
