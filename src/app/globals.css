@@ -76,9 +76,14 @@ html {
    버튼에 두르면 글자 양옆에만 선이 뜨는 것처럼 보여 어색하다. 그런
    버튼은 각자 밑줄·색 변화로 호버를 표현한다. 글자 굵기는 바꾸지
    않는다(너비가 변해 옆 요소가 흔들린다). */
-button[class*="rounded"]:not(:disabled):not([aria-disabled="true"]):hover,
-a[role="button"][class*="rounded"]:hover {
+button[class*="rounded"]:not([class*="rounded-full"]):not(:disabled):not([aria-disabled="true"]):hover,
+a[role="button"][class*="rounded"]:not([class*="rounded-full"]):hover {
   box-shadow: 0 0 0 2px var(--primary);
+}
+/* 알약형 칩(필터·태그)은 테두리를 두르면 양옆만 도드라져 보인다.
+   대신 배경을 조금 더 진하게 한다. 선택된(파란 배경) 칩은 그대로. */
+button[class*="rounded-full"]:not([class*="bg-primary"]):not(:disabled):hover {
+  filter: brightness(0.93);
 }
 /* 버튼 글자는 줄 중간에서 꺾이지 않는다. "제 한"처럼 두 글자가 갈라져 보이던 문제. */
 button {
