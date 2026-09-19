@@ -32,7 +32,7 @@ const categories: Category[] = [
   { icon: FileCheck2, label: "RA/인허가", desc: "인허가 컨설팅", tint: "bg-violet-50 text-violet-600", hoverFill: "group-hover:bg-violet-600", hoverBorder: "hover:border-violet-300/70", arrow: "group-hover:text-violet-600" },
   { icon: ShieldCheck, label: "임상시험 보험", desc: "임상시험 보험가입", tint: "bg-teal-50 text-teal-600", hoverFill: "group-hover:bg-teal-600", hoverBorder: "hover:border-teal-300/70", arrow: "group-hover:text-teal-600" },
   { icon: Package, label: "소모품 공급", desc: "인쇄물/연구용 키트 등", tint: "bg-sky-50 text-sky-600", hoverFill: "group-hover:bg-sky-600", hoverBorder: "hover:border-sky-300/70", arrow: "group-hover:text-sky-600" },
-  { icon: Megaphone, label: "마케팅 대행", desc: "심포지엄/CSO 업체", tint: "bg-purple-50 text-purple-600", hoverFill: "group-hover:bg-purple-600", hoverBorder: "hover:border-purple-300/70", arrow: "group-hover:text-purple-600" },
+  { icon: Megaphone, label: "마케팅 대행", desc: "심포지엄/웨비나/CSO/환자유치", tint: "bg-purple-50 text-purple-600", hoverFill: "group-hover:bg-purple-600", hoverBorder: "hover:border-purple-300/70", arrow: "group-hover:text-purple-600" },
 ];
 
 export default function HeroSection() {

@@ -268,7 +268,7 @@ export default function ServicesSection() {
                     { icon: FileCheck2, label: "RA/인허가", desc: "인허가 컨설팅" },
                     { icon: ShieldCheck, label: "임상시험 보험", desc: "보험가입" },
                     { icon: Package, label: "소모품 공급", desc: "인쇄물/키트" },
-                    { icon: Megaphone, label: "마케팅 대행", desc: "심포지엄/CSO" },
+                    { icon: Megaphone, label: "마케팅 대행", desc: "심포지엄/웨비나/CSO" },
                   ].map((cat) => {
                     const Icon = cat.icon;
                     return (
