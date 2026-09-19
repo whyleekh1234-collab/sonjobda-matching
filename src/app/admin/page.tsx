@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import {
   listAllUsers,
@@ -360,9 +361,9 @@ export default function AdminDashboard() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex items-center">
+            <Link href="/" className="flex items-center transition-opacity hover:opacity-70" title="메인 화면으로">
               <span className="text-xl font-bold text-primary">손잡다매칭</span>
-            </div>
+            </Link>
             <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/50">관리자</span>
           </div>
           <div className="flex items-center gap-3">
