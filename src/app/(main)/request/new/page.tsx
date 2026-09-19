@@ -904,8 +904,9 @@ function NewRequestForm() {
         {/* 헤더 */}
         <div className="flex items-center justify-between">
           <button onClick={() => { if (editRequestId && step <= 2) { router.push("/dashboard/client"); } else if (step > 1) { setStep(step - 1); } else { router.push("/dashboard/client"); } }}
-            className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-white">
-            이전 단계
+            className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-900">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            {step === 1 || (editRequestId && step <= 2) ? "대시보드로" : "이전 단계"}
           </button>
           <div />
         </div>
@@ -963,15 +964,16 @@ function NewRequestForm() {
                       }
                       setServiceType(type.id);
                     }}
-                    className={`flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
+                    className={`group flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-150 ${
                       blocked ? "cursor-not-allowed border-border bg-muted/40 opacity-60"
-                      : serviceType === type.id ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
+                      : serviceType === type.id ? "border-primary bg-primary/5 shadow-md"
+                      : "border-border hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-lg"
                     }`}>
-                    <div className={`mt-0.5 rounded-lg p-2 ${serviceType === type.id ? "bg-primary/10 text-primary" : "bg-muted text-foreground/40"}`}>
+                    <div className={`mt-0.5 rounded-lg p-2 transition-colors ${serviceType === type.id ? "bg-primary/10 text-primary" : "bg-muted text-foreground/40"} ${blocked ? "" : "group-hover:bg-primary/10 group-hover:text-primary"}`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={type.icon} /></svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{type.label}{blocked && <span className="ml-2 text-xs font-normal text-amber-600">등록 불가</span>}</p>
+                      <p className={`text-sm font-semibold text-foreground ${blocked ? "" : "group-hover:text-primary"}`}>{type.label}{blocked && <span className="ml-2 text-xs font-normal text-amber-600">등록 불가</span>}</p>
                       <p className="mt-0.5 break-keep text-xs text-foreground/50">{type.desc}</p>
                     </div>
                   </button>
@@ -1907,7 +1909,8 @@ function NewRequestForm() {
           <div className="flex gap-2">
             {step > 1 && !(editRequestId && step <= 2) && (
               <button onClick={() => setStep(step - 1)}
-                className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-white">
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-900">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                 이전 단계
               </button>
             )}
