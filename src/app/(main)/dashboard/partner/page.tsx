@@ -693,7 +693,7 @@ export default function PartnerDashboard() {
                                     {/* 업무범위 */}
                                     {myQuote?.timeline && myQuote.timeline.filter((t: { months: string }) => t.months).length > 0 && (
                                       <div>
-                                        <p className="text-xs text-foreground/40">업무범위 및 업무진행 소요개월(계약기간)</p>
+                                        <p className="text-xs text-foreground/40">업무범위별 소요기간</p>
                                         <div className="mt-1.5 flex flex-wrap gap-1.5">
                                           {myQuote.timeline.filter((t: { months: string }) => t.months).map((t: { label: string; months: string }, ti: number) => (
                                             <span key={ti} className="rounded-md border border-border bg-surface px-2 py-1 text-xs">
@@ -953,7 +953,7 @@ export default function PartnerDashboard() {
                       {/* 업무범위 */}
                       {myQuote.timeline && myQuote.timeline.filter((t: { months: string }) => t.months).length > 0 && (
                         <div className="mt-3">
-                          <p className="text-xs text-emerald-600/60">업무범위 및 업무진행 소요개월(계약기간)</p>
+                          <p className="text-xs text-emerald-600/60">업무범위별 소요기간</p>
                           <div className="mt-1.5 flex flex-wrap gap-1.5">
                             {myQuote.timeline.filter((t: { months: string }) => t.months).map((t: { label: string; months: string }, ti: number) => (
                               <span key={ti} className="rounded-md border border-emerald-200 bg-surface px-2 py-1 text-xs">
@@ -1022,13 +1022,14 @@ export default function PartnerDashboard() {
                     {isEditing && <button onClick={() => setIsEditing(false)} className="text-xs font-medium text-foreground/50 hover:underline">취소</button>}
                   </div>
                   <div className="mt-4 space-y-5">
-                    {/* 업무범위 및 업무진행 소요개월(계약기간) (보험 의뢰는 표시하지 않음) */}
+                    {/* 업무범위별 소요기간 (보험 의뢰는 표시하지 않음) */}
                     {selectedRequest?.category !== "임상시험 보험" && (
                     <div className="rounded-xl border border-border p-4">
                       <h5 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                         <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        업무범위 및 업무진행 소요개월(계약기간)
+                        업무범위별 소요기간
                       </h5>
+                      <p className="mt-1 text-xs text-foreground/50">준비 기간을 포함해 각 업무를 마치는 데 걸리는 개월 수를 적어 주세요.</p>
                       <div className="mt-3 space-y-2">
                         {quoteForm.timeline.map((item, idx) => (
                           <div key={item.label} className="flex items-center gap-3">
