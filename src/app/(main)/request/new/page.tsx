@@ -37,12 +37,14 @@ const getTrialPhaseOptions = (category: string) => {
         { value: "IIT", label: "IIT" },
         { value: "PMS", label: "PMS" },
         { value: "BE", label: "BE(생동성)" },
+        { value: "RWE", label: "RWE(실사용 근거)" },
       ];
     case "medical-device":
       return [
         { value: "탐색", label: "탐색" },
         { value: "확증", label: "확증" },
         { value: "시판후", label: "시판후" },
+        { value: "RWE", label: "RWE(실사용 근거)" },
         { value: "기타", label: "기타" },
       ];
     case "cosmetics":
@@ -65,6 +67,7 @@ const getTrialPhaseOptions = (category: string) => {
         { value: "Phase II", label: "Phase II" },
         { value: "Phase III", label: "Phase III" },
         { value: "Phase IV", label: "Phase IV" },
+        { value: "RWE", label: "RWE(실사용 근거)" },
         { value: "기타", label: "기타" },
       ];
   }
