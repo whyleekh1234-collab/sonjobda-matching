@@ -56,6 +56,11 @@ interface UserData {
   createdAt?: string;
 }
 
+// 회원 상세 모달의 동작 버튼. 색을 기능마다 다르게 줬더니 산만해서
+// 하나로 통일했다. 호버 강조는 globals.css의 전역 규칙이 맡는다.
+const ACTION_BTN =
+  "rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900";
+
 const typeLabels: Record<string, string> = {
   general: "일반 문의",
   quote: "견적관련 문의",
@@ -1510,22 +1515,22 @@ export default function AdminDashboard() {
               <div className="flex flex-wrap gap-2">
                 {(selectedUser.status === "pending" || !selectedUser.status) && (
                   <button onClick={() => { updateUserField(selectedUser.id, "status", "approved"); setSelectedUser({ ...selectedUser, status: "approved" }); }}
-                    className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100">승인</button>
+                    className={ACTION_BTN}>승인</button>
                 )}
                 {(selectedUser.status === "suspended" || selectedUser.status === "restricted") && (
                   <button onClick={() => { updateUserField(selectedUser.id, "status", "approved"); setSelectedUser({ ...selectedUser, status: "approved" }); }}
-                    className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100">해제</button>
+                    className={ACTION_BTN}>해제</button>
                 )}
                 {selectedUser.status === "approved" && (
                   <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 제한하시겠습니까?`)) { updateUserField(selectedUser.id, "status", "restricted"); setSelectedUser({ ...selectedUser, status: "restricted" }); } }}
-                    className="rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-600 hover:bg-amber-100">제한</button>
+                    className={ACTION_BTN}>제한</button>
                 )}
                 {(selectedUser.status === "approved" || selectedUser.status === "restricted") && (
                   <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 정지하시겠습니까?`)) { updateUserField(selectedUser.id, "status", "suspended"); setSelectedUser({ ...selectedUser, status: "suspended" }); } }}
-                    className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-100">정지</button>
+                    className={ACTION_BTN}>정지</button>
                 )}
                 <button onClick={() => { updateUserField(selectedUser.id, "verified", !selectedUser.verified); setSelectedUser({ ...selectedUser, verified: !selectedUser.verified }); }}
-                  className="rounded-lg bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10">
+                  className={ACTION_BTN}>
                   {selectedUser.verified ? "검증 해제" : "검증 승인"}
                 </button>
                 {selectedUser.roles?.includes("partner") && (
@@ -1533,7 +1538,7 @@ export default function AdminDashboard() {
                     updateUserField(selectedUser.id, "allowCategoryEdit", !selectedUser.allowCategoryEdit);
                     setSelectedUser({ ...selectedUser, allowCategoryEdit: !selectedUser.allowCategoryEdit });
                   }}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium ${selectedUser.allowCategoryEdit ? "bg-orange-50 text-orange-600 hover:bg-orange-100" : "bg-teal-50 text-teal-600 hover:bg-teal-100"}`}>
+                    className={ACTION_BTN}>
                     {selectedUser.allowCategoryEdit ? "회사유형 수정 잠금" : "회사유형 수정 허용"}
                   </button>
                 )}
@@ -1544,15 +1549,15 @@ export default function AdminDashboard() {
                   run(() => setCompanyAdmin(selectedUser.id, next));
                   setSelectedUser({ ...selectedUser, isCompanyAdmin: next });
                 }}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium ${selectedUser.isCompanyAdmin ? "bg-amber-50 text-amber-600 hover:bg-amber-100" : "bg-purple-50 text-purple-600 hover:bg-purple-100"}`}>
+                  className={ACTION_BTN}>
                   {selectedUser.isCompanyAdmin ? "회사관리자 해제" : "회사관리자 지정"}
                 </button>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => { setNotificationForm({ userId: selectedUser.id, message: "" }); setShowNotificationModal(true); setSelectedUser(null); }}
-                  className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100">알림 발송</button>
+                  className={ACTION_BTN}>알림 발송</button>
                 <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`) && confirm(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) { deleteUser(selectedUser.id); setSelectedUser(null); } }}
-                  className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-100">삭제</button>
+                  className={ACTION_BTN}>삭제</button>
               </div>
             </div>
             </>
