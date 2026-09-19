@@ -278,7 +278,7 @@ export default function ServicesSection() {
                       </span>
                       <div>
                         <p className="text-sm font-semibold text-foreground">{cat.label}</p>
-                        <p className="text-xs text-foreground-muted">{cat.desc}</p>
+                        <p className="break-keep text-xs text-foreground-muted">{cat.desc}</p>
                       </div>
                     </div>
                     );
