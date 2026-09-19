@@ -20,6 +20,7 @@ import { quoteStatusLabels, defaultTimeline } from "@/types/matching";
 import type { MatchRequest, Quote, QuoteStatus, TimelineItem } from "@/types/matching";
 import type { Notice, Notification } from "@/types/auth";
 import Greeting from "@/components/dashboard/Greeting";
+import CompanyLogo from "@/components/CompanyLogo";
 
 // request/new의 marketingTypeOptions와 같은 키를 쓴다.
 const MARKETING_TYPES = [
@@ -598,7 +599,7 @@ export default function PartnerDashboard() {
                       </div>
                       <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
                       <div className="mt-1 flex flex-wrap gap-4 text-xs text-foreground/50">
-                        <span className="break-all">의뢰사: {req.clientCompany}</span>
+                        <span className="inline-flex items-center gap-1.5 break-all">의뢰사: <CompanyLogo path={req.clientLogo} name={req.clientCompany} size={18} />{req.clientCompany}</span>
                         <span>예산: {req.budget}</span>
                         <span>마감: {req.deadline === "미정" ? "미정" : new Date(req.deadline).toLocaleDateString("ko-KR")}</span>
                       </div>
@@ -788,7 +789,7 @@ export default function PartnerDashboard() {
                     </div>
                     <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
                     <div className="mt-1 flex flex-wrap gap-4 text-xs text-foreground/50">
-                      <span>의뢰사: {req.clientCompany}</span>
+                      <span className="inline-flex items-center gap-1.5">의뢰사: <CompanyLogo path={req.clientLogo} name={req.clientCompany} size={18} />{req.clientCompany}</span>
                       <span>견적금액: <span className="font-medium text-foreground">{myQuote?.amount}</span></span>
                       <span>예산: {req.budget}</span>
                     </div>
@@ -828,7 +829,7 @@ export default function PartnerDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-xl border border-border p-4 overflow-hidden">
                   <p className="text-sm text-foreground/40">의뢰사</p>
-                  <p className="mt-1 text-base font-semibold text-foreground break-words">{selectedRequest.clientCompany}</p>
+                  <p className="mt-1 flex items-center gap-2 text-base font-semibold text-foreground break-words"><CompanyLogo path={selectedRequest.clientLogo} name={selectedRequest.clientCompany} size={32} />{selectedRequest.clientCompany}</p>
                 </div>
                 <div className="rounded-xl border border-border p-4">
                   <p className="text-sm text-foreground/40">예산</p>

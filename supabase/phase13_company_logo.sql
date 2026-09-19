@@ -50,3 +50,58 @@ begin
 end;
 $$;
 grant execute on function public.set_my_company_logo to authenticated;
+
+-- 매칭 연락처 패널에도 로고를 보여준다. 반환 컬럼이 늘어나므로 다시 만든다.
+drop function if exists public.get_match_contacts(uuid);
+create or replace function public.get_match_contacts(p_request_id uuid)
+returns table (
+  side         text,
+  company_name text,
+  logo_path    text,
+  contact_name text,
+  email        text,
+  phone        text
+)
+language plpgsql
+security definer
+set search_path = public, auth, pg_temp
+as $$
+declare
+  v_company_id uuid := current_company_id();
+  v_request    requests;
+  v_quote      quotes;
+begin
+  select * into v_request from requests where id = p_request_id;
+  if v_request.id is null then
+    raise exception '의뢰를 찾을 수 없습니다.';
+  end if;
+  if v_request.status not in ('matched', 'completed') then
+    raise exception '매칭이 성사된 뒤에 공개됩니다.';
+  end if;
+
+  select * into v_quote
+  from quotes where request_id = p_request_id and status = 'accepted';
+  if v_quote.id is null then
+    raise exception '수락된 견적이 없습니다.';
+  end if;
+
+  if v_company_id is null
+     or v_company_id not in (v_request.company_id, v_quote.company_id) then
+    raise exception '이 매칭의 당사자가 아닙니다.';
+  end if;
+
+  return query
+    select 'client'::text, c.name, c.logo_path, p.name, u.email::text, p.phone
+    from profiles p
+    join companies c on c.id = p.company_id
+    join auth.users u on u.id = p.id
+    where p.id = v_request.created_by
+  union all
+    select 'partner'::text, c.name, c.logo_path, p.name, u.email::text, p.phone
+    from profiles p
+    join companies c on c.id = p.company_id
+    join auth.users u on u.id = p.id
+    where p.id = v_quote.submitted_by;
+end;
+$$;
+grant execute on function public.get_match_contacts to authenticated;

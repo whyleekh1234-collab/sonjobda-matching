@@ -34,6 +34,7 @@ import {
 import { listPartnerRequests } from "@/lib/data/requests";
 import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
+import CompanyLogo from "@/components/CompanyLogo";
 import type { MatchingRequest, Notice } from "@/types/auth";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports";
@@ -164,7 +165,7 @@ export default function AdminDashboard() {
   const [noticeForm, setNoticeForm] = useState({ title: "", content: "" });
   const [notificationForm, setNotificationForm] = useState({ userId: "", message: "" });
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [allRequests, setAllRequests] = useState<{ id: string; requestCode?: string; matchCode?: string; clientId: string; clientCompany: string; title: string; category: string; description: string; budget: string; deadline: string; status: string; createdAt: string; quotes?: { id: string; quoteCode?: string; partnerId: string; partnerCompany: string; amount: string; duration: string; memo: string; status: string; createdAt: string; attachmentName?: string; attachmentData?: string }[] }[]>([]);
+  const [allRequests, setAllRequests] = useState<{ id: string; requestCode?: string; matchCode?: string; clientId: string; clientCompany: string; clientLogo?: string | null; title: string; category: string; description: string; budget: string; deadline: string; status: string; createdAt: string; quotes?: { id: string; quoteCode?: string; partnerId: string; partnerCompany: string; partnerLogo?: string | null; amount: string; duration: string; memo: string; status: string; createdAt: string; attachmentName?: string; attachmentData?: string }[] }[]>([]);
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [matchingView, setMatchingView] = useState<"all" | "requests" | "quotes">("all");
   const [matchingSortBy, setMatchingSortBy] = useState<"matchCode" | "title" | "client" | "partner" | "amount" | "category">("matchCode");
@@ -750,7 +751,7 @@ export default function AdminDashboard() {
               if (matchingView === "quotes") {
                 const allQuotesList = allRequests.flatMap((r) =>
                   (r.quotes || []).filter((q) => ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status))
-                    .map((q) => ({ ...q, requestTitle: r.title, requestCode: r.requestCode, category: r.category, clientCompany: r.clientCompany, requestId: r.id }))
+                    .map((q) => ({ ...q, requestTitle: r.title, requestCode: r.requestCode, category: r.category, clientCompany: r.clientCompany, clientLogo: r.clientLogo, requestId: r.id }))
                 ).sort((a, b) => (b.quoteCode || "").localeCompare(a.quoteCode || ""));
                 return allQuotesList.length === 0 ? (
                   <div className="rounded-2xl border border-border bg-background p-12 text-center">
@@ -785,8 +786,8 @@ export default function AdminDashboard() {
                                   <td className="px-4 py-3 text-left font-mono text-xs text-foreground/50">{q.quoteCode || "-"}</td>
                                   <td className="px-4 py-3 text-center font-medium text-foreground">{q.requestTitle}</td>
                                   <td className="px-4 py-3 text-center"><span className="rounded-lg bg-muted px-2 py-0.5 text-xs text-foreground/60">{q.category}</span></td>
-                                  <td className="px-4 py-3 text-center text-foreground/70">{q.clientCompany}</td>
-                                  <td className="px-4 py-3 text-center text-foreground/70">{q.partnerCompany}</td>
+                                  <td className="px-4 py-3 text-center text-foreground/70"><span className="inline-flex items-center gap-2"><CompanyLogo path={q.clientLogo} name={q.clientCompany} size={22} />{q.clientCompany}</span></td>
+                                  <td className="px-4 py-3 text-center text-foreground/70"><span className="inline-flex items-center gap-2"><CompanyLogo path={q.partnerLogo} name={q.partnerCompany} size={22} />{q.partnerCompany}</span></td>
                                   <td className="px-4 py-3 text-center text-xs text-foreground/50">{partnerUser?.name || "-"}</td>
                                   <td className="px-4 py-3 text-right font-semibold text-primary">{q.amount}원</td>
                                   <td className="px-4 py-3 text-center"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>{statusLabel}</span></td>
@@ -856,7 +857,7 @@ export default function AdminDashboard() {
                             <tr onClick={() => setSelectedRequestDetail(isOpen ? null : req.id)} className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30">
                               <td className="px-4 py-3"><span className="font-mono text-xs text-foreground/60">{req.requestCode || "-"}</span></td>
                               <td className="px-4 py-3"><button className="font-medium text-primary hover:underline">{req.title}</button></td>
-                              <td className="px-4 py-3 text-foreground/70">{req.clientCompany}</td>
+                              <td className="px-4 py-3 text-foreground/70"><span className="inline-flex items-center gap-2"><CompanyLogo path={req.clientLogo} name={req.clientCompany} size={22} />{req.clientCompany}</span></td>
                               <td className="px-4 py-3"><span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">{req.category}</span></td>
                               <td className="px-4 py-3 font-medium text-primary">{req.budget}</td>
                               <td className="px-4 py-3">
@@ -904,7 +905,7 @@ export default function AdminDashboard() {
                                             <div key={quote.id} className={`rounded-xl border transition-shadow hover:shadow-md ${quote.status === "quoted" || quote.status === "client_reviewing" ? "border-emerald-200 bg-emerald-50/30" : quote.status === "accepted" ? "border-primary/30 bg-primary/5" : quote.status === "rejected" || quote.status === "client_rejected" ? "border-red-100 bg-red-50/20" : quote.status === "reviewing" ? "border-amber-200 bg-amber-50/30" : "border-border bg-muted/20"}`}>
                                               <button onClick={() => setExpandedQuoteId(expandedQuoteId === quote.id ? null : quote.id)} className="flex w-full items-center justify-between p-5 text-left">
                                                 <div className="flex items-center gap-3">
-                                                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground/60">{quote.partnerCompany.charAt(0)}</div>
+                                                  <CompanyLogo path={quote.partnerLogo} name={quote.partnerCompany} size={36} />
                                                   <div>
                                                     <p className="text-sm font-semibold text-foreground">{quote.partnerCompany}</p>
                                                     <p className="text-xs text-foreground/40">
@@ -1058,7 +1059,7 @@ export default function AdminDashboard() {
                             <tr onClick={() => setSelectedRequestDetail(isOpen ? null : req.id)} className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30">
                               <td className="px-4 py-3"><span className="font-mono text-xs font-semibold text-primary">{req.matchCode || "-"}</span></td>
                               <td className="px-4 py-3"><button className="font-medium text-primary hover:underline">{req.title}</button></td>
-                              <td className="px-4 py-3 text-foreground/70">{req.clientCompany}</td>
+                              <td className="px-4 py-3 text-foreground/70"><span className="inline-flex items-center gap-2"><CompanyLogo path={req.clientLogo} name={req.clientCompany} size={22} />{req.clientCompany}</span></td>
                               <td className="px-4 py-3 text-foreground/70">{acceptedQuote?.partnerCompany || "-"}</td>
                               <td className="px-4 py-3 font-medium text-primary">{acceptedQuote ? `${acceptedQuote.amount}원` : "-"}</td>
                               <td className="px-4 py-3"><span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">{req.category}</span></td>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import CompanyLogo from "@/components/CompanyLogo";
 import { getMatchContacts, type MatchContact } from "@/lib/data/requests";
 
 // 매칭이 성사된 뒤에만 상대방 연락처가 열린다. 서버가 "이 매칭의 당사자인가"를
@@ -47,7 +48,7 @@ export default function MatchContactPanel({
         매칭 성사로 {label} 연락처가 공개되었습니다
       </p>
       <div className="grid grid-cols-2 gap-2 text-xs text-blue-900">
-        <span>회사명: <span className="font-medium">{contact.companyName}</span></span>
+        <span className="inline-flex items-center gap-1.5">회사명: <CompanyLogo path={contact.logoPath} name={contact.companyName} size={20} /><span className="font-medium">{contact.companyName}</span></span>
         <span>담당자명: <span className="font-medium">{contact.contactName}</span></span>
         <span>이메일: <span className="font-medium">{contact.email}</span></span>
         <span>연락처: <span className="font-medium">{contact.phone || "-"}</span></span>

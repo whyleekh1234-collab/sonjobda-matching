@@ -2,24 +2,25 @@
 
 import { logoUrl } from "@/lib/data/companyLogo";
 
-// 회사 로고 아바타. 로고가 없으면 회사명 첫 글자로 대신한다.
-// 견적 카드, 상단 바, 마이페이지가 모두 이걸 쓴다.
+// 회사 로고. 둥근 사각형 + 흰 배경 + 여백 — 회사 로고는 가로로 긴 글자형이
+// 많아서 원형에 넣으면 잘린다. 로고가 없으면 같은 크기의 흰 빈 칸으로 둬서
+// 줄이 흔들리지 않게 한다.
 export default function CompanyLogo({
   path, name, size = 40, className = "",
 }: { path?: string | null; name: string; size?: number; className?: string }) {
   const url = logoUrl(path);
-  const style = { width: size, height: size };
-  if (url) {
-    return (
-      <span style={style} className={`inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-white ${className}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt={`${name} 로고`} className="h-full w-full object-contain p-0.5" />
-      </span>
-    );
-  }
+  const radius = size >= 48 ? "rounded-xl" : "rounded-lg";
   return (
-    <span style={style} className={`inline-flex flex-shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-foreground/60 ${className}`}>
-      <span style={{ fontSize: Math.max(11, Math.round(size * 0.38)) }}>{name.trim().charAt(0) || "?"}</span>
+    <span
+      style={{ width: size, height: size }}
+      className={`inline-flex flex-shrink-0 items-center justify-center overflow-hidden border border-border bg-white ${radius} ${className}`}
+      title={name}
+      aria-label={url ? `${name} 로고` : undefined}
+    >
+      {url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={`${name} 로고`} className="h-full w-full object-contain" style={{ padding: Math.max(2, Math.round(size * 0.08)) }} />
+      )}
     </span>
   );
 }

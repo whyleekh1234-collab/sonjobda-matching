@@ -320,6 +320,7 @@ export async function getAttachmentUrl(path: string): Promise<string | null> {
 export interface MatchContact {
   side: "client" | "partner";
   companyName: string;
+  logoPath?: string | null;
   contactName: string;
   email: string;
   phone: string | null;
@@ -333,12 +334,14 @@ export async function getMatchContacts(requestId: string): Promise<MatchContact[
   return (data as {
     side: "client" | "partner";
     company_name: string;
+    logo_path?: string | null;
     contact_name: string;
     email: string;
     phone: string | null;
   }[]).map((r) => ({
     side: r.side,
     companyName: r.company_name,
+    logoPath: r.logo_path ?? null,
     contactName: r.contact_name,
     email: r.email,
     phone: r.phone,
