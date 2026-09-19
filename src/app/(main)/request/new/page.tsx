@@ -200,7 +200,7 @@ const marketingTypeOptions = [
   { value: "booth", label: "학회 부스 운영" },
   { value: "cso", label: "CSO(영업대행)" },
   { value: "patient", label: "환자유치 프로그램" },
-  { value: "data", label: "데이터 구독 (UBIST/IQVIA 등)" },
+  { value: "data", label: "데이터 구독" },
   { value: "digital", label: "디지털 마케팅" },
   { value: "other", label: "기타" },
 ];
