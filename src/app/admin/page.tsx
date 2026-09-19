@@ -35,6 +35,21 @@ import { listPartnerRequests } from "@/lib/data/requests";
 import type { MatchingRequest, Notice } from "@/types/auth";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports";
+const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "notifications", "reports"];
+
+// 펼친 상세의 맨 아래에 붙는 "목록으로" 줄. 긴 상세를 다 읽고 나서 위로
+// 스크롤해 다시 제목을 누르지 않아도 되게.
+function BackToList({ onClick, label = "목록으로" }: { onClick: () => void; label?: string }) {
+  return (
+    <div className="mt-4 flex justify-end border-t border-border pt-3">
+      <button type="button" onClick={onClick}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted">
+        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+        {label}
+      </button>
+    </div>
+  );
+}
 
 interface UserData {
   id: string;
@@ -106,7 +121,40 @@ const matchingStatusLabels: Record<string, { label: string; color: string }> = {
 export default function AdminDashboard() {
   const { isAdmin, adminId, isLoading, logout } = useAdminAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [activeTab, setActiveTabState] = useState<Tab>("overview");
+  const [selectedRequestDetail, setSelectedRequestDetail] = useState<string | null>(null);
+
+  // 탭을 주소(?tab=)에 적는다. 브라우저 뒤로가기가 이전 탭으로 돌아가고,
+  // 새로고침해도 보던 탭이 유지된다. useSearchParams는 Suspense 경계를
+  // 요구해서 history API를 직접 쓴다.
+  useEffect(() => {
+    const read = () => {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      setActiveTabState(TAB_KEYS.includes(t as Tab) ? (t as Tab) : "overview");
+      setSelectedRequestDetail(null);
+    };
+    read();
+    window.addEventListener("popstate", read);
+    return () => window.removeEventListener("popstate", read);
+  }, []);
+  // Esc로 팝업과 펼친 상세를 닫는다.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setSelectedUser(null); setUserEdit(null);
+      setShowNotificationModal(false);
+      setSelectedRequestDetail(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const setActiveTab = (t: Tab) => {
+    setActiveTabState(t);
+    setSelectedRequestDetail(null);
+    const u = new URL(window.location.href);
+    if (t === "overview") u.searchParams.delete("tab"); else u.searchParams.set("tab", t);
+    window.history.pushState({}, "", u);
+  };
   const [users, setUsers] = useState<UserData[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [matchings, setMatchings] = useState<MatchingRequest[]>([]);
@@ -115,7 +163,6 @@ export default function AdminDashboard() {
   const [notificationForm, setNotificationForm] = useState({ userId: "", message: "" });
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [allRequests, setAllRequests] = useState<{ id: string; requestCode?: string; matchCode?: string; clientId: string; clientCompany: string; title: string; category: string; description: string; budget: string; deadline: string; status: string; createdAt: string; quotes?: { id: string; quoteCode?: string; partnerId: string; partnerCompany: string; amount: string; duration: string; memo: string; status: string; createdAt: string; attachmentName?: string; attachmentData?: string }[] }[]>([]);
-  const [selectedRequestDetail, setSelectedRequestDetail] = useState<string | null>(null);
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [matchingView, setMatchingView] = useState<"all" | "requests" | "quotes">("all");
   const [matchingSortBy, setMatchingSortBy] = useState<"matchCode" | "title" | "client" | "partner" | "amount" | "category">("matchCode");
@@ -747,6 +794,7 @@ export default function AdminDashboard() {
                                         <span className="text-sm">{q.attachmentName}</span>
                                       </button>
                                     )}
+                                    <BackToList onClick={() => setSelectedRequestDetail(null)} />
                                   </td></tr>
                                 )}
                               </React.Fragment>
@@ -916,6 +964,7 @@ export default function AdminDashboard() {
                                       )}
                                     </div>
                                   </div>
+                                  <BackToList onClick={() => setSelectedRequestDetail(null)} />
                                 </td>
                               </tr>
                             )}
@@ -1043,6 +1092,7 @@ export default function AdminDashboard() {
                                       <span>거절 {(req.quotes || []).filter((q) => q.status === "client_rejected" || q.status === "rejected").length}건</span>
                                     </div>
                                   </div>
+                                  <BackToList onClick={() => setSelectedRequestDetail(null)} />
                                 </td>
                               </tr>
                             )}
@@ -1159,6 +1209,7 @@ export default function AdminDashboard() {
                                       {inq.status !== "closed" && <button onClick={() => updateInquiryStatus(inq.id, "closed")} className="rounded-lg bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100">종료</button>}
                                     </div>
                                   </div>
+                                  <BackToList onClick={() => setSelectedRequestDetail(null)} />
                                 </td>
                               </tr>
                             )}
@@ -1311,6 +1362,7 @@ export default function AdminDashboard() {
                                       </div>
                                     )}
                                   </div>
+                                  <BackToList onClick={() => setSelectedRequestDetail(null)} />
                                 </td>
                               </tr>
                             )}
@@ -1574,6 +1626,12 @@ export default function AdminDashboard() {
                 <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`) && confirm(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) { deleteUser(selectedUser.id); setSelectedUser(null); } }}
                   className={ACTION_BTN}>삭제</button>
               </div>
+            </div>
+            <div className="mt-4 flex justify-center">
+              <button type="button" onClick={() => setSelectedUser(null)}
+                className="rounded-lg border border-border px-5 py-2 text-sm font-medium text-foreground/70 hover:bg-muted">
+                ← 목록으로
+              </button>
             </div>
             </>
             )}
