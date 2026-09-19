@@ -55,7 +55,7 @@ function SignupContent() {
     if (category && partnerCategories.includes(category as PartnerCategory)) {
       setForm((prev) => ({
         ...prev,
-        roles: prev.roles.includes("client") ? [...prev.roles, "partner"] : ["client", "partner"],
+        roles: ["partner"],
         partnerCategories: [category as PartnerCategory],
       }));
     }
@@ -96,12 +96,14 @@ function SignupContent() {
     setError("");
   };
 
+  // 회원 유형은 하나만 고른다. 의뢰사와 파트너사를 한 회사가 겸하면
+  // 자기 의뢰에 자기 견적을 내거나 경쟁사 견적을 엿보는 이해상충이 생긴다.
+  // 서비스운영정책 제1조 ④.
   const toggleRole = (role: "client" | "partner") => {
     setForm((prev) => ({
       ...prev,
-      roles: prev.roles.includes(role)
-        ? prev.roles.filter((r) => r !== role)
-        : [...prev.roles, role],
+      roles: [role],
+      partnerCategories: role === "partner" ? prev.partnerCategories : [],
     }));
     setError("");
   };
@@ -155,7 +157,7 @@ function SignupContent() {
   };
 
   const validate = (): string | null => {
-    if (form.roles.length === 0) return "회원 유형을 하나 이상 선택해주세요.";
+    if (form.roles.length !== 1) return "회원 유형을 하나 선택해주세요.";
     if (form.roles.includes("partner") && form.partnerCategories.length === 0) return "회사유형을 하나 이상 선택해주세요.";
     // 이메일
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -256,10 +258,10 @@ function SignupContent() {
             </div>
           )}
 
-          {/* 회원 유형 선택 (복수 선택 가능) */}
+          {/* 회원 유형 선택 (하나만) */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-foreground">
-              회원 유형 * <span className="text-xs font-normal text-foreground/40">(복수 선택 가능)</span>
+              회원 유형 * <span className="text-xs font-normal text-foreground/40">(하나만 선택)</span>
             </label>
             <div className="mt-2 grid grid-cols-2 gap-3">
               <button
@@ -327,11 +329,10 @@ function SignupContent() {
                 </div>
               </div>
             )}
-            {form.roles.length === 2 && (
-              <p className="mt-2 text-xs text-primary">
-                의뢰사 + 파트너사 모두 선택되었습니다. 로그인 후 자유롭게 전환할 수 있어요.
-              </p>
-            )}
+            <p className="mt-3 rounded-lg bg-muted px-3 py-2.5 text-xs leading-relaxed text-foreground/60">
+              이해상충 방지를 위해 한 회사는 의뢰사 또는 파트너사 중 하나로만 가입할 수 있습니다
+              (서비스운영정책 제1조). 두 역할이 모두 필요한 경우 고객센터로 문의해 주세요.
+            </p>
           </div>
 
           <div className="space-y-4">
