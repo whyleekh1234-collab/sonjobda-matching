@@ -18,6 +18,8 @@ import {
   sendNotification as sendNotificationApi,
   replyNotification,
   setCompanyAdmin,
+  updateProfileAsAdmin,
+  updateCompanyAsAdmin,
   markAllMyNotificationsRead,
   markNotificationRead as markNotificationReadApi,
   type AdminInquiry as Inquiry,
@@ -38,6 +40,7 @@ interface UserData {
   id: string;
   memberCode?: string;
   name: string;
+  companyId?: string;
   company: string;
   email: string;
   roles: string[];
@@ -109,6 +112,10 @@ export default function AdminDashboard() {
   const [userFilterRole, setUserFilterRole] = useState<"all" | "client" | "partner">("all");
   const [userFilterStatus, setUserFilterStatus] = useState<"all" | "approved" | "pending" | "restricted" | "suspended">("all");
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  // 회원 상세 모달의 "정보 수정" 폼. null이면 보기 모드.
+  const [userEdit, setUserEdit] = useState<{
+    name: string; phone: string; company: string; businessNumber: string; address: string;
+  } | null>(null);
 
   // 고유번호(MT-, NF-)를 화면에서 채워 넣던 코드는 사라졌다. 이제 DB
   // 시퀀스가 부여하므로 빠진 번호를 나중에 메울 일이 없다.
@@ -397,17 +404,31 @@ export default function AdminDashboard() {
             return matchSearch && matchRole && matchStatus;
           });
           const pendingChanges = changeRequests.filter((r) => r.status === "pending");
+          const reviewedChanges = changeRequests.filter((r) => r.status !== "pending");
           return (
           <div className="mt-8">
-            {/* 회사 정보 변경 요청 */}
-            {pendingChanges.length > 0 && (
-              <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/40 p-6">
+            {/* 회사 정보 변경 요청. 대기 건이 없어도 섹션은 보여 준다 —
+                안 보이면 이런 절차가 있는지조차 모른다. */}
+            <div className={`mb-6 rounded-2xl border p-6 ${
+              pendingChanges.length > 0 ? "border-amber-200 bg-amber-50/40" : "border-border bg-background"
+            }`}>
                 <h3 className="text-base font-bold text-foreground">
-                  회사 정보 변경 요청 {pendingChanges.length}건
+                  회사 정보 변경 요청
+                  {pendingChanges.length > 0 && (
+                    <span className="ml-2 rounded-full bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+                      대기 {pendingChanges.length}건
+                    </span>
+                  )}
                 </h3>
                 <p className="mt-1 text-xs text-foreground/50">
+                  회원사 담당 관리자가 마이페이지에서 회사명·사업자번호·주소 등의 변경을 요청하면 여기 표시됩니다.
                   승인하면 회사 정보에 그대로 반영되고 요청자에게 알림이 갑니다.
                 </p>
+                {pendingChanges.length === 0 && (
+                  <p className="mt-4 rounded-xl border border-dashed border-border py-5 text-center text-sm text-foreground/40">
+                    대기 중인 변경 요청이 없습니다.
+                  </p>
+                )}
                 <div className="mt-4 space-y-3">
                   {pendingChanges.map((r) => (
                     <div key={r.id} className="rounded-xl border border-border bg-background p-4">
@@ -455,8 +476,30 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
+                {reviewedChanges.length > 0 && (
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-xs font-medium text-foreground/50 hover:text-foreground">
+                      처리 이력 {reviewedChanges.length}건
+                    </summary>
+                    <div className="mt-2 space-y-1.5">
+                      {reviewedChanges.slice(0, 20).map((r) => (
+                        <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs">
+                          <span className={`rounded-full px-2 py-0.5 font-semibold ${
+                            r.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+                          }`}>{r.status === "approved" ? "승인" : "반려"}</span>
+                          <span className="font-medium text-foreground">{r.companyName}</span>
+                          <span className="text-foreground/50">
+                            {Object.keys(r.after).map((k) => FIELD_LABELS[k] ?? k).join(", ")}
+                          </span>
+                          <span className="ml-auto text-foreground/40">
+                            {new Date(r.reviewedAt ?? r.createdAt).toLocaleDateString("ko-KR")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
               </div>
-            )}
             {/* 검색 + 필터 */}
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative flex-1 max-w-md">
@@ -1340,14 +1383,89 @@ export default function AdminDashboard() {
 
       {/* ════════════ 회원 상세보기 모달 ════════════ */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedUser(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setSelectedUser(null); setUserEdit(null); }}>
           <div className="mx-4 w-full max-w-lg rounded-2xl bg-background p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-foreground">회원 상세 정보</h3>
-              <button onClick={() => setSelectedUser(null)} className="rounded-lg p-1 text-foreground/40 hover:bg-muted hover:text-foreground">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
+              <h3 className="text-lg font-bold text-foreground">{userEdit ? "회원 정보 수정" : "회원 상세 정보"}</h3>
+              <div className="flex items-center gap-2">
+                {!userEdit && (
+                  <button onClick={() => setUserEdit({
+                    name: selectedUser.name, phone: selectedUser.phone ?? "",
+                    company: selectedUser.company, businessNumber: selectedUser.businessNumber ?? "",
+                    address: selectedUser.address ?? "",
+                  })} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted">
+                    정보 수정
+                  </button>
+                )}
+                <button onClick={() => { setSelectedUser(null); setUserEdit(null); }} className="rounded-lg p-1 text-foreground/40 hover:bg-muted hover:text-foreground">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
             </div>
+
+            {userEdit ? (
+              <form className="mt-5 space-y-4" onSubmit={async (e) => {
+                e.preventDefault();
+                const u = selectedUser; const f = userEdit;
+                const profileChanged = f.name !== u.name || f.phone !== (u.phone ?? "");
+                const companyChanged = f.company !== u.company || f.businessNumber !== (u.businessNumber ?? "") || f.address !== (u.address ?? "");
+                if (!profileChanged && !companyChanged) { setUserEdit(null); return; }
+                if (companyChanged && !confirm("회사 정보는 같은 회사의 모든 멤버에게 함께 반영됩니다. 저장할까요?")) return;
+                await run(async () => {
+                  if (profileChanged) await updateProfileAsAdmin(u.id, { name: f.name, phone: f.phone });
+                  if (companyChanged && u.companyId) await updateCompanyAsAdmin(u.companyId, {
+                    name: f.company, businessNumber: f.businessNumber, address: f.address,
+                  });
+                }, "저장했습니다.");
+                setSelectedUser({ ...u, name: f.name, phone: f.phone, company: f.company, businessNumber: f.businessNumber, address: f.address });
+                setUserEdit(null);
+              }}>
+                <div className="rounded-xl bg-muted p-4">
+                  <p className="text-xs font-semibold text-foreground/50">회원 개인 정보</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className="text-xs text-foreground/40">회원명</span>
+                      <input value={userEdit.name} onChange={(e) => setUserEdit({ ...userEdit, name: e.target.value })} required
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs text-foreground/40">연락처</span>
+                      <input value={userEdit.phone} onChange={(e) => setUserEdit({ ...userEdit, phone: e.target.value })}
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+                    </label>
+                  </div>
+                  <p className="mt-2 text-[11px] text-foreground/40">이메일({selectedUser.email})은 로그인 계정이라 여기서 바꿀 수 없습니다.</p>
+                </div>
+                <div className="rounded-xl bg-muted p-4">
+                  <p className="text-xs font-semibold text-foreground/50">회사 정보 <span className="font-normal">— 같은 회사 멤버 전체에 반영</span></p>
+                  <div className="mt-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="block">
+                        <span className="text-xs text-foreground/40">회사명</span>
+                        <input value={userEdit.company} onChange={(e) => setUserEdit({ ...userEdit, company: e.target.value })} required
+                          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+                      </label>
+                      <label className="block">
+                        <span className="text-xs text-foreground/40">사업자등록번호</span>
+                        <input value={userEdit.businessNumber} onChange={(e) => setUserEdit({ ...userEdit, businessNumber: e.target.value })} required
+                          className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+                      </label>
+                    </div>
+                    <label className="block">
+                      <span className="text-xs text-foreground/40">기업주소</span>
+                      <input value={userEdit.address} onChange={(e) => setUserEdit({ ...userEdit, address: e.target.value })}
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+                    </label>
+                  </div>
+                  <p className="mt-2 text-[11px] text-foreground/40">사업자등록번호를 바꾸면 국세청 검증 상태가 초기화됩니다.</p>
+                </div>
+                <div className="flex justify-end gap-2 border-t border-border pt-4">
+                  <button type="button" onClick={() => setUserEdit(null)} className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-foreground/70 hover:bg-muted">취소</button>
+                  <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary-dark">저장</button>
+                </div>
+              </form>
+            ) : (
+            <>
             <div className="mt-5 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <InfoRow label="회원번호" value={selectedUser.memberCode || "-"} />
@@ -1435,6 +1553,8 @@ export default function AdminDashboard() {
                   className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-100">삭제</button>
               </div>
             </div>
+            </>
+            )}
           </div>
         </div>
       )}

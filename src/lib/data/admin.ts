@@ -9,6 +9,7 @@ export interface AdminUser {
   id: string;
   memberCode?: string;
   name: string;
+  companyId?: string;
   company: string;
   email: string;
   roles: string[];
@@ -30,7 +31,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
   if (error) throw new Error(error.message);
   return ((data ?? []) as {
     id: string; member_code: string; name: string; email: string; phone: string | null;
-    company: string; business_number: string; address: string | null;
+    company_id?: string; company: string; business_number: string; address: string | null;
     roles: string[]; active_role: string; partner_categories: string[] | null;
     status: string; is_company_admin: boolean; is_platform_admin: boolean;
     verified: boolean; allow_category_edit: boolean; created_at: string;
@@ -40,6 +41,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     name: r.name,
     email: r.email,
     phone: r.phone ?? "",
+    companyId: r.company_id,
     company: r.company,
     businessNumber: r.business_number,
     address: r.address ?? "",
@@ -64,6 +66,35 @@ export async function updateUser(
     p_status: fields.status ?? null,
     p_verified: fields.verified ?? null,
     p_allow_category_edit: fields.allowCategoryEdit ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// 운영자가 회원 개인 정보를 직접 고친다. 비운 항목은 그대로 둔다.
+export async function updateProfileAsAdmin(
+  targetId: string,
+  fields: { name?: string; phone?: string; roles?: string[]; partnerCategories?: string[] }
+): Promise<void> {
+  const { error } = await createClient().rpc("admin_update_profile", {
+    p_target: targetId,
+    p_name: fields.name ?? null,
+    p_phone: fields.phone ?? null,
+    p_roles: fields.roles ?? null,
+    p_partner_categories: fields.partnerCategories ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// 회사 정보 직접 수정. 사업자번호를 바꾸면 국세청 검증이 초기화된다.
+export async function updateCompanyAsAdmin(
+  companyId: string,
+  fields: { name?: string; businessNumber?: string; address?: string }
+): Promise<void> {
+  const { error } = await createClient().rpc("admin_update_company", {
+    p_company_id: companyId,
+    p_name: fields.name ?? null,
+    p_business_number: fields.businessNumber ?? null,
+    p_address: fields.address ?? null,
   });
   if (error) throw new Error(error.message);
 }
