@@ -18,6 +18,7 @@ import type { Notice, Notification } from "@/types/auth";
 import Link from "next/link";
 import Greeting from "@/components/dashboard/Greeting";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
+import CompanyLogo from "@/components/CompanyLogo";
 import { listPartnerProfiles, type PartnerProfile } from "@/lib/data/partnerProfiles";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
@@ -491,7 +492,7 @@ export default function ClientDashboard() {
                             <div key={quote.id} className={`rounded-xl border transition-shadow hover:shadow-md ${quote.status === "accepted" ? "border-primary bg-primary/5" : quote.status === "client_rejected" || quote.status === "not_selected" ? "border-border bg-muted/30" : "border-emerald-200 bg-surface"}`}>
                               <button onClick={() => setExpandedQuoteId(isQuoteOpen ? null : quote.id)} className="flex w-full items-center justify-between p-5 text-left">
                                 <div className="flex items-center gap-3">
-                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground/60">{quote.partnerCompany.charAt(0)}</div>
+                                  <CompanyLogo path={quote.partnerLogo} name={quote.partnerCompany} size={40} />
                                   <div>
                                     <p className="break-all text-base font-semibold text-foreground">{quote.partnerCompany} {quote.quoteCode && <span className="ml-1 font-mono text-xs text-foreground/30">{quote.quoteCode}</span>}</p>
                                     {/* 담당자 이름은 매칭 성사 전에는 공개되지 않는다. 성사 후 아래 연락처 칸에 나온다. */}

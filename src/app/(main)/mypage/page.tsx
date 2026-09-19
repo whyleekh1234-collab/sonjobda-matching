@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyCompanyRequests, listPartnerRequests } from "@/lib/data/requests";
 import PartnerProfileEditor from "@/components/partner/PartnerProfileEditor";
+import CompanyLogo from "@/components/CompanyLogo";
+import { uploadCompanyLogo, removeCompanyLogo, validateLogo } from "@/lib/data/companyLogo";
 import {
   listCompanyMembers,
   createCompanyInvite,
@@ -40,6 +42,8 @@ export default function MyPage() {
   const [companyChangeRequest, setCompanyChangeRequest] = useState("");
   const [changeForm, setChangeForm] = useState({ name: "", businessNumber: "", address: "" });
   const [changeRequests, setChangeRequests] = useState<CompanyChangeRequest[]>([]);
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+  useEffect(() => { setLogoPath(user?.companyLogo ?? null); }, [user?.companyLogo]);
   const [editingCategories, setEditingCategories] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<PartnerCategory[]>([]);
   const [summary, setSummary] = useState({
@@ -469,6 +473,36 @@ export default function MyPage() {
                 {isAdmin && (
                   <button onClick={() => setShowCompanyChangeModal(true)} className="text-xs font-medium text-primary hover:underline">회사 정보 변경 요청</button>
                 )}
+              </div>
+              {/* 로고: 회사 관리자만 바꾼다. 바꾸면 세션의 user에도 바로 반영한다. */}
+              <div className="mt-4 flex items-center gap-4">
+                <CompanyLogo path={logoPath} name={user.company} size={64} />
+                <div className="text-sm">
+                  <p className="text-foreground/40">회사 로고</p>
+                  {isAdmin ? (
+                    <div className="mt-1 flex items-center gap-3">
+                      <label className="cursor-pointer text-xs font-medium text-primary hover:underline">
+                        {logoPath ? "변경" : "올리기"}
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden"
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
+                            const err = validateLogo(f); if (err) { alert(err); return; }
+                            try { setLogoPath(await uploadCompanyLogo(user.companyId, f)); alert("로고를 저장했습니다."); }
+                            catch (er) { alert(er instanceof Error ? er.message : "로고를 올리지 못했습니다."); }
+                          }} />
+                      </label>
+                      {logoPath && (
+                        <button type="button" className="text-xs text-foreground/50 hover:text-red-500"
+                          onClick={async () => { if (!confirm("로고를 삭제할까요?")) return; try { await removeCompanyLogo(user.companyId); setLogoPath(null); } catch (er) { alert(er instanceof Error ? er.message : "삭제하지 못했습니다."); } }}>
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-foreground/40">회사 관리자가 변경할 수 있습니다.</p>
+                  )}
+                  <p className="mt-1 text-[11px] text-foreground/30">PNG·JPG·WEBP·SVG, 2MB 이하</p>
+                </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-foreground/40">회사명</span><p className="mt-0.5 font-medium text-foreground">{user.company}</p></div>

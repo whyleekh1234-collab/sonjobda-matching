@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import CompanyLogo from "@/components/CompanyLogo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,6 +86,7 @@ export default function Header() {
                 {roleLabels[user.activeRole].label}
               </span>
               <Link href="/mypage" className="whitespace-nowrap text-white/70 transition-colors hover:text-white">
+                <CompanyLogo path={user.companyLogo} name={user.company} size={22} className="mr-1.5 align-middle" />
                 <span className="font-medium text-white">{user.company}</span> {user.name}님
               </Link>
             </div>

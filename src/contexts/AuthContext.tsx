@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { uploadCompanyLogo } from "@/lib/data/companyLogo";
 import type { User, Role, PartnerCategory, UserStatus } from "@/types/auth";
 
 interface AuthContextType {
@@ -20,6 +21,7 @@ interface AuthContextType {
     roles: Role[];
     partnerCategories?: PartnerCategory[];
     inviteToken?: string;
+    logo?: File | null; // 선택. 가입 직후 올린다.
   }) => Promise<{ needsEmailConfirmation: boolean }>;
   findEmailByPhone: (name: string, phone: string) => Promise<string>;
   findEmailByEmail: (name: string, email: string) => Promise<string>;
@@ -51,6 +53,7 @@ type ProfileRow = {
     name: string;
     business_number: string;
     address: string | null;
+    logo_path: string | null;
   } | null;
 };
 
@@ -62,6 +65,7 @@ function toUser(profile: ProfileRow, email: string): User {
     name: profile.name,
     companyId: profile.company_id,
     company: profile.companies?.name ?? "",
+    companyLogo: profile.companies?.logo_path ?? null,
     businessNumber: profile.companies?.business_number ?? "",
     roles: profile.roles,
     activeRole: profile.active_role,
@@ -86,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, company_id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, created_at, companies(name, business_number, address)"
+        "id, company_id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, created_at, companies(name, business_number, address, logo_path)"
       )
       .eq("id", session.user.id)
       .single();
@@ -156,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles: Role[];
     partnerCategories?: PartnerCategory[];
     inviteToken?: string;
+    logo?: File | null;
   }) => {
     // 폼 값을 계정 메타데이터로 넘긴다. 회사와 프로필 생성은 auth.users의
     // on_auth_user_created 트리거가 같은 트랜잭션 안에서 처리한다.
@@ -193,6 +198,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // onAuthStateChange가 화면에 잠깐 로그인된 모습을 비추는 걸 막는다.
     if (signUpData.session) {
       suppressAuthEvent.current = true;
+      // 로고는 세션이 있는 이 짧은 순간에 올린다. 실패해도 가입은 유효하다 —
+      // 마이페이지에서 다시 올릴 수 있으니 조용히 넘어간다.
+      if (data.logo && signUpData.user) {
+        try {
+          const { data: p } = await supabase.from("profiles").select("company_id").eq("id", signUpData.user.id).single();
+          if (p?.company_id) await uploadCompanyLogo(p.company_id, data.logo);
+        } catch (e) {
+          console.error("logo upload at signup", e);
+        }
+      }
       await supabase.auth.signOut();
       suppressAuthEvent.current = false;
     }

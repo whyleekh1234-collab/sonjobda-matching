@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { validateLogo } from "@/lib/data/companyLogo";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,6 +49,8 @@ function SignupContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inviteInfo, setInviteInfo] = useState<{ company: string; businessNumber: string; invitedBy: string } | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // 쿼리 파라미터로 전달된 카테고리 미리 선택 / 초대 링크 처리
   useEffect(() => {
@@ -220,6 +223,7 @@ function SignupContent() {
         roles: form.roles,
         ...(inviteToken && { inviteToken }),
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
+        logo,
       });
       alert(
         needsEmailConfirmation
@@ -495,6 +499,37 @@ function SignupContent() {
               </div>
               <p className="mt-1 text-xs text-foreground/40">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
             </div>
+
+            {/* 회사 로고 (선택). 초대로 합류하는 멤버는 회사 로고가 이미 있으니 묻지 않는다. */}
+            {!inviteInfo && (
+              <div>
+                <label className="block text-sm font-medium text-foreground">
+                  회사 로고 <span className="text-xs font-normal text-foreground/40">(선택)</span>
+                </label>
+                <div className="mt-1 flex items-center gap-3">
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+                    {logoPreview
+                      ? <img src={logoPreview} alt="로고 미리보기" className="h-full w-full object-contain" />
+                      : <span className="text-lg font-bold text-foreground/30">{form.company.trim().charAt(0) || "로고"}</span>}
+                  </div>
+                  <div className="flex-1">
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" id="logo"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        if (!f) { setLogo(null); setLogoPreview(null); return; }
+                        const err = validateLogo(f);
+                        if (err) { setError(err); e.target.value = ""; return; }
+                        setLogo(f); setLogoPreview(URL.createObjectURL(f)); setError("");
+                      }}
+                      className="block w-full text-sm text-foreground/70 file:mr-3 file:rounded-lg file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground/70 hover:file:bg-muted" />
+                    <p className="mt-1 text-xs text-foreground/40">PNG·JPG·WEBP·SVG, 2MB 이하. 견적 카드와 상단 바에 표시됩니다. 나중에 마이페이지에서도 올릴 수 있어요.</p>
+                  </div>
+                  {logo && (
+                    <button type="button" onClick={() => { setLogo(null); setLogoPreview(null); }} className="text-xs text-foreground/50 hover:text-red-500">삭제</button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 약관 동의 */}

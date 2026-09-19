@@ -12,12 +12,12 @@ import type { MatchRequest, Quote, QuoteStatus, RequestStatus, TimelineItem } fr
 const REQUEST_SELECT = `
   id, request_code, match_code, company_id, created_by,
   title, category, description, budget, deadline, status, form_data, created_at,
-  companies!requests_company_id_fkey(name),
+  companies!requests_company_id_fkey(name, logo_path),
   quotes(
     id, quote_code, request_id, company_id, submitted_by,
     amount, duration, memo, timeline, details,
     attachment_path, attachment_name, status, created_at,
-    companies!quotes_company_id_fkey(name)
+    companies!quotes_company_id_fkey(name, logo_path)
   )
 `;
 
@@ -36,7 +36,7 @@ type QuoteRow = {
   attachment_name: string | null;
   status: QuoteStatus;
   created_at: string;
-  companies: { name: string } | null;
+  companies: { name: string; logo_path: string | null } | null;
 };
 
 type RequestRow = {
@@ -53,7 +53,7 @@ type RequestRow = {
   status: RequestStatus;
   form_data: Record<string, unknown> | null;
   created_at: string;
-  companies: { name: string } | null;
+  companies: { name: string; logo_path: string | null } | null;
   quotes: QuoteRow[] | null;
 };
 
@@ -77,6 +77,7 @@ function toQuote(row: QuoteRow): Quote {
     companyId: row.company_id,
     partnerId: row.submitted_by ?? "",
     partnerCompany: row.companies?.name ?? "",
+    partnerLogo: row.companies?.logo_path ?? null,
     amount: formatAmount(row.amount),
     duration: row.duration ?? "",
     memo: row.memo ?? "",
@@ -104,6 +105,7 @@ function toRequest(row: RequestRow): MatchRequest {
     ...(row.match_code && { matchCode: row.match_code }),
     clientId: row.created_by ?? "",
     clientCompany: row.companies?.name ?? "",
+    clientLogo: row.companies?.logo_path ?? null,
     title: row.title,
     category: row.category,
     description: row.description ?? "",

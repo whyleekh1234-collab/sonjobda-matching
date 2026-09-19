@@ -17,6 +17,7 @@ export interface User {
   email: string;
   name: string;
   companyId: string; // 소속 회사 id. 의뢰·견적의 소유는 회원이 아니라 회사 단위다.
+  companyLogo?: string | null; // 로고 저장 경로 (company-logos 버킷). 없으면 이니셜로 대신한다.
   company: string;
   businessNumber: string;
   roles: Role[];

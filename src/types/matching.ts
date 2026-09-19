@@ -10,6 +10,7 @@ export interface MatchRequest {
   matchCode?: string; // 매칭 관리번호 (MT-00000001)
   clientId: string;
   clientCompany: string;
+  clientLogo?: string | null;
   title: string;
   category: string;
   description: string;
@@ -28,6 +29,7 @@ export interface MatchOffer {
   requestId: string;
   partnerId: string;
   partnerCompany: string;
+  partnerLogo?: string | null;
   requestTitle: string;
   clientCompany: string;
   category: string;
@@ -54,6 +56,7 @@ export interface Quote {
   companyId: string;
   partnerId: string; // 마지막으로 제출/수정한 담당자
   partnerCompany: string;
+  partnerLogo?: string | null;
   // 제출 시점 파트너사의 회사유형. 의뢰사는 상대 회사의 프로필을 읽을 수
   // 없어서(다른 회사라 막힌다) 견적에 같이 담아 둔다.
   partnerCategories?: string[];
