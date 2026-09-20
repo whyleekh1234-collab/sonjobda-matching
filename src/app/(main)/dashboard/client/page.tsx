@@ -19,6 +19,7 @@ import Link from "next/link";
 import Greeting from "@/components/dashboard/Greeting";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import CompanyLogo from "@/components/CompanyLogo";
+import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import { listPartnerProfiles, type PartnerProfile } from "@/lib/data/partnerProfiles";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
@@ -590,16 +591,9 @@ export default function ClientDashboard() {
                               )}
 
                               {/* 첨부파일 */}
-                              {quote.attachmentName && (
-                                <button onClick={() => { if ((quote as { attachmentData?: string }).attachmentData) { const a = document.createElement("a"); a.href = (quote as { attachmentData: string }).attachmentData; a.download = quote.attachmentName || "file"; a.click(); } }}
-                                  className="mt-3 flex w-full items-center gap-2 rounded-lg border border-border p-3 text-primary/70 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary">
-                                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                                  <div className="text-left">
-                                    <p className="text-sm font-medium">견적서 다운로드</p>
-                                    <p className="text-xs text-foreground/40">{quote.attachmentName}</p>
-                                  </div>
-                                </button>
-                              )}
+                              <div className="mt-3">
+                                <QuoteAttachment path={(quote as { attachmentData?: string }).attachmentData} name={quote.attachmentName} />
+                              </div>
 
                               </div>
                               <aside className="lg:col-span-2">

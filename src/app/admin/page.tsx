@@ -35,6 +35,7 @@ import { listPartnerRequests } from "@/lib/data/requests";
 import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import CompanyLogo from "@/components/CompanyLogo";
+import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import type { MatchingRequest, Notice } from "@/types/auth";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports";
@@ -805,13 +806,7 @@ export default function AdminDashboard() {
                                       <div className="mt-3"><p className="text-xs text-foreground/40">업무범위</p><div className="mt-1 flex flex-wrap gap-1">{(q as { timeline?: { label: string; months: string }[] }).timeline!.filter((t) => t.months).map((t, i) => (<span key={i} className="rounded-md border border-border bg-white px-2 py-0.5 text-xs"><span className="text-foreground/60">{t.label}</span> <span className="font-semibold">{t.months}개월</span></span>))}</div></div>
                                     ) : null}
                                     {q.memo && <div className="mt-3 rounded-lg bg-white p-3"><p className="text-xs text-foreground/40">메모</p><p className="mt-0.5 text-sm text-foreground/70">{q.memo}</p></div>}
-                                    {q.attachmentName && (
-                                      <button onClick={() => { if (q.attachmentData) { const a = document.createElement("a"); a.href = q.attachmentData; a.download = q.attachmentName || "file"; a.click(); } }}
-                                        className="mt-2 flex items-center gap-2 text-primary/70 hover:text-primary hover:underline">
-                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                                        <span className="text-sm">{q.attachmentName}</span>
-                                      </button>
-                                    )}
+                                    <QuoteAttachment path={q.attachmentData} name={q.attachmentName} variant="inline" />
                                     <BackToList onClick={() => setSelectedRequestDetail(null)} />
                                   </td></tr>
                                 )}
@@ -964,16 +959,7 @@ export default function AdminDashboard() {
                                                     </div>
                                                   )}
                                                   {/* 첨부파일 */}
-                                                  {quote.attachmentName && (
-                                                    <button onClick={() => { if ((quote as { attachmentData?: string }).attachmentData) { const a = document.createElement("a"); a.href = (quote as { attachmentData: string }).attachmentData; a.download = quote.attachmentName || "file"; a.click(); } }}
-                                                      className="mt-3 flex w-full items-center gap-2 rounded-lg border border-border p-3 text-primary/70 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary">
-                                                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                                                      <div className="text-left">
-                                                        <p className="text-sm font-medium">견적서 다운로드</p>
-                                                        <p className="text-xs text-foreground/40">{quote.attachmentName}</p>
-                                                      </div>
-                                                    </button>
-                                                  )}
+                                                  <QuoteAttachment path={(quote as { attachmentData?: string }).attachmentData} name={quote.attachmentName} variant="box" />
                                                 </div>
                                               )}
                                             </div>
@@ -1090,13 +1076,7 @@ export default function AdminDashboard() {
                                             <div><span className="text-foreground/40">견적 금액</span><p className="mt-0.5 text-base font-bold text-primary">{acceptedQuote.amount}원</p></div>
                                             <div><span className="text-foreground/40">소요 기간</span><p className="mt-0.5 font-semibold text-foreground">{acceptedQuote.duration || "-"}</p></div>
                                           </div>
-                                          {acceptedQuote.attachmentName && (
-                                            <button onClick={() => { if ((acceptedQuote as { attachmentData?: string }).attachmentData) { const a = document.createElement("a"); a.href = (acceptedQuote as { attachmentData: string }).attachmentData; a.download = acceptedQuote.attachmentName || "file"; a.click(); } }}
-                                              className="mt-2 flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary hover:underline">
-                                              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                                              견적서 다운로드
-                                            </button>
-                                          )}
+                                          <QuoteAttachment path={(acceptedQuote as { attachmentData?: string }).attachmentData} name={acceptedQuote.attachmentName} variant="box" />
                                         </div>
                                       )}
                                     </div>
