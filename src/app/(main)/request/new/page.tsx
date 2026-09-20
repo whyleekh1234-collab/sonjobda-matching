@@ -955,7 +955,16 @@ function NewRequestForm() {
             <div>
               <h2 className="text-lg font-bold text-foreground">서비스 유형 선택</h2>
               <p className="mt-1 text-sm text-foreground/50">필요한 서비스 유형을 선택해주세요</p>
-              {blockedTypes.length > 0 && (
+              {blockedTypes.length >= serviceTypes.length ? (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-amber-800">등록할 수 있는 분야가 없습니다</p>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-700">
+                    귀사가 모든 분야의 파트너사로 등록되어 있어, 이해상충 방지 규칙(서비스운영정책 제3조)에 따라
+                    등록 가능한 의뢰 분야가 없습니다. 마이페이지에서 실제로 수행하지 않는 회사유형을 해제하거나,
+                    고객센터로 문의해 주세요.
+                  </p>
+                </div>
+              ) : blockedTypes.length > 0 && (
                 <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-700">
                   귀사가 파트너사로 등록한 분야({blockedTypes.map((t) => serviceTypes.find((s) => s.id === t)?.label).join(", ")})의
                   의뢰는 이해상충 방지를 위해 등록할 수 없습니다. (서비스운영정책 제3조)
@@ -1917,8 +1926,9 @@ function NewRequestForm() {
           )}
         </div>
 
-        {/* 하단 버튼 */}
-        <div className="mt-6 flex items-center justify-between">
+        {/* 하단 버튼. 모바일에선 화면 아래에 붙여 둔다 — 입력이 길어
+            버튼을 찾으러 끝까지 스크롤하지 않아도 되게. */}
+        <div className="sticky bottom-0 z-30 -mx-4 mt-6 flex items-center justify-between gap-2 border-t border-border bg-muted/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
           <div className="flex gap-2">
             {step > 1 && !(editRequestId && step <= 2) && (
               <button onClick={() => setStep(step - 1)}

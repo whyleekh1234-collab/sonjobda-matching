@@ -116,3 +116,48 @@ button:not(:has(p, h1, h2, h3, h4)) {
     filter: none;
   }
 }
+
+/* 좁은 화면에서 표를 카드 목록으로 바꾼다. 손가락으로 좌우 스크롤하며
+   표를 읽는 건 괴롭다. 각 td에 data-label을 달아 두면 그 값이 왼쪽
+   항목명으로 나온다. data-label이 없는 칸(펼친 상세)은 그대로 한 줄을
+   다 쓴다. PC에서는 평범한 표 그대로다. */
+@media (max-width: 640px) {
+  table.cards-on-mobile,
+  table.cards-on-mobile tbody {
+    display: block;
+    width: 100%;
+  }
+  table.cards-on-mobile thead { display: none; }
+  table.cards-on-mobile tr {
+    display: block;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 4px 0;
+    overflow: hidden;
+  }
+  table.cards-on-mobile td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 0 !important;
+    padding: 7px 14px !important;
+    text-align: right !important;
+  }
+  table.cards-on-mobile td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    color: color-mix(in srgb, var(--foreground) 45%, transparent);
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+  }
+  /* 펼친 상세처럼 항목명이 없는 칸 */
+  table.cards-on-mobile td:not([data-label]) {
+    display: block;
+    text-align: left !important;
+    padding: 0 !important;
+  }
+}

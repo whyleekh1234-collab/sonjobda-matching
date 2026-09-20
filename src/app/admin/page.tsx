@@ -645,7 +645,7 @@ export default function AdminDashboard() {
                 <h3 className="font-semibold text-foreground">전체 회원 목록</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
+                <table className="cards-on-mobile w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">회원번호</th>
@@ -666,23 +666,23 @@ export default function AdminDashboard() {
                       const projectCount = allRequests.filter((r) => r.clientId === user.id || (r.quotes || []).some((q) => q.partnerId === user.id)).length;
                       return (
                       <tr key={user.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                        <td className="px-4 py-3"><span className="font-mono text-xs text-foreground/60">{user.memberCode || "-"}</span></td>
-                        <td className="px-4 py-3"><button onClick={() => setSelectedUser(user)} className="font-medium text-primary hover:underline">{user.name}</button></td>
-                        <td className="px-4 py-3 text-primary/80">{user.email}</td>
-                        <td className="px-4 py-3 text-foreground/70">{user.company}</td>
-                        <td className="px-4 py-3">
+                        <td data-label="회원번호" className="px-4 py-3"><span className="font-mono text-xs text-foreground/60">{user.memberCode || "-"}</span></td>
+                        <td data-label="회원명" className="px-4 py-3"><button onClick={() => setSelectedUser(user)} className="font-medium text-primary hover:underline">{user.name}</button></td>
+                        <td data-label="ID" className="px-4 py-3 text-primary/80">{user.email}</td>
+                        <td data-label="회사명" className="px-4 py-3 text-foreground/70">{user.company}</td>
+                        <td data-label="유형" className="px-4 py-3">
                           <div className="flex gap-1">
                             {user.roles?.map((role) => <RoleBadge key={role} role={role} />)}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td data-label="상태" className="px-4 py-3">
                           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${!user.status || user.status === "pending" ? "bg-yellow-100 text-yellow-700" : user.status === "approved" ? "bg-green-100 text-green-700" : user.status === "restricted" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
                             {!user.status || user.status === "pending" ? "대기" : user.status === "approved" ? "활성" : user.status === "restricted" ? "제한" : "정지"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-foreground/50">{user.createdAt ? new Date(user.createdAt).toLocaleDateString("ko-KR") : "-"}</td>
-                        <td className="px-4 py-3 text-sm text-foreground/70">{projectCount}건</td>
-                        <td className="px-4 py-3">
+                        <td data-label="가입일" className="px-4 py-3 text-xs text-foreground/50">{user.createdAt ? new Date(user.createdAt).toLocaleDateString("ko-KR") : "-"}</td>
+                        <td data-label="프로젝트" className="px-4 py-3 text-sm text-foreground/70">{projectCount}건</td>
+                        <td data-label="관리" className="px-4 py-3">
                           <div className="flex gap-1">
                             {(user.status === "pending" || !user.status) && (
                               <button onClick={() => updateUserField(user.id, "status", "approved")} className={ROW_BTN}>승인</button>

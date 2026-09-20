@@ -87,10 +87,12 @@ export default function Header() {
               </span>
               <Link href="/mypage" className="whitespace-nowrap text-white/70 transition-colors hover:text-white">
                 <CompanyLogo path={user.companyLogo} name={user.company} size={22} className="mr-1.5 align-middle" />
-                <span className="font-medium text-white">{user.company}</span> {user.name}님
+                <span className="font-medium text-white">{user.company}</span>
+                <span className="hidden sm:inline"> {user.name}님</span>
               </Link>
             </div>
-            <div className="flex flex-shrink-0 items-center gap-3">
+            {/* 좁은 화면에선 숨긴다 — 같은 기능이 햄버거 메뉴 안에 있다. */}
+            <div className="hidden flex-shrink-0 items-center gap-3 sm:flex">
               {canSwitch && (
                 <button
                   onClick={handleSwitchRole}

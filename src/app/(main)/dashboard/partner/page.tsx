@@ -630,7 +630,7 @@ export default function PartnerDashboard() {
               ) : (
                 <div className="rounded-2xl border border-border bg-surface shadow-card">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="cards-on-mobile w-full text-left text-sm">
                       <thead>
                         <tr className="border-b border-border bg-muted/30">
                           {([
@@ -670,13 +670,13 @@ export default function PartnerDashboard() {
                           return (
                             <React.Fragment key={req.id}>
                               <tr onClick={() => setSelectedRequest(isOpen ? null : req)} className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30">
-                                <td className="px-4 py-3 text-left font-mono text-xs text-foreground/50">{myQuote?.quoteCode || "-"}</td>
-                                <td className="px-4 py-3 text-center font-medium text-foreground">{req.title}</td>
-                                <td className="px-4 py-3 text-center"><span className="rounded-lg bg-muted px-2 py-0.5 text-xs text-foreground/60">{req.category}</span></td>
-                                <td className="px-4 py-3 text-center break-all text-foreground/70">{clientLabel(req)}</td>
-                                <td className="px-4 py-3 text-right font-semibold text-primary">{myQuote?.amount || "-"}원</td>
-                                <td className="px-4 py-3 text-center"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>{statusLabel}</span></td>
-                                <td className="px-4 py-3 text-center text-xs text-foreground/50">{myQuote ? new Date(myQuote.createdAt).toLocaleDateString("ko-KR") : "-"}</td>
+                                <td data-label="견적번호" className="px-4 py-3 text-left font-mono text-xs text-foreground/50">{myQuote?.quoteCode || "-"}</td>
+                                <td data-label="프로젝트명" className="px-4 py-3 text-center font-medium text-foreground">{req.title}</td>
+                                <td data-label="서비스유형" className="px-4 py-3 text-center"><span className="rounded-lg bg-muted px-2 py-0.5 text-xs text-foreground/60">{req.category}</span></td>
+                                <td data-label="의뢰사" className="px-4 py-3 text-center break-all text-foreground/70">{clientLabel(req)}</td>
+                                <td data-label="견적금액" className="px-4 py-3 text-right font-semibold text-primary">{myQuote?.amount || "-"}원</td>
+                                <td data-label="상태" className="px-4 py-3 text-center"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>{statusLabel}</span></td>
+                                <td data-label="제출일" className="px-4 py-3 text-center text-xs text-foreground/50">{myQuote ? new Date(myQuote.createdAt).toLocaleDateString("ko-KR") : "-"}</td>
                               </tr>
                               {isOpen && (
                                 <tr><td colSpan={7} className="bg-muted/10 px-4 py-4">
