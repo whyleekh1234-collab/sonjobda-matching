@@ -404,42 +404,42 @@ export default function PartnerDashboard() {
         <Greeting name={user?.name} company={`${user?.company ?? ""} 파트너사 대시보드`} />
 
         {/* 메인 카드 3개 */}
-        <div className="sticky top-[108px] z-30 mt-8 grid grid-cols-1 gap-4 bg-muted pb-4 sm:grid-cols-3">
+        <div className="sticky top-[108px] z-30 mt-6 grid grid-cols-2 gap-3 bg-muted pb-3 sm:mt-8 sm:gap-4 sm:pb-4 sm:grid-cols-3">
           <button onClick={() => { setActiveSection("received"); setFilterStatus("all"); }}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "received" ? "border-primary bg-primary/5 shadow-md" : "border-border bg-surface shadow-card hover:border-primary/30 hover:shadow-md"}`}>
+            className={`rounded-xl border p-4 text-left transition-all sm:p-6 ${activeSection === "received" ? "border-primary bg-primary/5 shadow-md" : "border-border bg-surface shadow-card hover:border-primary/30 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground/50">받은 의뢰</p>
-                <p className="mt-1 text-3xl font-bold text-primary">{stats.total}</p>
+                <p className="mt-1 text-2xl font-bold sm:text-3xl text-primary">{stats.total}</p>
                 <p className="mt-1 text-xs text-foreground/40">신규 {stats.newCount} | 검토중 {stats.reviewing}</p>
               </div>
-              <div className="rounded-xl bg-gradient-to-br from-primary to-primary-light p-3 text-white shadow-sm">
+              <div className="hidden rounded-xl bg-gradient-to-br sm:block from-primary to-primary-light p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
               </div>
             </div>
           </button>
           <button onClick={() => setActiveSection("sent")}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "sent" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-border bg-surface shadow-card hover:border-emerald-300 hover:shadow-md"}`}>
+            className={`rounded-xl border p-4 text-left transition-all sm:p-6 ${activeSection === "sent" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-border bg-surface shadow-card hover:border-emerald-300 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground/50">보낸 견적</p>
-                <p className="mt-1 text-3xl font-bold text-emerald-600">{stats.quoted}</p>
+                <p className="mt-1 text-2xl font-bold sm:text-3xl text-emerald-600">{stats.quoted}</p>
                 <p className="mt-1 text-xs text-foreground/40">제출 완료된 견적서</p>
               </div>
-              <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 p-3 text-white shadow-sm">
+              <div className="hidden rounded-xl bg-gradient-to-br sm:block from-emerald-500 to-emerald-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
               </div>
             </div>
           </button>
           <button onClick={() => setActiveSection("won")}
-            className={`rounded-xl border p-6 text-left transition-all ${activeSection === "won" ? "border-amber-500 bg-amber-50 shadow-md" : "border-border bg-surface shadow-card hover:border-amber-300 hover:shadow-md"}`}>
+            className={`col-span-2 rounded-xl border p-4 text-left transition-all sm:col-span-1 sm:p-6 ${activeSection === "won" ? "border-amber-500 bg-amber-50 shadow-md" : "border-border bg-surface shadow-card hover:border-amber-300 hover:shadow-md"}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground/50">매칭 성사</p>
-                <p className="mt-1 text-3xl font-bold text-amber-600">{stats.won}</p>
+                <p className="mt-1 text-2xl font-bold sm:text-3xl text-amber-600">{stats.won}</p>
                 <p className="mt-1 text-xs text-foreground/40">매칭 성사된 프로젝트</p>
               </div>
-              <div className="rounded-xl bg-gradient-to-br from-amber-500 to-amber-400 p-3 text-white shadow-sm">
+              <div className="hidden rounded-xl bg-gradient-to-br sm:block from-amber-500 to-amber-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
               </div>
             </div>

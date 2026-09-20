@@ -91,3 +91,28 @@ button[class*="rounded-full"]:not([class*="bg-primary"]):not(:disabled):hover {
 button:not(:has(p, h1, h2, h3, h4)) {
   white-space: nowrap;
 }
+
+/* ── 모바일 ────────────────────────────────────────────────── */
+
+/* iOS 사파리는 글씨가 16px보다 작은 입력칸을 탭하면 화면을 확대한다.
+   한 번 확대되면 스스로 돌아오지 않아 폼 작성이 괴롭다. 좁은 화면에서만
+   입력칸 글씨를 16px로 올려 확대를 막는다. PC는 그대로 14px. */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* 마우스가 없는 기기(터치)에서는 호버 효과를 끈다. 탭한 뒤 손을 떼도
+   파란 테두리가 남아 눌린 것처럼 보이는 문제. */
+@media (hover: none) {
+  button[class*="rounded"]:hover,
+  a[role="button"][class*="rounded"]:hover {
+    box-shadow: none;
+  }
+  button[class*="rounded-full"]:hover {
+    filter: none;
+  }
+}

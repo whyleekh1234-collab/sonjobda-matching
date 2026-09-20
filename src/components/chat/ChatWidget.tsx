@@ -66,12 +66,12 @@ export default function ChatWidget() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="상담 챗봇 열기"
-          className="fixed bottom-5 right-5 z-40 flex h-14 items-center gap-2 rounded-full bg-primary pl-4 pr-5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-primary-dark"
+          className="fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-white shadow-lg transition-colors hover:bg-primary-dark sm:h-14 sm:w-auto sm:justify-start sm:pl-4 sm:pr-5"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5M21 12c0 4.418-4.03 8-9 8a9.9 9.9 0 01-3.5-.63L3 21l1.63-4.07A7.5 7.5 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
-          상담
+          <span className="hidden sm:inline">상담</span>
         </button>
       )}
 
@@ -80,7 +80,7 @@ export default function ChatWidget() {
         <div
           role="dialog"
           aria-label="상담 챗봇"
-          className="fixed bottom-5 right-5 z-40 flex h-[min(600px,calc(100vh-40px))] w-[min(380px,calc(100vw-40px))] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"
+          className="fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col overflow-hidden border-border bg-background shadow-2xl sm:inset-auto sm:bottom-5 sm:right-5 sm:z-40 sm:h-[min(600px,calc(100vh-40px))] sm:w-[min(380px,calc(100vw-40px))] sm:rounded-2xl sm:border"
         >
           <div className="flex items-center justify-between bg-primary px-4 py-3 text-white">
             <div>
