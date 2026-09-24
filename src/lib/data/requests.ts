@@ -16,7 +16,7 @@ const REQUEST_SELECT = `
   quotes(
     id, quote_code, request_id, company_id, submitted_by,
     amount, duration, memo, timeline, details,
-    attachment_path, attachment_name, status, created_at,
+    attachment_path, attachment_name, status, shortlisted_at, created_at,
     companies!quotes_company_id_fkey(name, logo_path)
   )
 `;
@@ -35,6 +35,7 @@ type QuoteRow = {
   attachment_path: string | null;
   attachment_name: string | null;
   status: QuoteStatus;
+  shortlisted_at: string | null;
   created_at: string;
   companies: { name: string; logo_path: string | null } | null;
 };
@@ -94,6 +95,7 @@ function toQuote(row: QuoteRow): Quote {
     edcBrand: text("edcBrand"),
     ...(Array.isArray(d.partnerCategories) && { partnerCategories: d.partnerCategories }),
     status: row.status,
+    shortlistedAt: row.shortlisted_at ?? null,
     createdAt: row.created_at,
   };
 }
@@ -272,6 +274,16 @@ export async function setQuoteStatusAsClient(quoteId: string, status: QuoteStatu
   const { error } = await createClient().rpc("set_quote_status_as_client", {
     p_quote_id: quoteId,
     p_status: status,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// 1차 선정/해제. 여러 곳 가능(최대 3곳)이고 연락처는 열리지 않는다.
+// 선정된 파트너는 견적을 다시 고칠 수 있다.
+export async function shortlistQuote(quoteId: string, on: boolean): Promise<void> {
+  const { error } = await createClient().rpc("shortlist_quote", {
+    p_quote_id: quoteId,
+    p_on: on,
   });
   if (error) throw new Error(error.message);
 }

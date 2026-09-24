@@ -129,6 +129,10 @@ export default function PartnerDashboard() {
   const getMyQuoteStatus = (request: MatchRequest): QuoteStatus =>
     getMyQuote(request)?.status ?? "new";
 
+  // 1차 선정: 의뢰사가 후보로 추렸다는 뜻. 연락처는 아직 공개되지 않고,
+  // 이때는 견적을 다시 고쳐 조건을 보완할 수 있다.
+  const isShortlisted = (request: MatchRequest) => !!getMyQuote(request)?.shortlistedAt;
+
   // 한 회사당 한 의뢰에 견적 하나라는 규칙은 DB의 유니크 제약이 지킨다.
   // 동료가 먼저 낸 견적이 있으면 그게 곧 "내 회사 견적"이다.
   const hasCompanyQuote = (request: MatchRequest): boolean => {
@@ -570,6 +574,7 @@ export default function PartnerDashboard() {
                   const myStatus = getMyQuoteStatus(req);
                   const statusInfo = quoteStatusLabels[myStatus];
                   const closedLabel = req.status === "cancelled" ? "회수됨" : (req.status === "matched" || req.status === "completed") ? "마감(매칭 성사)" : null;
+                  const shortlisted = isShortlisted(req) && req.status === "pending";
                   return (
                     <div key={req.id} onClick={() => {
                       setSelectedRequest(req);
@@ -595,6 +600,9 @@ export default function PartnerDashboard() {
                             <span className="text-foreground/40"> · {MARKETING_TYPES.find((t) => t.key === mktTypeOf(req))?.label ?? mktTypeOf(req)}</span>
                           )}
                         </span>
+                        {shortlisted && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">1차 선정</span>
+                        )}
                         {closedLabel ? (
                           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">{closedLabel}</span>
                         ) : (
@@ -827,7 +835,16 @@ export default function PartnerDashboard() {
                 <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${quoteStatusLabels[getMyQuoteStatus(selectedRequest)].color}`}>
                   {quoteStatusLabels[getMyQuoteStatus(selectedRequest)].label}
                 </span>
+                {isShortlisted(selectedRequest) && selectedRequest.status === "pending" && (
+                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">1차 선정</span>
+                )}
               </div>
+              {isShortlisted(selectedRequest) && selectedRequest.status === "pending" && (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+                  이 의뢰의 <b>1차 선정 대상</b>입니다. 조건을 보완해 견적을 다시 제출하실 수 있습니다.
+                  최종 선정되면 의뢰사의 회사명과 담당자 연락처가 공개됩니다.
+                </p>
+              )}
               <h3 className="text-lg font-bold text-foreground">{selectedRequest.title}</h3>
 
               {/* 기본 정보 카드 - 2x2 */}

@@ -9,6 +9,7 @@ import {
   extendDeadline as extendDeadlineApi,
   setQuoteStatusAsClient,
   acceptQuote,
+  shortlistQuote,
 } from "@/lib/data/requests";
 import { listNotices, listMyNotifications } from "@/lib/data/notices";
 import MatchContactPanel from "@/components/dashboard/MatchContact";
@@ -119,9 +120,16 @@ export default function ClientDashboard() {
     }
   };
 
+  // 1차 선정은 여러 곳(최대 3곳) 가능하고, 연락처는 열리지 않는다.
+  // 선정된 파트너사는 알림을 받고 견적을 다시 고칠 수 있다.
+  const toggleShortlist = (quoteId: string, on: boolean) =>
+    runAction(() => shortlistQuote(quoteId, on),
+      on ? "1차 선정했습니다. 파트너사가 조건을 보완해 다시 제출할 수 있습니다."
+         : "1차 선정을 해제했습니다.");
+
   const updateQuoteStatus = (requestId: string, quoteId: string, newStatus: string) => {
     if (newStatus === "accepted") {
-      if (!confirm("이 견적을 수락하시겠습니까?\n\n수락 시 다른 파트너사의 견적은 미결정 처리됩니다.\n이 작업은 되돌릴 수 없으며, 해당 업체에 회사명 및 연락처가 노출됩니다.")) return;
+      if (!confirm("이 파트너사로 최종 매칭을 확정하시겠습니까?\n\n· 다른 파트너사의 견적은 모두 미결정 처리됩니다.\n· 이 시점부터 양쪽의 회사명·담당자·연락처가 서로 공개됩니다.\n· 되돌릴 수 없습니다.")) return;
       // 견적 수락은 여러 행을 한 번에 바꾼다(고른 견적 수락, 나머지 미결정,
       // 의뢰 마감, 매칭번호 부여). 중간에 끊기면 안 되므로 서버가 한
       // 트랜잭션으로 처리한다.
@@ -602,15 +610,26 @@ export default function ClientDashboard() {
                               </div>
 
                               {/* 마감일 + 수락/거절/보류 */}
-                              {(quote.status === "client_reviewing" || quote.status === "client_hold") && req.status === "pending" && (
+                              {(quote.status === "client_reviewing" || quote.status === "client_hold" || !!quote.shortlistedAt) && quote.status !== "accepted" && quote.status !== "not_selected" && req.status === "pending" && (
                                 <div className="mt-4 border-t border-border pt-4">
                                   <div className="mb-3 text-xs text-foreground/40">
                                     마감일: {(() => { const d = new Date(req.createdAt); d.setDate(d.getDate() + 7); return d.toLocaleDateString("ko-KR"); })()}
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex flex-wrap gap-2">
+                                    {quote.shortlistedAt ? (
+                                      <button onClick={() => toggleShortlist(quote.id, false)}
+                                        className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100">
+                                        1차 선정 해제
+                                      </button>
+                                    ) : (
+                                      <button onClick={() => toggleShortlist(quote.id, true)}
+                                        className="rounded-lg border border-primary/40 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/5">
+                                        1차 선정
+                                      </button>
+                                    )}
                                     <button onClick={() => updateQuoteStatus(req.id, quote.id, "accepted")}
                                       className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
-                                      견적 수락
+                                      최종 매칭 확정
                                     </button>
                                     <button onClick={() => updateQuoteStatus(req.id, quote.id, "client_rejected")}
                                       className="rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-50">
