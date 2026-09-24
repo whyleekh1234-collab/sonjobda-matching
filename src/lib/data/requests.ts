@@ -322,6 +322,8 @@ export interface MatchContact {
   companyName: string;
   logoPath?: string | null;
   contactName: string;
+  // 원래 담당자가 탈퇴해 회사의 다른 담당자로 대체된 연락처인가 (16단계)
+  isFallback?: boolean;
   email: string;
   phone: string | null;
 }
@@ -336,12 +338,14 @@ export async function getMatchContacts(requestId: string): Promise<MatchContact[
     company_name: string;
     logo_path?: string | null;
     contact_name: string;
+    is_fallback?: boolean;
     email: string;
     phone: string | null;
   }[]).map((r) => ({
     side: r.side,
     companyName: r.company_name,
     logoPath: r.logo_path ?? null,
+    isFallback: r.is_fallback ?? false,
     contactName: r.contact_name,
     email: r.email,
     phone: r.phone,

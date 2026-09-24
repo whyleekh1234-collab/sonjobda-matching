@@ -53,6 +53,11 @@ export default function MatchContactPanel({
         <span>이메일: <span className="font-medium">{contact.email}</span></span>
         <span>연락처: <span className="font-medium">{contact.phone || "-"}</span></span>
       </div>
+      {contact.isFallback && (
+        <p className="mt-2 border-t border-blue-200 pt-2 text-[11px] leading-relaxed text-blue-700/80">
+          이 건을 담당했던 분이 탈퇴하여 {label}의 다른 담당자 연락처를 안내합니다.
+        </p>
+      )}
     </div>
   );
 }
