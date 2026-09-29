@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordInput from "@/components/PasswordInput";
 import { useState, useEffect, Suspense } from "react";
 import { validateLogo } from "@/lib/data/companyLogo";
 import Link from "next/link";
@@ -367,8 +368,7 @@ function SignupContent() {
               <label htmlFor="password" className="block text-sm font-medium text-foreground">
                 비밀번호 *
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 id="password"
                 name="password"
                 required
@@ -386,8 +386,7 @@ function SignupContent() {
               <label htmlFor="passwordConfirm" className="block text-sm font-medium text-foreground">
                 비밀번호 확인 *
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 id="passwordConfirm"
                 name="passwordConfirm"
                 required

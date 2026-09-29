@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordInput from "@/components/PasswordInput";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
@@ -65,8 +66,7 @@ export default function AdminLoginPage() {
               <label htmlFor="adminPassword" className="block text-sm font-medium text-foreground">
                 비밀번호
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 id="adminPassword"
                 value={form.password}
                 onChange={(e) => { setForm({ ...form, password: e.target.value }); setError(""); }}

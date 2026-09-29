@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordInput from "@/components/PasswordInput";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -120,8 +121,7 @@ export default function ResetPasswordConfirmPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-foreground">
                   새 비밀번호
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   id="password"
                   required
                   value={password}
@@ -138,8 +138,7 @@ export default function ResetPasswordConfirmPage() {
                 <label htmlFor="passwordConfirm" className="block text-sm font-medium text-foreground">
                   새 비밀번호 확인
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   id="passwordConfirm"
                   required
                   value={passwordConfirm}

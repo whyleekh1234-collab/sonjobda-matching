@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordInput from "@/components/PasswordInput";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -494,18 +495,18 @@ export default function MyPage() {
               <div className="mt-4 max-w-sm space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground">현재 비밀번호 *</label>
-                  <input type="password" value={pwForm.current} onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })}
+                  <PasswordInput value={pwForm.current} onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })}
                     className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground">새 비밀번호 *</label>
-                  <input type="password" value={pwForm.newPw} onChange={(e) => setPwForm({ ...pwForm, newPw: e.target.value })} maxLength={12}
+                  <PasswordInput value={pwForm.newPw} onChange={(e) => setPwForm({ ...pwForm, newPw: e.target.value })} maxLength={12}
                     placeholder="8~12자, 영문/숫자/특수문자 중 2종 이상"
                     className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground">새 비밀번호 확인 *</label>
-                  <input type="password" value={pwForm.confirm} onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })} maxLength={12}
+                  <PasswordInput value={pwForm.confirm} onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })} maxLength={12}
                     className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                   {pwForm.confirm && pwForm.newPw !== pwForm.confirm && (
                     <p className="mt-1 text-xs text-red-500">비밀번호가 일치하지 않습니다.</p>

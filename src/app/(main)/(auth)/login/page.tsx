@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordInput from "@/components/PasswordInput";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -80,8 +81,7 @@ export default function LoginPage() {
               <label htmlFor="password" className="block text-sm font-medium text-foreground">
                 비밀번호
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 id="password"
                 name="password"
                 required
