@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyInquiries, createInquiry, type InquiryWithExtras } from "@/lib/data/notices";
 
@@ -15,8 +16,12 @@ const inquiryTypes = [
   { value: "other", label: "기타" },
 ];
 
-export default function InquiryPage() {
+function InquiryPageInner() {
   const { user, isLoading } = useAuth();
+  // 의뢰·견적 화면의 "신고" 버튼이 ?type=report&ref=RQ-0001 형태로 보낸다.
+  // 신고는 대상이 특정되지 않으면 조사할 수가 없어서, 어느 건에 대한
+  // 신고인지를 링크가 실어 나르고 제목에 미리 박아둔다.
+  const params = useSearchParams();
   const [activeTab, setActiveTab] = useState<"new" | "history">("new");
   const [form, setForm] = useState({ type: "", title: "", message: "" });
   const [myInquiries, setMyInquiries] = useState<InquiryWithExtras[]>([]);
@@ -33,6 +38,19 @@ export default function InquiryPage() {
   }, [user]);
 
   useEffect(() => { reload(); }, [reload]);
+
+  useEffect(() => {
+    const type = params.get("type");
+    const ref = params.get("ref");
+    if (!type && !ref) return;
+    setForm((prev) => ({
+      ...prev,
+      ...(type && { type }),
+      // 사용자가 이미 뭔가 적고 있었다면 덮지 않는다.
+      ...(ref && !prev.title && { title: `[${ref}] ` }),
+    }));
+    setActiveTab("new");
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,5 +206,14 @@ export default function InquiryPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// useSearchParams는 Suspense 경계 안에서만 쓸 수 있다.
+export default function InquiryPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-foreground/50">불러오는 중...</div>}>
+      <InquiryPageInner />
+    </Suspense>
   );
 }

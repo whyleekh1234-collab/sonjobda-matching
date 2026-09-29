@@ -44,6 +44,7 @@ function SignupContent() {
     partnerCategories: [] as PartnerCategory[],
     agreeTerms: false,
     agreePrivacy: false,
+    agreeMarketing: false,
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -223,6 +224,7 @@ function SignupContent() {
         roles: form.roles,
         ...(inviteToken && { inviteToken }),
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
+        marketingConsent: form.agreeMarketing,
         logo,
       });
       alert(
@@ -560,6 +562,28 @@ function SignupContent() {
                 동의합니다. (필수)
               </span>
             </label>
+            {/* 광고성 정보 수신 동의. 정보통신망법 제50조에 따라 선택이며,
+                체크하지 않아도 가입은 그대로 진행된다. 승인 완료·견적 도착·
+                매칭 성사 같은 안내 메일은 거래 이행에 필요한 것이라 이 동의와
+                무관하게 발송된다 — 그 점을 아래에 밝혀둔다. */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="agreeMarketing"
+                checked={form.agreeMarketing}
+                onChange={handleChange}
+                className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+              />
+              <span className="text-sm text-foreground/70">
+                마케팅 정보 수신에 동의합니다. <span className="text-foreground/40">(선택)</span>
+              </span>
+            </label>
+            <p className="ml-7 text-xs text-foreground/40">
+              새로운 서비스와 이벤트 소식을 이메일로 보내드립니다. 동의하지 않아도
+              가입할 수 있으며, 마이페이지에서 언제든 철회할 수 있습니다. 승인 완료,
+              견적 도착, 매칭 성사 등 서비스 이용에 필요한 안내는 동의 여부와
+              관계없이 발송됩니다.
+            </p>
             <p className="ml-7 text-xs text-amber-600">
               ※ 매칭 성사 시 상대 업체에 회사명, 담당자명, 이메일, 연락처가 공개됩니다.
             </p>

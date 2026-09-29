@@ -235,6 +235,24 @@ export async function updateMyProfile(name: string, phone: string): Promise<void
   if (error) throw new Error(error.message);
 }
 
+/**
+ * 광고성 정보 수신 동의를 켜고 끈다.
+ *
+ * profiles를 직접 update하지 않고 RPC를 거치는 이유는, RLS가 행 단위라
+ * "이 컬럼만 바꿀 수 있다"를 표현하지 못하기 때문이다. update를 열어두면
+ * 승인 상태 같은 다른 컬럼까지 손댈 길이 같이 열린다.
+ *
+ * 반환값은 서버가 기록한 동의 시각이다. 화면이 "언제 동의했는지"를
+ * 보여주려면 필요하고, 클라이언트가 계산한 시각은 믿을 수 없다.
+ */
+export async function setMarketingConsent(on: boolean): Promise<string | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("set_marketing_consent", { p_on: on });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as { marketing_consent_at: string | null } | null)?.marketing_consent_at ?? null;
+}
+
 export async function updateMyPartnerCategories(categories: string[]): Promise<void> {
   const supabase = createClient();
   const { data } = await supabase.auth.getUser();

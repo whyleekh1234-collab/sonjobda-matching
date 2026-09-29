@@ -72,6 +72,11 @@ export default function PrivacyPage() {
                     <td className="border border-border px-3 py-2 align-top">이용자 식별, 고지사항 전달</td>
                   </tr>
                   <tr>
+                    <td className="border border-border px-3 py-2 align-top">마케팅 정보 수신</td>
+                    <td className="border border-border px-3 py-2 align-top">[선택] 수신 동의 여부, 동의 일시</td>
+                    <td className="border border-border px-3 py-2 align-top">신규 서비스 및 이벤트 등 광고성 정보 전달</td>
+                  </tr>
+                  <tr>
                     <td className="border border-border px-3 py-2 align-top">사업분야 설정(의뢰사)</td>
                     <td className="border border-border px-3 py-2 align-top">[필수] 사업분야</td>
                     <td className="border border-border px-3 py-2 align-top">이용자 식별, 회원제 서비스(유료 서비스 등) 제공</td>

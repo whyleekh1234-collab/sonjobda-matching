@@ -21,6 +21,7 @@ interface AuthContextType {
     roles: Role[];
     partnerCategories?: PartnerCategory[];
     inviteToken?: string;
+    marketingConsent?: boolean; // 선택. 광고성 정보 수신 동의.
     logo?: File | null; // 선택. 가입 직후 올린다.
   }) => Promise<{ needsEmailConfirmation: boolean }>;
   findEmailByPhone: (name: string, phone: string) => Promise<string>;
@@ -48,6 +49,8 @@ type ProfileRow = {
   partner_categories: PartnerCategory[] | null;
   status: UserStatus;
   is_company_admin: boolean;
+  marketing_consent: boolean;
+  marketing_consent_at: string | null;
   created_at: string;
   companies: {
     name: string;
@@ -74,6 +77,8 @@ function toUser(profile: ProfileRow, email: string): User {
     ...(profile.companies?.address && { address: profile.companies.address }),
     status: profile.status,
     isCompanyAdmin: profile.is_company_admin,
+    marketingConsent: profile.marketing_consent ?? false,
+    marketingConsentAt: profile.marketing_consent_at ?? null,
     createdAt: profile.created_at,
   };
 }
@@ -90,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, company_id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, created_at, companies(name, business_number, address, logo_path)"
+        "id, company_id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, marketing_consent, marketing_consent_at, created_at, companies(name, business_number, address, logo_path)"
       )
       .eq("id", session.user.id)
       .single();
@@ -160,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles: Role[];
     partnerCategories?: PartnerCategory[];
     inviteToken?: string;
+    marketingConsent?: boolean;
     logo?: File | null;
   }) => {
     // 폼 값을 계정 메타데이터로 넘긴다. 회사와 프로필 생성은 auth.users의
@@ -182,6 +188,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // 이미 등록된 회사에 합류하려면 이 토큰이 있어야 한다.
           // 트리거가 검사하고, 없으면 가입 자체가 취소된다.
           invite_token: data.inviteToken ?? "",
+          // 선택 항목. 트리거가 이 값을 profiles로 옮기고 동의 시각을 남긴다.
+          marketing_consent: data.marketingConsent ?? false,
         },
       },
     });

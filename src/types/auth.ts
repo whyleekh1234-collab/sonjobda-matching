@@ -27,6 +27,10 @@ export interface User {
   address?: string; // 기업주소 (선택)
   status: UserStatus;
   isCompanyAdmin?: boolean; // 회사 담당 관리자
+  // 광고성 정보 수신 동의(선택). 승인·견적·매칭 같은 거래 안내 메일은
+  // 이 값과 무관하게 발송된다 — 발송 코드에서 둘을 섞지 말 것.
+  marketingConsent?: boolean;
+  marketingConsentAt?: string | null;
   verified?: boolean;
   allowCategoryEdit?: boolean; // 관리자가 회사유형 수정을 허용했을 때
   createdAt: string;

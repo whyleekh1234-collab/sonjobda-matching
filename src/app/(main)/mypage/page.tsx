@@ -15,6 +15,7 @@ import {
   deleteMyAccount,
   updateMyProfile,
   updateMyPartnerCategories,
+  setMarketingConsent,
   changeMyPassword,
 } from "@/lib/data/notices";
 import {
@@ -33,6 +34,10 @@ export default function MyPage() {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "password" | "company">("profile");
+  // 마케팅 수신 동의. user가 늦게 도착하므로 아래 effect로 맞춘다.
+  const [marketingOn, setMarketingOn] = useState(false);
+  const [marketingAt, setMarketingAt] = useState<string | null>(null);
+  const [marketingSaving, setMarketingSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({ name: "", phone: "" });
   const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
@@ -44,6 +49,29 @@ export default function MyPage() {
   const [changeRequests, setChangeRequests] = useState<CompanyChangeRequest[]>([]);
   const [logoPath, setLogoPath] = useState<string | null>(null);
   useEffect(() => { setLogoPath(user?.companyLogo ?? null); }, [user?.companyLogo]);
+
+  useEffect(() => {
+    setMarketingOn(user?.marketingConsent ?? false);
+    setMarketingAt(user?.marketingConsentAt ?? null);
+  }, [user?.marketingConsent, user?.marketingConsentAt]);
+
+  // 체크박스를 먼저 움직여 두고 저장한다. 실패하면 되돌린다 — 네트워크를
+  // 기다리는 동안 체크박스가 멈춰 있으면 눌리지 않은 것처럼 보인다.
+  const toggleMarketing = async (on: boolean) => {
+    const prev = { on: marketingOn, at: marketingAt };
+    setMarketingOn(on);
+    setMarketingSaving(true);
+    try {
+      const at = await setMarketingConsent(on);
+      setMarketingAt(at);
+    } catch (err) {
+      setMarketingOn(prev.on);
+      setMarketingAt(prev.at);
+      alert(err instanceof Error ? err.message : "동의 설정을 변경하지 못했습니다.");
+    } finally {
+      setMarketingSaving(false);
+    }
+  };
   const [editingCategories, setEditingCategories] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<PartnerCategory[]>([]);
   const [summary, setSummary] = useState({
@@ -415,6 +443,35 @@ export default function MyPage() {
                   </>
                 )}
               </div>
+            </div>
+
+            {/* 마케팅 정보 수신 동의.
+                정보통신망법 제50조 제8항이 수신자가 언제든 철회할 수 있어야
+                한다고 정하고 있어, 가입 때 받은 동의를 여기서 되돌릴 수 있게
+                둔다. 동의한 시각은 서버가 기록한 값을 그대로 보여준다. */}
+            <div className="rounded-xl border border-border bg-surface p-6">
+              <h3 className="text-base font-semibold text-foreground">마케팅 정보 수신</h3>
+              <p className="mt-1 text-sm text-foreground/50">
+                새로운 서비스와 이벤트 소식을 이메일로 보내드립니다. 승인 완료, 견적 도착,
+                매칭 성사 등 서비스 이용에 필요한 안내는 동의 여부와 관계없이 발송됩니다.
+              </p>
+              <label className="mt-4 flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={marketingOn}
+                  disabled={marketingSaving}
+                  onChange={(e) => toggleMarketing(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                />
+                <span className="text-sm text-foreground/70">
+                  마케팅 정보 수신에 동의합니다. <span className="text-foreground/40">(선택)</span>
+                </span>
+              </label>
+              {marketingOn && marketingAt && (
+                <p className="ml-7 mt-1 text-xs text-foreground/40">
+                  {new Date(marketingAt).toLocaleDateString("ko-KR")} 동의함
+                </p>
+              )}
             </div>
 
             {/* 회원 탈퇴 */}

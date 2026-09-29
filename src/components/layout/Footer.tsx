@@ -1,9 +1,18 @@
 import Link from "next/link";
 import EmailCollectionNotice from "./EmailCollectionNotice";
 
-// 통신판매업 신고번호. 실제 번호를 받으면 여기 한 곳만 바꾸면 된다.
+// 전자상거래법 제10조가 표시를 요구하는 값들. 실제 값을 받으면 여기
+// 한 곳만 바꾸면 화면 전체에 반영된다.
+//
 // 형식 예: 2026-경기남양주-0000
 const MAIL_ORDER_REG_NO = "신고번호 입력 예정";
+
+// 전화번호는 같은 조항의 필수 표시사항이다. 이메일로 대신할 수 없다.
+const CONTACT_PHONE = "번호 입력 예정";
+
+// 개인정보 보호법 제31조. 처리방침 안에만 두는 경우가 많지만, 푸터에
+// 함께 적어두는 것이 관례다.
+const PRIVACY_OFFICER = "이은정";
 
 const linkColumns = [
   {
@@ -64,6 +73,7 @@ export default function Footer() {
               >
                 contact@sonjobdamd.com
               </a>
+              <p className="mt-0.5 text-sm text-foreground/70">{CONTACT_PHONE}</p>
               <p className="mt-1 text-xs text-foreground/40">
                 평일 09:00 – 18:00 (주말 · 공휴일 휴무)
               </p>
@@ -112,8 +122,28 @@ export default function Footer() {
               <dd className="text-foreground/70">501-87-03457</dd>
             </div>
             <div className="flex gap-1.5">
+              <dt>전화</dt>
+              <dd className="text-foreground/70">{CONTACT_PHONE}</dd>
+            </div>
+            <div className="flex gap-1.5">
               <dt>통신판매업신고</dt>
               <dd className="text-foreground/70">{MAIL_ORDER_REG_NO}</dd>
+              {/* 신고번호만 적어두면 이용자가 진위를 확인할 길이 없다.
+                  공정위 조회 페이지로 바로 보내는 것이 관례다. */}
+              <dd>
+                <a
+                  href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=5018703457"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline transition-colors hover:text-primary"
+                >
+                  사업자정보 확인
+                </a>
+              </dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt>개인정보보호책임자</dt>
+              <dd className="text-foreground/70">{PRIVACY_OFFICER}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt>주소</dt>

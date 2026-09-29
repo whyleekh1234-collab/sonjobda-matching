@@ -603,6 +603,18 @@ export default function ClientDashboard() {
                                 <QuoteAttachment path={(quote as { attachmentData?: string }).attachmentData} name={quote.attachmentName} />
                               </div>
 
+                              {/* 신고. 운영정책 제6조가 신고 접수를 전제로 제재를 정하고
+                                  있는데, 정작 특정 건을 신고할 경로가 없었다. 문의하기로
+                                  보내되 어느 견적에 대한 신고인지를 링크가 실어 나른다. */}
+                              <div className="mt-3">
+                                <Link
+                                  href={`/inquiry?type=report&ref=${quote.quoteCode ?? req.requestCode ?? ""}`}
+                                  className="text-xs text-foreground/35 underline transition-colors hover:text-red-500"
+                                >
+                                  이 견적 신고하기
+                                </Link>
+                              </div>
+
                               </div>
                               <aside className="lg:col-span-2">
                                 <PartnerProfileCard profile={partnerProfiles[quote.companyId]} categories={quote.partnerCategories ?? []} expanded />
