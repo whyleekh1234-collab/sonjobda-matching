@@ -8,6 +8,8 @@ import {
   listPartnerRequests,
   upsertMyQuote,
   uploadQuoteAttachment,
+  validateQuoteAttachment,
+  ATTACHMENT_ACCEPT,
   withdrawMyQuote,
   getAttachmentUrl,
 } from "@/lib/data/requests";
@@ -42,6 +44,7 @@ export default function PartnerDashboard() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<MatchRequest | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [requests, setRequests] = useState<MatchRequest[]>([]);
   const [quoteForm, setQuoteForm] = useState({
     subjectCount: "", siteCountCapital: "", siteCountLocal: "",
@@ -262,12 +265,15 @@ export default function PartnerDashboard() {
     else alert("첨부파일을 열지 못했습니다.");
   };
 
-  // 파일 첨부 핸들러
+  // 파일 첨부 핸들러. 검사 규칙은 업로드 함수와 같은 곳에 둔다 —
+  // 여기서만 막으면 accept 속성처럼 우회할 수 있는 장식이 된다.
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("파일 크기는 5MB 이하만 가능합니다.");
+    const err = validateQuoteAttachment(file);
+    if (err) {
+      alert(err);
+      e.target.value = "";   // 거부한 파일이 고른 것처럼 남아 있지 않게
       return;
     }
     setAttachment(file);
@@ -293,6 +299,15 @@ export default function PartnerDashboard() {
       : openRequests.filter((r) => filterStatus === "all" || getMyQuoteStatus(r) === filterStatus)
   )
     .filter((r) => mktFilter === "all" || (r.category === "마케팅 대행" && mktTypeOf(r) === mktFilter))
+    .filter((r) => {
+      // 의뢰가 쌓이면 상태 탭만으로는 찾을 수가 없다. 제목·의뢰번호·분야를
+      // 한 칸으로 훑는다. 의뢰사명은 매칭 전까지 비공개라 검색 대상에서
+      // 뺀다 — 넣으면 검색 결과로 가려둔 이름을 되짚을 수 있다.
+      const q = searchTerm.trim().toLowerCase();
+      if (!q) return true;
+      return [r.title, r.requestCode, r.category]
+        .some((v) => String(v ?? "").toLowerCase().includes(q));
+    })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // 보류 처리
@@ -528,6 +543,30 @@ export default function PartnerDashboard() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">받은 의뢰</h2>
             </div>
+            {/* 검색 */}
+            <div className="relative mt-3">
+              <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+              </svg>
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="제목 · 의뢰번호 · 분야로 검색"
+                className="w-full rounded-lg border border-border py-2.5 pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  aria-label="검색어 지우기"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-foreground/30 hover:bg-muted hover:text-foreground"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+
             {/* 상태 필터 탭 */}
             <div className="mt-3 flex gap-2 overflow-x-auto">
               {([
@@ -567,7 +606,7 @@ export default function PartnerDashboard() {
             <div className="mt-4 space-y-4">
               {filteredRequests.length === 0 ? (
                 <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
-                  <p className="text-foreground/50">{requests.length === 0 ? "아직 받은 의뢰가 없습니다." : "해당 상태의 의뢰가 없습니다."}</p>
+                  <p className="text-foreground/50">{requests.length === 0 ? "아직 받은 의뢰가 없습니다." : searchTerm.trim() ? `"${searchTerm.trim()}"에 대한 검색 결과가 없습니다.` : "해당 상태의 의뢰가 없습니다."}</p>
                   {!user?.partnerCategories?.length && <p className="mt-2 text-sm text-foreground/40">파트너 카테고리가 설정되지 않았습니다.</p>}
                 </div>
               ) : (
@@ -1157,7 +1196,7 @@ export default function PartnerDashboard() {
                           <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-foreground/40 transition-colors hover:border-primary hover:text-primary">
                             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
                             파일 선택 (PDF 또는 Word 문서만 업로드 가능, 최대 10MB)
-                            <input type="file" className="hidden" onChange={handleFileChange} accept=".pdf,.doc,.docx,.xls,.xlsx,.hwp,.ppt,.pptx" />
+                            <input type="file" className="hidden" onChange={handleFileChange} accept={ATTACHMENT_ACCEPT} />
                           </label>
                         )}
                       </div>

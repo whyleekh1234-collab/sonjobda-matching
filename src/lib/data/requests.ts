@@ -308,11 +308,43 @@ function safeKey(name: string) {
   return ext ? `file.${ext}` : "file";
 }
 
+// 받을 파일은 견적서다. 문서 형식만 허용하고 나머지는 막는다.
+//
+// MIME 타입이 아니라 확장자로 판단한다. .hwp는 브라우저마다 타입이
+// 제각각이고(빈 문자열로 오는 경우도 흔하다), 어차피 MIME은 파일을
+// 고른 쪽이 마음대로 붙일 수 있어 믿을 값이 못 된다.
+//
+// 막아야 할 것은 실행파일만이 아니다. .html과 .svg는 스크립트를 품을
+// 수 있고, 서명 링크로 열면 Storage 도메인에서 실행된다. 허용 목록
+// 방식이라 이런 것들은 따로 열거하지 않아도 자동으로 걸린다.
+const ATTACHMENT_EXTS = [
+  "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "hwp", "hwpx", "txt", "csv", "zip",
+];
+export const ATTACHMENT_ACCEPT = ATTACHMENT_EXTS.map((e) => `.${e}`).join(",");
+const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
+
+/** 문제가 있으면 사용자에게 보여줄 문구를, 없으면 null을 준다. */
+export function validateQuoteAttachment(file: File): string | null {
+  const dot = file.name.lastIndexOf(".");
+  const ext = dot > 0 ? file.name.slice(dot + 1).toLowerCase() : "";
+  if (!ATTACHMENT_EXTS.includes(ext)) {
+    return `${ATTACHMENT_EXTS.join(", ").toUpperCase()} 형식만 올릴 수 있습니다.`;
+  }
+  if (file.size > ATTACHMENT_MAX_BYTES) return "파일 크기는 5MB 이하만 가능합니다.";
+  return null;
+}
+
 export async function uploadQuoteAttachment(
   companyId: string,
   requestId: string,
   file: File
 ): Promise<{ path: string; name: string }> {
+  // 화면에서도 한 번 거르지만 여기서 다시 본다. input의 accept 속성은
+  // 파일 고르는 창의 기본 필터일 뿐이라 "모든 파일"을 고르거나 끌어다
+  // 놓으면 그냥 통과한다.
+  const err = validateQuoteAttachment(file);
+  if (err) throw new Error(err);
+
   const path = `${companyId}/${requestId}/${Date.now()}-${safeKey(file.name)}`;
   const { error } = await createClient().storage.from(BUCKET).upload(path, file, { upsert: true });
   if (error) throw new Error(error.message);
