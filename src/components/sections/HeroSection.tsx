@@ -81,7 +81,10 @@ export default function HeroSection() {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-foreground-muted sm:text-xl">
-            찾느라 쏟는 시간은 줄이고, 딱 맞는 파트너와 연결되세요.
+            찾느라 쏟는 시간은 줄이고, 딱 맞는 파트너와 연결되세요.{" "}
+            {/* 모바일에서는 이 br이 display:none이 되는데, JSX가 앞뒤 줄바꿈을
+                지워버려서 두 문장이 "연결되세요.임상시험부터"로 붙어버린다.
+                위의 {" "}가 그 공백을 대신한다. */}
             <br className="hidden sm:block" />
             임상시험부터 바이오 의약품 개발까지, 검증된 전문 파트너를 한 곳에서.
           </p>

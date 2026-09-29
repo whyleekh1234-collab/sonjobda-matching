@@ -41,3 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 모바일 QC 스크립트·스크린샷 (로컬 전용)
+.qc/
