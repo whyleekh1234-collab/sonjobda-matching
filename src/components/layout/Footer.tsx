@@ -14,6 +14,14 @@ const CONTACT_PHONE = "번호 입력 예정";
 // 함께 적어두는 것이 관례다.
 const PRIVACY_OFFICER = "이은정";
 
+// 특허 출원번호. 형식: 10-2026-0012345
+//
+// 등록 전에는 "특허 제○○○호"로 쓸 수 없다. 특허법 제224조가 허위표시를
+// 금지하고 있고, 출원번호를 등록번호처럼 적는 것이 전형적인 위반이다.
+// 그래서 "특허출원"이라는 말을 번호 앞에 붙여 둔다. 등록이 끝나면 등록
+// 번호로 바꾸면서 이 문구도 "특허 제○○○호"로 고친다.
+const PATENT_APP_NO = "10-2026-0186274";
+
 const linkColumns = [
   {
     heading: "서비스",
@@ -101,7 +109,7 @@ export default function Footer() {
           {/* 마지막 컬럼: 특허 배지 (기존 유지) */}
           <div className="col-span-2 md:col-span-1 md:justify-self-end">
             <span className="inline-block whitespace-nowrap rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground/50">
-              특허 출원 중
+              {PATENT_APP_NO ? `특허출원 ${PATENT_APP_NO}` : "특허 출원 중"}
             </span>
           </div>
         </div>
@@ -112,10 +120,6 @@ export default function Footer() {
             <div className="flex gap-1.5">
               <dt className="sr-only">상호</dt>
               <dd className="font-medium text-foreground/70">(주) 손잡다메디칼</dd>
-            </div>
-            <div className="flex gap-1.5">
-              <dt>대표</dt>
-              <dd className="text-foreground/70">이은정</dd>
             </div>
             <div className="flex gap-1.5">
               <dt>사업자등록번호</dt>

@@ -478,7 +478,7 @@ function SignupContent() {
             {/* 기업주소 (선택) */}
             <div>
               <label htmlFor="address" className="block text-sm font-medium text-foreground">
-                기업주소 <span className="text-xs font-normal text-foreground/40">(선택)</span>
+                기업주소 <span className="text-xs font-normal text-foreground/60">(선택)</span>
               </label>
               <div className="mt-1 flex gap-2">
                 <input
@@ -505,7 +505,7 @@ function SignupContent() {
             {!inviteInfo && (
               <div>
                 <label className="block text-sm font-medium text-foreground">
-                  회사 로고 <span className="text-xs font-normal text-foreground/40">(선택)</span>
+                  회사 로고 <span className="text-xs font-normal text-foreground/60">(선택)</span>
                 </label>
                 <div className="mt-1 flex items-center gap-3">
                   <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
@@ -574,7 +574,7 @@ function SignupContent() {
                 className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
               />
               <span className="text-sm text-foreground/70">
-                마케팅 정보 수신에 동의합니다. <span className="text-foreground/40">(선택)</span>
+                마케팅 정보 수신에 동의합니다. <span className="text-foreground/60">(선택)</span>
               </span>
             </label>
             <p className="ml-7 text-xs text-foreground/40">
@@ -585,6 +585,17 @@ function SignupContent() {
             </p>
             <p className="ml-7 text-xs text-amber-600">
               ※ 매칭 성사 시 상대 업체에 회사명, 담당자명, 이메일, 연락처가 공개됩니다.
+            </p>
+
+            {/* 통신판매중개자 고지.
+                전자상거래법 제20조 제1항은 중개자가 "자신이 거래의 당사자가
+                아니라는 사실"을 미리 알리도록 한다. 푸터에도 적혀 있지만,
+                계약이 성립하는 지점이 가입 시점이므로 여기서 한 번 더
+                분명히 둔다. 거래 전에 알렸다는 사실이 중요하다. */}
+            <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-foreground/55">
+              (주) 손잡다메디칼은 통신판매중개자로서 통신판매의 당사자가 아니며,
+              위수탁사가 제공하는 서비스에 대한 이행, 계약사항 등과 관련한 의무와
+              책임은 거래당사자에게 있습니다.
             </p>
           </div>
 

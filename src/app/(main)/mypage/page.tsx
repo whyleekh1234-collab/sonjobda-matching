@@ -465,7 +465,7 @@ export default function MyPage() {
                   className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
                 />
                 <span className="text-sm text-foreground/70">
-                  마케팅 정보 수신에 동의합니다. <span className="text-foreground/40">(선택)</span>
+                  마케팅 정보 수신에 동의합니다. <span className="text-foreground/60">(선택)</span>
                 </span>
               </label>
               {marketingOn && marketingAt && (
