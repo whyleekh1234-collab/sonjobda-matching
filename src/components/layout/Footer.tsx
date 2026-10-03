@@ -132,8 +132,14 @@ export default function Footer() {
             <div className="flex gap-1.5">
               <dt>통신판매업신고</dt>
               <dd className="text-foreground/70">{MAIL_ORDER_REG_NO}</dd>
-              {/* 신고번호만 적어두면 이용자가 진위를 확인할 길이 없다.
-                  공정위 조회 페이지로 바로 보내는 것이 관례다. */}
+            </div>
+            {/* 신고번호만 적어두면 이용자가 진위를 확인할 길이 없다. 공정위
+                조회 페이지로 바로 보내는 것이 관례다.
+
+                앞 항목 안에 넣으면 라벨-값 간격(gap-1.5)을 받아 신고번호에
+                바싹 붙는다. 항목 사이 간격(gap-x-5)을 받도록 형제로 뺀다. */}
+            <div className="flex gap-1.5">
+              <dt className="sr-only">사업자정보 확인</dt>
               <dd>
                 <a
                   href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=5018703457"

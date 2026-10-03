@@ -52,7 +52,7 @@ export default function FindEmailPage() {
       // 메일 발송이 아직 연결되지 않은 개발 환경에서만 코드가 내려온다.
       setDevCode(data.devCode ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "인증번호 발송에 실패했습니다.");
+      setError(err instanceof Error ? err.message : "인증번호를 보내지 못했습니다.");
     } finally {
       setIsBusy(false);
     }
@@ -116,7 +116,7 @@ export default function FindEmailPage() {
                     : "text-foreground/60 hover:text-foreground"
                 }`}
               >
-                전화번호 인증
+                전화번호로 찾기
               </button>
               <button
                 type="button"
@@ -127,7 +127,7 @@ export default function FindEmailPage() {
                     : "text-foreground/60 hover:text-foreground"
                 }`}
               >
-                이메일 인증
+                이메일로 찾기
               </button>
             </div>
 
@@ -189,6 +189,12 @@ export default function FindEmailPage() {
                       placeholder="010-1234-5678"
                       className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-muted disabled:text-foreground/50"
                     />
+                    {/* 번호는 본인을 찾는 열쇠일 뿐, 인증번호는 문자가 아니라
+                        메일로 간다. 이 줄이 없으면 사용자가 오지 않을 문자를
+                        기다린다. 문자 발송은 붙여 둔 적이 없다. */}
+                    <p className="mt-1 text-xs text-foreground/50">
+                      문자가 아니라, 가입하신 이메일로 인증번호를 보내드립니다.
+                    </p>
                   </div>
                 ) : (
                   <div>
@@ -241,7 +247,7 @@ export default function FindEmailPage() {
                   disabled={isBusy}
                   className="mt-6 w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isBusy ? "확인 중..." : "인증번호 발송"}
+                  {isBusy ? "확인 중..." : "인증번호 메일 받기"}
                 </button>
               ) : (
                 <button
