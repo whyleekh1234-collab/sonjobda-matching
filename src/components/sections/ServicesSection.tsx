@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { breakAfterSlash } from "@/lib/text";
 import { FlaskConical, Factory, ClipboardList, FileCheck2, ShieldCheck, Package, Megaphone, Lock, LockOpen } from "lucide-react";
 
@@ -61,6 +61,27 @@ const sampleQuotes = [
 export default function ServicesSection() {
   const [activeDetail, setActiveDetail] = useState<string | null>(null);
 
+  // 상세 패널은 카드 네 장 "아래"에 열린다. 화면이 넓을 때는 카드가 한
+  // 줄이라 바로 눈에 들어오지만, 모바일에서는 카드가 세로로 쌓이는 탓에
+  // 첫 카드를 누르면 패널이 500px쯤 화면 밖에 생긴다. 사용자 눈에는
+  // 아무 일도 일어나지 않은 것으로 보인다.
+  //
+  // 이미 보이는 경우에는 건드리지 않는다. 데스크톱에서 멀쩡히 보이는
+  // 화면을 굳이 움직이면 그게 더 거슬린다.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!activeDetail) return;
+    const el = panelRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const headerH = 72;              // 상단 고정 바에 가리지 않도록
+    // 패널 "윗부분"이 이미 보이면 그대로 둔다. 패널 전체가 들어왔는지로
+    // 따지면 내용이 긴 패널은 항상 조건에 걸려서, 데스크톱처럼 이미 잘
+    // 보이는 화면까지 매번 끌어올리게 된다.
+    if (rect.top >= headerH && rect.top <= window.innerHeight - 120) return;
+    window.scrollTo({ top: window.scrollY + rect.top - headerH, behavior: "smooth" });
+  }, [activeDetail]);
+
   return (
     <section id="services" className="bg-surface py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -107,6 +128,7 @@ export default function ServicesSection() {
           ))}
         </div>
 
+        <div ref={panelRef}>
         {/* 견적 비교 상세 */}
         {activeDetail === "compare" && (
           <div className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-white to-blue-50">
@@ -438,6 +460,7 @@ export default function ServicesSection() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </section>
   );
