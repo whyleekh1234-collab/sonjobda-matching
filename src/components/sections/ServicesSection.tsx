@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { breakAfterSlash } from "@/lib/text";
-import { FlaskConical, Factory, ClipboardList, FileCheck2, ShieldCheck, Package, Megaphone } from "lucide-react";
+import { FlaskConical, Factory, ClipboardList, FileCheck2, ShieldCheck, Package, Megaphone, Lock, LockOpen } from "lucide-react";
 
 const services = [
   {
@@ -317,6 +317,120 @@ export default function ServicesSection() {
                     <div>
                       <p className="text-sm font-semibold text-foreground">5분 만에 의뢰 완료</p>
                       <p className="mt-0.5 text-sm text-foreground/50">4단계 간편 양식으로 복잡한 의뢰도 빠르게 등록할 수 있습니다.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 비공개 매칭 상세.
+            네 장의 카드 중 이것만 패널이 없어서 눌러도 아무것도 열리지
+            않았다. 내용은 실제로 시스템이 강제하는 규칙 그대로다 —
+            문구와 동작이 어긋나면 안 되므로 규칙을 바꿀 때 여기도 같이
+            고친다. (/policy 제5조, supabase/phase14·phase17) */}
+        {activeDetail === "private" && (
+          <div className="mt-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-white to-blue-50">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              {/* 좌측: 단계별로 무엇이 가려지고 열리는지 */}
+              <div className="p-6 sm:p-8">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary/60">Disclosure</p>
+                <h3 className="mt-2 text-lg font-bold text-foreground">단계별 공개 범위</h3>
+                <div className="mt-5 space-y-3">
+                  {[
+                    {
+                      stage: "의뢰 등록",
+                      state: "의뢰사 비공개",
+                      detail: "파트너사는 분야·규모·예산만 봅니다. 회사명은 가려집니다.",
+                      open: false,
+                    },
+                    {
+                      stage: "견적 제출",
+                      state: "연락처 비공개",
+                      detail: "의뢰사는 파트너사명과 견적을 보지만, 담당자 정보는 아직입니다.",
+                      open: false,
+                    },
+                    {
+                      stage: "1차 선정 (최대 3곳)",
+                      state: "여전히 비공개",
+                      detail: "후보를 추리는 단계입니다. 선정돼도 연락처는 열리지 않습니다.",
+                      open: false,
+                    },
+                    {
+                      stage: "최종 매칭 확정",
+                      state: "상호 공개",
+                      detail: "확정된 두 곳 사이에서만 회사명·담당자·이메일·연락처가 열립니다.",
+                      open: true,
+                    },
+                  ].map((s, i) => (
+                    <div
+                      key={s.stage}
+                      className={`rounded-xl border p-4 transition-all ${
+                        s.open ? "border-primary bg-white shadow-md" : "border-border bg-white/80"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
+                            s.open ? "bg-primary text-white" : "bg-foreground/10 text-foreground/40"
+                          }`}
+                        >
+                          {s.open ? <LockOpen className="h-4 w-4" strokeWidth={2} /> : <Lock className="h-4 w-4" strokeWidth={2} />}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <p className={`text-sm font-semibold ${s.open ? "text-primary" : "text-foreground"}`}>
+                              {i + 1}. {s.stage}
+                            </p>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                s.open ? "bg-primary/10 text-primary" : "bg-foreground/5 text-foreground/45"
+                              }`}
+                            >
+                              {s.state}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs leading-relaxed text-foreground/50">{s.detail}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 우측: 왜 이렇게 하는가 */}
+              <div className="flex flex-col justify-center border-t border-primary/10 p-6 sm:p-8 lg:border-l lg:border-t-0">
+                <h3 className="text-xl font-bold text-foreground">왜 비공개 매칭인가요?</h3>
+                <div className="mt-6 space-y-5">
+                  <div className="flex gap-3">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">1</div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">영업 전화가 오지 않습니다</p>
+                      <p className="mt-0.5 text-sm text-foreground/50">의뢰를 올려도 회사명이 공개되지 않아, 견적 대신 영업 연락부터 받는 일이 없습니다.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">2</div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">조건으로만 비교됩니다</p>
+                      <p className="mt-0.5 text-sm text-foreground/50">파트너사는 다른 파트너사의 견적을 볼 수 없습니다. 기존 거래관계가 아니라 제시한 조건으로 겨룹니다.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">3</div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">탈락한 곳에는 열리지 않습니다</p>
+                      <p className="mt-0.5 text-sm text-foreground/50">1차 선정됐더라도 최종 확정되지 않으면 의뢰사 정보는 끝까지 비공개로 남습니다.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                      <ShieldCheck className="h-4 w-4" strokeWidth={2} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">화면이 아니라 권한으로 막습니다</p>
+                      <p className="mt-0.5 text-sm text-foreground/50">가리는 수준이 아니라 데이터베이스 조회 권한 자체를 제한합니다. 우회 경로가 없습니다.</p>
                     </div>
                   </div>
                 </div>
