@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/env";
 import { SITE_LOCK_COOKIE, hasSiteAccess, siteLockCode } from "@/lib/siteLock";
+import { ADMIN_MFA_COOKIE } from "@/lib/adminMfa";
 
 // Supabase 세션 쿠키는 액세스 토큰이 만료되면(기본 1시간) 서버가 매 요청마다
 // 갱신해줘야 한다. 이걸 안 하면 로그인이 슬며시 끊긴다. 요청 경로 보호도
@@ -69,17 +70,20 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
 
-    // 2단계 인증까지 통과했는지 본다. 비밀번호만 맞힌 세션은 aal1이고,
-    // OTP를 넣어야 aal2가 된다. 그 값은 액세스 토큰에 박혀 있어 클라이언트가
-    // 흉내 낼 수 없다.
+    // 2단계 인증까지 통과했는지 본다. 비밀번호만으로는 여기를 넘지 못한다.
     //
     // 이 검사가 화면이 아니라 여기 있는 이유는, 로그인 화면을 건너뛰고
     // /admin 주소를 직접 쳐도 막아야 하기 때문이다.
     //
-    // 아직 인증 수단을 등록하지 않은 관리자도 여기서 걸려 /admin/login으로
-    // 간다. 그 화면이 등록 절차를 띄우므로 막다른 길은 아니다.
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aal?.currentLevel !== "aal2") {
+    // 쿠키에는 임의의 토큰만 들어 있고 실체는 DB에 있다. "통과함" 같은 값을
+    // 쿠키에 담으면 브라우저에서 고쳐 쓸 수 있다. 토큰이 내 것이고 아직
+    // 살아 있는지는 DB가 판단한다.
+    const token = request.cookies.get(ADMIN_MFA_COOKIE)?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+    const { data: valid } = await supabase.rpc("admin_mfa_session_valid", { p_token: token });
+    if (!valid) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }

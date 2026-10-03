@@ -4,16 +4,15 @@ import PasswordInput from "@/components/PasswordInput";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
-import { nextMfaStep, startEnroll, verifyCode, type EnrollInfo } from "@/lib/adminMfa";
+import { sendAdminCode, verifyAdminCode } from "@/lib/adminMfa";
 
-// 관리자 로그인은 두 관문이다. 비밀번호를 통과해도 OTP를 넣기 전에는
-// /admin에 들어갈 수 없다 — proxy.ts가 세션의 보증 수준(aal2)을 보고
-// 막으므로, 이 화면을 건너뛰고 주소를 직접 쳐도 소용없다.
+// 관리자 로그인은 두 관문이다. 비밀번호를 통과해도 인증번호를 넣기 전에는
+// /admin에 들어갈 수 없다 — proxy.ts가 통과 증명을 확인하므로, 이 화면을
+// 건너뛰고 주소를 직접 쳐도 소용없다.
 //
-// 등록된 인증 수단이 없는 계정은 여기서 바로 등록하게 한다. 등록 화면을
-// 따로 두면 "아직 등록 안 한 관리자"라는 어중간한 상태가 생기고, 그 상태를
-// 누가 언제 정리하는지가 또 문제가 된다.
-type Step = "password" | "enroll" | "verify";
+// 인증번호는 로그인 이메일이 아니라 따로 지정한 주소로 간다. 어디로 갔는지는
+// 가려서 보여준다 — 공격자에게 다음 표적을 알려줄 이유가 없다.
+type Step = "password" | "code";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -21,7 +20,8 @@ export default function AdminLoginPage() {
   const [step, setStep] = useState<Step>("password");
   const [form, setForm] = useState({ email: "", password: "" });
   const [code, setCode] = useState("");
-  const [enroll, setEnroll] = useState<EnrollInfo | null>(null);
+  const [sentTo, setSentTo] = useState("");
+  const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,15 +31,28 @@ export default function AdminLoginPage() {
     setError("");
     try {
       await login(form.email, form.password);
-      const next = await nextMfaStep();
-      if (next === "done") {
-        router.push("/admin");
-        return;
-      }
-      if (next === "enroll") setEnroll(await startEnroll());
-      setStep(next);
+      const { to } = await sendAdminCode();
+      setSentTo(to);
+      setStep("code");
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 메일이 늦거나 스팸함에 갔을 때. 서버가 1분 간격을 강제한다.
+  const handleResend = async () => {
+    setIsSubmitting(true);
+    setError("");
+    setNotice("");
+    try {
+      const { to } = await sendAdminCode();
+      setSentTo(to);
+      setCode("");
+      setNotice("인증번호를 다시 보냈습니다.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "다시 보내지 못했습니다.");
     } finally {
       setIsSubmitting(false);
     }
@@ -50,7 +63,7 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
     setError("");
     try {
-      await verifyCode(code, enroll?.factorId);
+      await verifyAdminCode(code);
       router.push("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "인증에 실패했습니다.");
@@ -69,7 +82,7 @@ export default function AdminLoginPage() {
           </div>
           <h1 className="mt-4 text-xl font-bold text-foreground">손잡다매칭</h1>
           <p className="mt-1 text-sm text-foreground/50">
-            {step === "password" ? "관리자 로그인" : step === "enroll" ? "2단계 인증 등록" : "2단계 인증"}
+            {step === "password" ? "관리자 로그인" : "2단계 인증"}
           </p>
         </div>
 
@@ -120,36 +133,13 @@ export default function AdminLoginPage() {
             </>
           )}
 
-          {step === "enroll" && enroll && (
+          {step === "code" && (
             <>
               <p className="text-sm leading-relaxed text-foreground/60">
-                이 계정에는 아직 2단계 인증이 등록되지 않았습니다. 인증 앱(Google
-                Authenticator, Authy 등)으로 아래 QR을 찍고, 앱에 뜨는 6자리를 입력해주세요.
+                <b className="text-foreground">{sentTo}</b> 으로 인증번호를 보냈습니다.
+                메일에 적힌 6자리를 입력해주세요.
               </p>
-              <div className="mt-4 flex justify-center rounded-xl border border-border bg-white p-4">
-                {/* Supabase가 SVG data URL로 내려준다 — next/image는 못 다룬다. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={enroll.qrCode} alt="2단계 인증 QR 코드" className="h-44 w-44" />
-              </div>
-              <details className="mt-3">
-                <summary className="cursor-pointer text-xs text-foreground/50 hover:text-foreground">
-                  QR을 찍을 수 없나요?
-                </summary>
-                <p className="mt-2 text-xs text-foreground/50">앱에 아래 키를 직접 입력하세요.</p>
-                <code className="mt-1 block break-all rounded-lg bg-muted px-3 py-2 text-xs text-foreground/70">
-                  {enroll.secret}
-                </code>
-              </details>
-            </>
-          )}
-
-          {(step === "enroll" || step === "verify") && (
-            <>
-              {step === "verify" && (
-                <p className="text-sm leading-relaxed text-foreground/60">
-                  인증 앱에 표시된 6자리 숫자를 입력해주세요.
-                </p>
-              )}
+              {notice && <p className="mt-2 text-xs text-emerald-600">{notice}</p>}
               <div className="mt-4">
                 <label htmlFor="otp" className="block text-sm font-medium text-foreground">
                   인증번호
@@ -162,7 +152,7 @@ export default function AdminLoginPage() {
                   autoFocus
                   maxLength={6}
                   value={code}
-                  onChange={(e) => { setCode(e.target.value.replace(/\D/g, "")); setError(""); }}
+                  onChange={(e) => { setCode(e.target.value.replace(/[^0-9]/g, "")); setError(""); }}
                   placeholder="000000"
                   className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-center text-lg tracking-[0.4em] outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
                 />
@@ -172,13 +162,22 @@ export default function AdminLoginPage() {
                 disabled={isSubmitting || code.length !== 6}
                 className="mt-6 w-full rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? "확인 중..." : step === "enroll" ? "등록하고 로그인" : "확인"}
+                {isSubmitting ? "확인 중..." : "확인"}
+              </button>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isSubmitting}
+                className="mt-3 w-full text-center text-xs text-foreground/50 underline hover:text-foreground disabled:opacity-50"
+              >
+                인증번호 다시 받기
               </button>
               <p className="mt-3 text-center text-xs text-foreground/40">
-                인증 앱을 잃어버렸다면 다른 관리자에게 등록 해제를 요청하세요.
+                메일이 보이지 않으면 스팸함도 확인해주세요.
               </p>
             </>
           )}
+
         </form>
       </div>
     </div>
