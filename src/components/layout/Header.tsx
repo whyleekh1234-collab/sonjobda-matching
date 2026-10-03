@@ -127,10 +127,7 @@ export default function Header() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-light text-white shadow-soft">
               <Workflow className="h-5 w-5" strokeWidth={2.2} />
             </span>
-            <span className="text-xl font-bold tracking-tight">
-              <span className="text-primary">손잡다</span>
-              <span className="text-foreground">매칭</span>
-            </span>
+            <span className="text-xl font-bold tracking-tight text-foreground">손잡다매칭</span>
           </Link>
 
           {/* 데스크톱 네비게이션 */}

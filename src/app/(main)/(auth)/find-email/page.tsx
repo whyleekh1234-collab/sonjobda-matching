@@ -79,8 +79,7 @@ export default function FindEmailPage() {
         {/* 헤더 */}
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary">손잡다</span>
-            <span className="text-2xl font-bold text-foreground">매칭</span>
+            <span className="text-2xl font-bold text-foreground">손잡다매칭</span>
           </Link>
           <h1 className="mt-6 text-2xl font-bold text-foreground">이메일 찾기</h1>
           <p className="mt-2 text-sm text-foreground/60">

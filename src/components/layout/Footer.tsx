@@ -64,10 +64,16 @@ export default function Footer() {
         {/* 상단: 브랜드 + 링크 컬럼 */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 md:grid-cols-12">
           <div className="col-span-2 md:col-span-5">
-            <Link href="/" className="inline-flex items-center gap-1.5">
-              <span className="text-lg font-bold text-primary">손잡다</span>
-              <span className="text-lg font-bold text-foreground">매칭</span>
-            </Link>
+            {/* 특허 배지는 브랜드 바로 옆에 둔다. 오른쪽 끝에 떨어뜨려 두면
+                어느 컬럼에 딸린 것인지 읽히지 않는다. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <Link href="/" className="inline-flex items-center">
+                <span className="text-lg font-bold text-foreground">손잡다매칭</span>
+              </Link>
+              <span className="inline-block whitespace-nowrap rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground/50">
+                {PATENT_APP_NO ? `특허출원 ${PATENT_APP_NO}` : "특허 출원 중"}
+              </span>
+            </div>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-foreground/60">
               임상시험 및 바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼
             </p>
@@ -106,12 +112,6 @@ export default function Footer() {
             </div>
           ))}
 
-          {/* 마지막 컬럼: 특허 배지 (기존 유지) */}
-          <div className="col-span-2 md:col-span-1 md:justify-self-end">
-            <span className="inline-block whitespace-nowrap rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground/50">
-              {PATENT_APP_NO ? `특허출원 ${PATENT_APP_NO}` : "특허 출원 중"}
-            </span>
-          </div>
         </div>
 
         {/* 중단: 사업자 정보. 한 줄로 이어 쓰는 국내 관례를 따른다. */}
@@ -132,24 +132,6 @@ export default function Footer() {
             <div className="flex gap-1.5">
               <dt>통신판매업신고</dt>
               <dd className="text-foreground/70">{MAIL_ORDER_REG_NO}</dd>
-            </div>
-            {/* 신고번호만 적어두면 이용자가 진위를 확인할 길이 없다. 공정위
-                조회 페이지로 바로 보내는 것이 관례다.
-
-                앞 항목 안에 넣으면 라벨-값 간격(gap-1.5)을 받아 신고번호에
-                바싹 붙는다. 항목 사이 간격(gap-x-5)을 받도록 형제로 뺀다. */}
-            <div className="flex gap-1.5">
-              <dt className="sr-only">사업자정보 확인</dt>
-              <dd>
-                <a
-                  href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=5018703457"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline transition-colors hover:text-primary"
-                >
-                  사업자정보 확인
-                </a>
-              </dd>
             </div>
             <div className="flex gap-1.5">
               <dt>개인정보보호책임자</dt>
