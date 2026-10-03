@@ -68,6 +68,20 @@ export async function proxy(request: NextRequest) {
     if (!profile?.is_platform_admin) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
+
+    // 2단계 인증까지 통과했는지 본다. 비밀번호만 맞힌 세션은 aal1이고,
+    // OTP를 넣어야 aal2가 된다. 그 값은 액세스 토큰에 박혀 있어 클라이언트가
+    // 흉내 낼 수 없다.
+    //
+    // 이 검사가 화면이 아니라 여기 있는 이유는, 로그인 화면을 건너뛰고
+    // /admin 주소를 직접 쳐도 막아야 하기 때문이다.
+    //
+    // 아직 인증 수단을 등록하지 않은 관리자도 여기서 걸려 /admin/login으로
+    // 간다. 그 화면이 등록 절차를 띄우므로 막다른 길은 아니다.
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.currentLevel !== "aal2") {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
   }
 
   if (siteLockCode()) {
