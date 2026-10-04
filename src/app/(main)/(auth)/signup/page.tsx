@@ -383,7 +383,7 @@ ${licenseError}
                   onChange={(e) => { handleChange(e); setEmailOk(null); }}
                   readOnly={!!inviteInfo}
                   placeholder="example@company.com"
-                  className={`w-full rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
+                  className={`w-full min-w-0 rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
                 />
                 {/* 초대로 들어온 경우 이메일이 고정이라 확인할 것이 없다. */}
                 {!inviteInfo && (
@@ -515,7 +515,7 @@ ${licenseError}
                   readOnly={!!inviteInfo}
                   placeholder="000-00-00000"
                   maxLength={12}
-                  className={`w-full rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
+                  className={`w-full min-w-0 rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
                 />
                 {/* 초대로 들어온 경우 회사가 이미 검증돼 있어 다시 묻지 않는다. */}
                 {!inviteInfo && (
@@ -603,12 +603,12 @@ ${licenseError}
                   value={form.address}
                   onChange={handleChange}
                   placeholder="주소 검색을 눌러 주소를 입력하세요"
-                  className="flex-1 rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
                 />
                 <button
                   type="button"
                   onClick={openAddressSearch}
-                  className="flex-shrink-0 rounded-lg border border-border px-4 py-3 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted"
+                  className="shrink-0 whitespace-nowrap rounded-lg border border-border px-4 py-3 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted"
                 >
                   주소 검색
                 </button>
