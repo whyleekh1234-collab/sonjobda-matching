@@ -2,7 +2,7 @@
 
 import { validateLicense, LICENSE_ACCEPT } from "@/lib/data/companyLicense";
 import PasswordInput from "@/components/PasswordInput";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { validateLogo } from "@/lib/data/companyLogo";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -59,6 +59,10 @@ function SignupContent() {
   // 확인해 둔 상태로 주소만 바꿔 제출하는 구멍을 막는다.
   const [emailOk, setEmailOk] = useState<boolean | null>(null);
   const [emailChecking, setEmailChecking] = useState(false);
+  // 오류 문구는 폼 맨 위에 뜨는데 가입 버튼은 맨 아래에 있다. 눌러도
+  // 화면 밖에서 뜨니 아무 반응이 없는 것처럼 보였다. 오류가 생기면
+  // 그 자리로 데려간다.
+  const errorRef = useRef<HTMLDivElement>(null);
   // 사업자등록번호 조회. 번호를 고치면 다시 조회하게 되돌린다.
   const [bizOk, setBizOk] = useState<boolean | null>(null);
   const [bizNote, setBizNote] = useState("");
@@ -208,6 +212,10 @@ function SignupContent() {
     if (validationError) {
       setError(validationError);
       setIsSubmitting(false);
+      // setError 직후에는 아직 박스가 그려지지 않았을 수 있다. 다음 프레임에 옮긴다.
+      requestAnimationFrame(() =>
+        errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+      );
       return;
     }
 
@@ -284,7 +292,7 @@ ${licenseError}
           className="mt-8 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8"
         >
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div ref={errorRef} className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
               {error}
             </div>
           )}
@@ -740,6 +748,18 @@ ${licenseError}
               책임은 거래당사자에게 있습니다.
             </p>
           </div>
+
+          {/* 버튼 바로 위에서 남은 할 일을 알린다. 맨 위 오류 박스까지
+              올라가지 않아도 왜 안 되는지 알 수 있어야 한다. */}
+          {!inviteInfo && (emailOk !== true || !license) && (
+            <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              가입하려면 먼저{" "}
+              {[emailOk !== true && "이메일 중복확인", !license && "사업자등록증 첨부"]
+                .filter(Boolean)
+                .join(", ")}
+              이(가) 필요합니다.
+            </p>
+          )}
 
           <button
             type="submit"
