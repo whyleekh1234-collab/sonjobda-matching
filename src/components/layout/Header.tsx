@@ -82,7 +82,10 @@ export default function Header() {
         <div className="fixed top-0 z-50 w-full bg-foreground text-white">
           <div className="mx-auto flex h-12 max-w-7xl items-center justify-between overflow-x-auto px-4 text-sm sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-2">
-              <span className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${roleLabels[user.activeRole].color}`}>
+              {/* 넓은 화면에는 오른쪽에 역할 토글이 있어 같은 것을 두 번
+                  보여주게 된다. 토글이 숨는 좁은 폭에서만 띄운다 —
+                  거기서는 이 배지가 지금 역할을 알려주는 유일한 표시다. */}
+              <span className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold sm:hidden ${roleLabels[user.activeRole].color}`}>
                 {roleLabels[user.activeRole].label}
               </span>
               <Link href="/mypage" className="whitespace-nowrap text-white/85 transition-colors hover:text-white">
@@ -257,10 +260,9 @@ export default function Header() {
               <div className="mt-3 border-t border-border pt-3">
                 {user ? (
                   <>
-                    <div className="flex items-center gap-2 px-3 py-2">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${roleLabels[user.activeRole].color}`}>
-                        {roleLabels[user.activeRole].label}
-                      </span>
+                    {/* 역할 배지는 두지 않는다. 바로 아래 토글이 같은 것을
+                        더 또렷하게 보여준다. */}
+                    <div className="px-3 py-2">
                       <span className="text-sm text-foreground/70">
                         {user.company} {user.name}님
                       </span>
