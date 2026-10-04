@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import {
   EMPTY_PROFILE, CERTIFICATIONS, EXTRA_FIELDS,
   getPartnerProfile, savePartnerProfile, profileCompleteness, categoryCompleteness,
+  listProfileDocs,
   type PartnerProfile, type ExtraField,
 } from "@/lib/data/partnerProfiles";
+import {
+  uploadProfileDoc, removeProfileDoc, validateProfileDoc, PROFILE_DOC_ACCEPT,
+} from "@/lib/data/companyProfileDoc";
 
 // 마이페이지의 "회사 역량". 카드 한 장(회사 소개) + 회사유형마다 카드 한 장.
 // 파트너 역할이 있는 회원이면 누구나 자기 회사 프로필을 고칠 수 있다.
@@ -14,6 +18,9 @@ type Draft = Omit<PartnerProfile, "companyId">;
 type ArrayCol = "therapeuticAreas" | "phases" | "regions" | "certifications";
 
 export default function PartnerProfileEditor({ companyId, categories }: { companyId: string; categories: string[] }) {
+  // 회사소개서는 partner_profiles가 아니라 companies에 달려 있어 따로 읽는다.
+  const [docName, setDocName] = useState<string | null>(null);
+  const [docBusy, setDocBusy] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY_PROFILE);
   const [saved, setSaved] = useState<PartnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +29,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
 
   useEffect(() => {
     let alive = true;
+    listProfileDocs([companyId]).then((m) => setDocName(m[companyId] ?? null)).catch(() => {});
     getPartnerProfile(companyId)
       .then((p) => { if (!alive) return; setSaved(p); setDraft(p ?? EMPTY_PROFILE); setEditing(!p); })
       .catch(console.error)
@@ -137,6 +145,40 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
             <Field label="보유 인증">
               <Chips options={CERTIFICATIONS} selected={draft.certifications} onToggle={(v) => toggleCol("certifications", v)} />
             </Field>
+            {/* 회사소개서.
+                체크박스로는 레퍼런스도 수행 사례도 담을 수 없다. 이미 갖고
+                계신 자료를 그대로 올리게 한다. 견적을 낸 의뢰사와 운영자만
+                열람하고, 그 판단은 서버가 한다. */}
+            <Field label="회사소개서" hint="PDF 또는 PPT, 20MB 이하. 견적을 제출한 의뢰사와 운영자만 열람할 수 있습니다.">
+              {docName && (
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground/70">{docName}</span>
+                  <button type="button" disabled={docBusy}
+                    onClick={async () => {
+                      if (!confirm("회사소개서를 삭제하시겠습니까?")) return;
+                      setDocBusy(true);
+                      try { await removeProfileDoc(companyId); setDocName(null); }
+                      catch (err) { alert(err instanceof Error ? err.message : "삭제하지 못했습니다."); }
+                      finally { setDocBusy(false); }
+                    }}
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:bg-muted disabled:opacity-50">
+                    삭제
+                  </button>
+                </div>
+              )}
+              <input type="file" accept={PROFILE_DOC_ACCEPT} disabled={docBusy}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0]; if (!f) return;
+                  const err = validateProfileDoc(f);
+                  if (err) { alert(err); e.target.value = ""; return; }
+                  setDocBusy(true);
+                  try { await uploadProfileDoc(companyId, f); setDocName(f.name); }
+                  catch (er) { alert(er instanceof Error ? er.message : "올리지 못했습니다."); }
+                  finally { setDocBusy(false); e.target.value = ""; }
+                }}
+                className="block w-full text-sm text-foreground/70 file:mr-3 file:rounded-lg file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground/70 hover:file:bg-muted" />
+              {docBusy && <p className="mt-1 text-xs text-foreground/40">처리 중...</p>}
+            </Field>
             <Field label="대표 실적" hint="회사명·품목을 밝히기 어려우면 '국내 제약사 A, 고혈압 Phase III, 2024' 정도로 적어도 됩니다.">
               <textarea value={draft.trackRecord} onChange={(e) => setDraft({ ...draft, trackRecord: e.target.value })} rows={4} maxLength={1500}
                 placeholder={"예:\n- 국내 상위 제약사, 당뇨 신약 Phase III (2023~2025), 30개 기관\n- 바이오벤처, 항암제 Phase I (2024)"}
@@ -149,6 +191,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
             ["직원 수", current.employees !== null ? `${current.employees.toLocaleString()}명` : ""],
             ["연간 수행 과제", current.annualProjects !== null ? `${current.annualProjects}건` : ""],
             ["보유 인증", current.certifications.join(", ")],
+            ["회사소개서", docName ?? ""],
           ]} longText={["대표 실적", current.trackRecord]} />
         )}
       </Card>

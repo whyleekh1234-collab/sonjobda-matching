@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { EXTRA_FIELDS, type PartnerProfile } from "@/lib/data/partnerProfiles";
+import { openProfileDoc } from "@/lib/data/companyProfileDoc";
 
 // 의뢰사가 견적을 비교할 때 보는 파트너사 역량 요약. 접힌 상태에서는
 // 강점 한 줄 + 핵심 태그, 펼치면 전부. 회사명·연락처는 여기 없다 —
 // 매칭 전 비공개 원칙은 그대로다.
 
 export default function PartnerProfileCard({
-  profile, categories, expanded = false,
-}: { profile: PartnerProfile | null | undefined; categories: string[]; expanded?: boolean }) {
+  profile, categories, expanded = false, docName,
+}: { profile: PartnerProfile | null | undefined; categories: string[]; expanded?: boolean; docName?: string }) {
   const [toggled, setToggled] = useState(false);
   const open = expanded || toggled;
 
@@ -68,6 +69,30 @@ export default function PartnerProfileCard({
             <div>
               <p className="text-xs font-semibold text-foreground/50">대표 실적</p>
               <p className="mt-1 whitespace-pre-line text-xs text-foreground/80">{profile.trackRecord}</p>
+            </div>
+          )}
+          {/* 회사소개서. 항목으로는 담기지 않는 레퍼런스·사례가 여기 있다.
+              경로는 화면이 모르고, 누를 때마다 서버가 자격을 다시 따진다. */}
+          {docName && (
+            <div>
+              <p className="text-xs font-semibold text-foreground/50">회사소개서</p>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    window.open(await openProfileDoc(profile.companyId), "_blank", "noopener");
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : "열 수 없습니다.");
+                  }
+                }}
+                className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+                {docName}
+              </button>
             </div>
           )}
         </div>

@@ -19,6 +19,9 @@ export interface PartnerProfile {
   extra: Record<string, string | string[]>;
   updatedAt?: string;
   verifiedAt?: string | null;
+  // 회사소개서. 경로는 비공개라 열람은 서버가 자격을 따져 서명 링크로만 내준다.
+  profileDocName?: string | null;
+  hasProfileDoc?: boolean;
 }
 
 export const EMPTY_PROFILE: Omit<PartnerProfile, "companyId"> = {
@@ -45,7 +48,16 @@ export const PHASES = ["Phase I", "Phase II", "Phase III", "Phase IV", "IIT", "P
 
 export const REGIONS = ["국내", "일본", "중국", "아시아(기타)", "미국", "유럽", "글로벌"];
 
-export const CERTIFICATIONS = ["KGCP", "ICH-GCP", "GMP", "KGMP", "ISO 9001", "ISO 13485", "ISO 27001", "CAP/CLIA", "기타"];
+// 인증. 임상(GCP) → 품질경영 → 시험·검사 → 정보보호 순으로 묶어 둔다.
+// 체크박스가 길어지지만, 파트너사가 자기 강점을 드러낼 거의 유일한
+// 정량 항목이라 빠진 것이 있으면 그만큼 못 보여준다.
+export const CERTIFICATIONS = [
+  "KGCP", "ICH-GCP", "ISO 14155",
+  "GMP", "KGMP", "ISO 9001", "ISO 13485", "ISO 37001",
+  "ISO 15189", "ISO/IEC 17025", "CAP/CLIA",
+  "ISO 27001", "ISO 27701",
+  "기타",
+];
 
 // 분야별 항목. key는 extra에 저장되는 이름. column이 있으면 extra가 아니라
 // 프로필 컬럼(therapeuticAreas 등)에 저장되는 공통 항목을 그 분야 카드에서
@@ -59,10 +71,17 @@ export type ExtraField = {
   column?: "therapeuticAreas" | "phases" | "regions";
 };
 
+// 분야마다 2~4개만 묻는다.
+//
+// 항목을 늘릴수록 작성률이 떨어진다. 그러면서도 체크박스로는 레퍼런스나
+// 수행 사례를 담을 수 없어, 부담만 있고 보여줄 것은 적었다. 깊이는
+// 회사소개서(phase26)가 맡고, 여기는 "의뢰사가 숫자로 비교하는 것"만 둔다.
+//
+// 지역·제공 서비스·EDC처럼 빠진 항목의 기존 입력값은 extra에 그대로
+// 남아 있다 — 지우지 않는다. 나중에 되살릴 수도 있다.
 const CLINICAL_COMMON: ExtraField[] = [
   { key: "therapeuticAreas", label: "전문 질환영역", type: "multi", options: THERAPEUTIC_AREAS, column: "therapeuticAreas" },
   { key: "phases", label: "경험 단계", type: "multi", options: PHASES, column: "phases" },
-  { key: "regions", label: "수행 지역", type: "multi", options: REGIONS, column: "regions" },
 ];
 
 export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
@@ -70,27 +89,21 @@ export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
     ...CLINICAL_COMMON,
     { key: "cra_count", label: "보유 CRA 수", type: "number" },
     { key: "site_network", label: "협력 기관(병원) 수", type: "number" },
-    { key: "services", label: "제공 서비스", type: "multi",
-      options: ["프로토콜 개발", "IRB/규제 제출", "모니터링", "데이터 관리(DM)", "통계", "메디컬 라이팅", "약물감시(PV)", "임상 물류"] },
-    { key: "edc", label: "사용 EDC", type: "text", placeholder: "예: 상용 EDC, 자체 개발" },
   ],
   "CMO/CDMO": [
     { key: "dosage_forms", label: "생산 가능 제형", type: "multi",
       options: ["경구 고형", "주사제", "바이오의약품", "세포/유전자치료제", "외용제", "흡입제", "원료의약품(API)"] },
-    { key: "capacity", label: "생산 규모", type: "text", placeholder: "예: 연 5억 정, 2,000L 바이오리액터" },
     { key: "gmp_scope", label: "GMP 인증 범위", type: "text", placeholder: "예: MFDS, FDA, EU-GMP" },
   ],
   "SMO": [
     ...CLINICAL_COMMON,
     { key: "crc_count", label: "보유 CRC 수", type: "number" },
     { key: "site_count", label: "관리 실시기관 수", type: "number" },
-    { key: "site_regions", label: "실시기관 지역", type: "multi", options: ["수도권", "충청", "영남", "호남", "강원/제주"] },
   ],
   "RA/인허가": [
     { key: "products", label: "인허가 경험 품목", type: "multi",
       options: ["합성의약품", "바이오의약품", "제네릭", "의료기기 1·2등급", "의료기기 3·4등급", "체외진단", "화장품", "건강기능식품"] },
     { key: "agencies", label: "대응 규제기관", type: "multi", options: ["MFDS", "FDA", "EMA", "PMDA", "NMPA", "기타"] },
-    { key: "approvals", label: "최근 3년 승인 건수", type: "number" },
   ],
   "소모품 공급": [
     { key: "items", label: "공급 품목", type: "multi",
@@ -112,10 +125,7 @@ export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
       options: ["원료의약품(API)", "부형제/첨가제", "식품첨가물", "화장품 원료", "건강기능식품 원료", "배지/시약", "포장재"] },
     { key: "grades", label: "취급 등급", type: "multi",
       options: ["GMP", "USP/EP/KP 등 공정서", "식품등급", "화장품등급", "연구용(RUO)"] },
-    { key: "origin", label: "주요 원산지·제조원", type: "text", placeholder: "예: 국내 자사 생산, 인도·중국 수입" },
     { key: "lead_time", label: "평균 납기", type: "text", placeholder: "예: 재고품 3영업일, 수입품 6주" },
-    { key: "docs", label: "제공 서류", type: "multi",
-      options: ["COA(시험성적서)", "MSDS", "DMF", "GMP 증명서", "원산지 증명", "샘플 제공"] },
   ],
 };
 
@@ -193,6 +203,27 @@ export async function listPartnerProfiles(companyIds: string[]): Promise<Record<
   if (error) throw new Error(error.message);
   const out: Record<string, PartnerProfile> = {};
   for (const r of (data ?? []) as Row[]) out[r.company_id] = toProfile(r);
+  return out;
+}
+
+/**
+ * 회사소개서가 있는지, 파일명이 무엇인지만 모아 온다.
+ *
+ * 소개서는 partner_profiles가 아니라 companies에 달려 있다 — 회사 단위
+ * 자료라서다. 경로는 가져오지 않는다. 열람은 서버가 자격을 따져 서명
+ * 링크로만 내주므로 화면이 경로를 알 이유가 없다.
+ */
+export async function listProfileDocs(companyIds: string[]): Promise<Record<string, string>> {
+  if (companyIds.length === 0) return {};
+  const { data, error } = await createClient()
+    .from("companies")
+    .select("id, profile_doc_name")
+    .in("id", companyIds);
+  if (error) return {};   // 못 읽어도 화면은 떠야 한다
+  const out: Record<string, string> = {};
+  for (const r of (data ?? []) as { id: string; profile_doc_name: string | null }[]) {
+    if (r.profile_doc_name) out[r.id] = r.profile_doc_name;
+  }
   return out;
 }
 
