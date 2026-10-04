@@ -108,16 +108,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return toUser(data as unknown as ProfileRow, session.user.email ?? "");
   };
 
+  /**
+   * 회원 사이트가 볼 프로필.
+   *
+   * 운영자 세션은 "로그인하지 않은 것"으로 다룬다. login()에서 막고
+   * 있었지만 그건 이 화면에서 직접 로그인할 때뿐이다. 관리자 페이지에서
+   * 로그인한 뒤 메인으로 넘어오면 세션 복구 경로를 타는데, 거기에는
+   * 검사가 없어 운영자가 의뢰사 배지를 달고 나타났다.
+   *
+   * 운영자 프로필도 roles를 비울 수 없어(스키마 제약) client가 박혀 있는
+   * 탓이다. 세션을 비워 두면 배지만 사라지는 게 아니라 의뢰 등록·견적
+   * 제출 같은 회원 전용 화면도 함께 닫힌다. 손잡다메디칼이 자기 플랫폼의
+   * 거래 당사자가 되는 길을 막는 것이 목적이므로, 그게 맞다.
+   */
+  const loadMemberProfile = async (session: Session): Promise<User | null> => {
+    const profile = await loadProfile(session);
+    return profile && !profile.isPlatformAdmin ? profile : null;
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) setUser(await loadProfile(session));
+      if (session) setUser(await loadMemberProfile(session));
       setIsLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (suppressAuthEvent.current) return;
       if (session) {
-        setUser(await loadProfile(session));
+        setUser(await loadMemberProfile(session));
       } else {
         setUser(null);
       }
