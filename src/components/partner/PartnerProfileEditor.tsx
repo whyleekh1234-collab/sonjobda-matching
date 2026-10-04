@@ -102,6 +102,12 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
             {saved?.verifiedAt && !editing && (
               <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">운영자 확인</span>
             )}
+            {/* 한 번도 저장하지 않았으면 처음부터 편집 상태로 열린다. 그때는
+                고칠 내용이 없으니 "수정"이 나올 자리가 아니다. 다만 화면만
+                봐서는 지금이 편집 중인지 알기 어려워 한 줄 알려 준다. */}
+            {editing && !saved && (
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">작성 중</span>
+            )}
             {!editing ? (
               <button type="button" onClick={() => { setDraft(saved ?? EMPTY_PROFILE); setEditing(true); }}
                 className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900">
