@@ -353,7 +353,7 @@ export default function ClientDashboard() {
         </div>
 
         {/* 섹션 탭 */}
-        <div className="mt-6 flex gap-2 border-b border-border">
+        <div className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
           {([
             { key: "activity" as const, label: "전체 활동" },
             { key: "requests" as const, label: "등록한 의뢰" },
@@ -361,7 +361,7 @@ export default function ClientDashboard() {
             { key: "completed" as const, label: "매칭 성사" },
           ]).map((tab) => (
             <button key={tab.key} onClick={() => setActiveSection(tab.key)}
-              className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${activeSection === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:text-foreground"}`}>
+              className={`shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors sm:px-4 ${activeSection === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:text-foreground"}`}>
               {tab.label}
             </button>
           ))}

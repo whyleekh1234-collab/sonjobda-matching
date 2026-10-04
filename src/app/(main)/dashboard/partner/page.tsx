@@ -480,7 +480,7 @@ export default function PartnerDashboard() {
         </div>
 
         {/* 섹션 탭 */}
-        <div className="mt-6 flex gap-2 border-b border-border pb-0">
+        <div className="mt-6 flex gap-2 overflow-x-auto border-b border-border pb-0">
           {([
             { key: "activity" as const, label: "전체 활동" },
             { key: "received" as const, label: "받은 의뢰" },
@@ -488,7 +488,7 @@ export default function PartnerDashboard() {
             { key: "won" as const, label: "매칭 성사" },
           ]).map((tab) => (
             <button key={tab.key} onClick={() => { setActiveSection(tab.key); if (tab.key === "received") setFilterStatus("all"); }}
-              className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${activeSection === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:text-foreground"}`}>
+              className={`shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors sm:px-4 ${activeSection === tab.key ? "border-primary text-primary" : "border-transparent text-foreground/50 hover:text-foreground"}`}>
               {tab.label}
             </button>
           ))}
