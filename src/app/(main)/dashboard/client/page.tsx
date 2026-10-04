@@ -609,9 +609,10 @@ export default function ClientDashboard() {
                               <div className="mt-3">
                                 <Link
                                   href={`/inquiry?type=report&ref=${quote.quoteCode ?? req.requestCode ?? ""}&company=${quote.companyId}&request=${req.id}`}
-                                  className="text-xs text-foreground/35 underline transition-colors hover:text-red-500"
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50"
                                 >
-                                  이 견적 신고하기
+                                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
+                                  파트너사 신고
                                 </Link>
                               </div>
 

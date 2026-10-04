@@ -55,6 +55,10 @@ function SignupContent() {
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [license, setLicense] = useState<File | null>(null);
+  // 이메일 중복 확인. 주소를 고치면 다시 확인하게 null로 되돌린다 —
+  // 확인해 둔 상태로 주소만 바꿔 제출하는 구멍을 막는다.
+  const [emailOk, setEmailOk] = useState<boolean | null>(null);
+  const [emailChecking, setEmailChecking] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // 쿼리 파라미터로 전달된 카테고리 미리 선택 / 초대 링크 처리
@@ -183,6 +187,7 @@ function SignupContent() {
     // 연락처
     const phoneDigits = form.phone.replace(/\D/g, "").length;
     if (phoneDigits < 10 || phoneDigits > 11) return "연락처를 정확히 입력해주세요.";
+    if (!inviteInfo && emailOk !== true) return "이메일 중복확인을 해주세요.";
     if (!inviteInfo && !license) return "사업자등록증을 첨부해주세요.";
     if (!form.agreeTerms) return "이용약관에 동의해주세요.";
     if (!form.agreePrivacy) return "개인정보처리방침에 동의해주세요.";
@@ -363,17 +368,52 @@ ${licenseError}
               <label htmlFor="email" className="block text-sm font-medium text-foreground">
                 이메일 *
               </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                value={form.email}
-                onChange={handleChange}
-                readOnly={!!inviteInfo}
-                placeholder="example@company.com"
-                className={`mt-1 w-full rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
-              />
+              <div className="mt-1 flex gap-2">
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => { handleChange(e); setEmailOk(null); }}
+                  readOnly={!!inviteInfo}
+                  placeholder="example@company.com"
+                  className={`w-full rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
+                />
+                {/* 초대로 들어온 경우 이메일이 고정이라 확인할 것이 없다. */}
+                {!inviteInfo && (
+                  <button
+                    type="button"
+                    disabled={emailChecking || !form.email.trim()}
+                    onClick={async () => {
+                      setEmailChecking(true);
+                      setError("");
+                      try {
+                        const res = await fetch("/api/check-email", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ email: form.email }),
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok) throw new Error(data.message ?? "확인하지 못했습니다.");
+                        setEmailOk(data.available);
+                        if (!data.available) setError("이미 가입된 이메일입니다. 이메일 찾기 또는 비밀번호 재설정을 이용해주세요.");
+                      } catch (err) {
+                        setEmailOk(null);
+                        setError(err instanceof Error ? err.message : "확인하지 못했습니다.");
+                      } finally {
+                        setEmailChecking(false);
+                      }
+                    }}
+                    className="shrink-0 whitespace-nowrap rounded-lg border border-border px-4 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {emailChecking ? "확인 중..." : "중복확인"}
+                  </button>
+                )}
+              </div>
+              {emailOk === true && (
+                <p className="mt-1 text-xs text-emerald-600">사용할 수 있는 이메일입니다.</p>
+              )}
               {inviteInfo && (
                 <p className="mt-1 text-xs text-primary">{inviteInfo.invitedBy}님이 {inviteInfo.company}으로 초대했습니다. 회사명과 사업자등록번호가 자동 입력되었습니다.</p>
               )}

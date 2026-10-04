@@ -56,6 +56,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // 운영자는 회원 화면에 들어올 수 없다. 로그인 쪽에서도 막지만, 이미
+  // 세션을 들고 주소를 직접 치는 경우가 남는다.
+  if (needsUser && user) {
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("is_platform_admin")
+      .eq("id", user.id)
+      .single();
+    if (me?.is_platform_admin) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+  }
+
   const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin/login";
   if (isAdminRoute) {
     if (!user) {

@@ -744,6 +744,14 @@ function NewRequestForm() {
   useEffect(() => {
     const editId = searchParams.get("edit");
 
+    // 홈 카테고리 카드가 ?category=CRO 로 보낸다. 지금까지 아무도 읽지
+    // 않아서, 골라서 들어와도 서비스 유형이 비어 있었다.
+    const fromHome = searchParams.get("category");
+    if (!editId && fromHome) {
+      const id = CATEGORY_TO_TYPE[fromHome];
+      if (id) setServiceType(id);
+    }
+
     if (!editId) {
       const stored = localStorage.getItem(DRAFT_KEY);
       if (stored) {
@@ -1025,7 +1033,7 @@ function NewRequestForm() {
         {/* 헤더 */}
         <div className="flex items-center justify-between">
           <button onClick={() => { if (editRequestId && step <= 2) { router.push("/dashboard/client"); } else if (step > 1) { setStep(step - 1); } else { router.push("/dashboard/client"); } }}
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-900">
+            className="inline-flex h-11 items-center gap-2 rounded-lg bg-slate-700 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-900">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             {step === 1 || (editRequestId && step <= 2) ? "대시보드로" : "이전 단계"}
           </button>
@@ -1131,7 +1139,7 @@ function NewRequestForm() {
                 <div>
                   <label className="block text-sm font-medium text-foreground">프로젝트명(가칭도 무관) *</label>
                   <input type="text" value={projectName} onChange={(e) => setProjectName(e.target.value)}
-                    placeholder={serviceType === "cro" ? "예: Phase II 고혈압 치료제 임상시험" : serviceType === "cmo-cdmo" ? "예: 바이오시밀러 위탁생산" : serviceType === "smo" ? "예: 의료기기 확증 임상시험 SMO" : serviceType === "ra" ? "예: 의료기기 3등급 인허가" : serviceType === "insurance" ? "예: 생산물배상책임보험 가입" : serviceType === "supply" ? "예: 임상시험용 소모품 공급" : serviceType === "material" ? "예: 원료의약품 공급처 발굴" : serviceType === "marketing" ? "예: 심포지엄 대행" : "프로젝트명을 입력하세요"} maxLength={100}
+                    placeholder={serviceType === "cro" ? "예: Phase II 고혈압 치료제 임상시험" : serviceType === "cmo-cdmo" ? "예: 바이오시밀러 위탁생산" : serviceType === "smo" ? "예: 의료기기 확증 임상시험 SMO" : serviceType === "ra" ? "예: 의료기기 3등급 인허가" : serviceType === "insurance" ? "예: 임상시험 책임배상보험 가입" : serviceType === "supply" ? "예: 임상시험용 소모품 공급" : serviceType === "material" ? "예: 원료의약품 공급처 발굴" : serviceType === "marketing" ? "예: 심포지엄 대행" : "프로젝트명을 입력하세요"} maxLength={100}
                     className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                   <p className="mt-1 text-xs text-primary/60">숫자/문자(한영)/기호 제한 없음 / 최소 5자 이상</p>
                 </div>
@@ -2153,14 +2161,14 @@ function NewRequestForm() {
           <div className="flex gap-2">
             {step > 1 && !(editRequestId && step <= 2) && (
               <button onClick={() => setStep(step - 1)}
-                className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-900">
+                className="inline-flex h-11 items-center gap-2 rounded-lg bg-slate-700 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-900">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                 이전 단계
               </button>
             )}
             {step > 1 && (
               <button onClick={saveDraft}
-                className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50">
+                className="inline-flex h-11 items-center rounded-lg border border-border px-5 text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50">
                 임시저장
               </button>
             )}
@@ -2168,12 +2176,12 @@ function NewRequestForm() {
 
           {step < 4 ? (
             <button onClick={handleNext}
-              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+              className="inline-flex h-11 items-center rounded-lg bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
               다음 단계
             </button>
           ) : (
             <button onClick={handleSubmit}
-              className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+              className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
               {editRequestId ? "수정 완료" : "견적 요청 제출"}
             </button>

@@ -51,6 +51,7 @@ type ProfileRow = {
   partner_categories: PartnerCategory[] | null;
   status: UserStatus;
   is_company_admin: boolean;
+  is_platform_admin: boolean;
   marketing_consent: boolean;
   marketing_consent_at: string | null;
   created_at: string;
@@ -79,6 +80,7 @@ function toUser(profile: ProfileRow, email: string): User {
     ...(profile.companies?.address && { address: profile.companies.address }),
     status: profile.status,
     isCompanyAdmin: profile.is_company_admin,
+    isPlatformAdmin: profile.is_platform_admin,
     marketingConsent: profile.marketing_consent ?? false,
     marketingConsentAt: profile.marketing_consent_at ?? null,
     createdAt: profile.created_at,
@@ -97,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, company_id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, marketing_consent, marketing_consent_at, created_at, companies(name, business_number, address, logo_path)"
+        "id, company_id, member_code, name, phone, roles, active_role, partner_categories, status, is_company_admin, is_platform_admin, marketing_consent, marketing_consent_at, created_at, companies(name, business_number, address, logo_path)"
       )
       .eq("id", session.user.id)
       .single();
@@ -146,6 +148,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (profile.status === "pending") {
       await supabase.auth.signOut();
       throw new Error("관리자 승인 대기 중입니다. 승인 후 로그인할 수 있습니다.");
+    }
+
+    // 운영자는 일반 사이트에 들어올 수 없다.
+    //
+    // 운영자 프로필도 roles를 비울 수 없어(스키마 제약) client가 박혀 있는데,
+    // 그대로 두면 운영자가 의뢰사로 보이고 의뢰 등록·견적 제출까지 된다.
+    // 손잡다메디칼이 자기 플랫폼의 거래 당사자가 되는 셈이라 막는다.
+    if (profile.isPlatformAdmin) {
+      await supabase.auth.signOut();
+      throw new Error("운영자 계정입니다. 관리자 페이지(/admin)로 로그인해주세요.");
     }
 
     if (profile.status === "suspended") {

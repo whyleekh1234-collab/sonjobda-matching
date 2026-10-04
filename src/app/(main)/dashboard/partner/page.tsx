@@ -865,13 +865,19 @@ export default function PartnerDashboard() {
               <div className="flex items-center gap-3">
                 {/* 신고. 운영정책 제6조가 신고 접수를 전제로 제재를 정하고 있는데
                     정작 특정 의뢰를 신고할 경로가 없었다. 어느 건인지를 링크가
-                    실어 나른다 — 대상이 특정되지 않으면 조사할 수가 없다. */}
-                <Link
-                  href={`/inquiry?type=report&ref=${selectedRequest.requestCode ?? ""}&company=${selectedRequest.clientCompanyId ?? ""}&request=${selectedRequest.id}`}
-                  className="text-xs text-foreground/35 underline transition-colors hover:text-red-500"
-                >
-                  신고
-                </Link>
+                    실어 나른다 — 대상이 특정되지 않으면 조사할 수가 없다.
+                    "받은 의뢰"에서만 보인다. 보낸 견적·매칭 성사 탭에서 열면
+                    화면의 주인공이 내 견적이라, 거기 신고 버튼이 있으면 자기
+                    자신을 신고하는 것처럼 읽힌다. */}
+                {activeSection === "received" && (
+                  <Link
+                    href={`/inquiry?type=report&ref=${selectedRequest.requestCode ?? ""}&company=${selectedRequest.clientCompanyId ?? ""}&request=${selectedRequest.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
+                    의뢰사 신고
+                  </Link>
+                )}
                 <button onClick={() => { setSelectedRequest(null); setIsEditing(false); }} className="rounded-lg p-1 text-foreground/40 hover:bg-muted hover:text-foreground">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
