@@ -325,15 +325,28 @@ export default function PartnerDashboard() {
   // 매칭 성사: 매칭 성사된 요청 중 내 견적이 있는 것
   const wonRequests = requests.filter((r) => (r.status === "matched" || r.status === "completed") && (r.quotes || []).some((q) => q.companyId === user?.companyId && q.status === "accepted"));
 
+  // 상태 탭 숫자는 "지금 적용된 다른 필터까지 통과한" 건수여야 한다.
+  //
+  // 마케팅 유형이 걸려 있는데 숫자는 전체로 세고 있어서, "마감 1"을 눌러도
+  // 목록이 비는 일이 있었다. 숫자와 목록이 다른 것을 세면 사용자는 화면이
+  // 고장 난 줄 안다.
+  const matchesSide = (r: MatchRequest) => {
+    if (mktFilter !== "all" && !(r.category === "마케팅 대행" && mktTypeOf(r) === mktFilter)) return false;
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return true;
+    return [r.title, r.requestCode, r.category].some((v) => String(v ?? "").toLowerCase().includes(q));
+  };
+  const openVisible = openRequests.filter(matchesSide);
+
   const stats = {
-    total: openRequests.length,
-    newCount: openRequests.filter((r) => getMyQuoteStatus(r) === "new").length,
-    reviewing: openRequests.filter((r) => getMyQuoteStatus(r) === "reviewing").length,
-    quoted: sentQuotes.length,
-    rejected: openRequests.filter((r) => getMyQuoteStatus(r) === "rejected").length,
-    hold: openRequests.filter((r) => getMyQuoteStatus(r) === "hold").length,
+    total: openVisible.length,
+    newCount: openVisible.filter((r) => getMyQuoteStatus(r) === "new").length,
+    reviewing: openVisible.filter((r) => getMyQuoteStatus(r) === "reviewing").length,
+    quoted: sentQuotes.filter(matchesSide).length,
+    rejected: openVisible.filter((r) => getMyQuoteStatus(r) === "rejected").length,
+    hold: openVisible.filter((r) => getMyQuoteStatus(r) === "hold").length,
     won: wonRequests.length,
-    closed: closedRequests.length,
+    closed: closedRequests.filter(matchesSide).length,
   };
 
   // 전체 활동 피드 생성
@@ -543,8 +556,9 @@ export default function PartnerDashboard() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">받은 의뢰</h2>
             </div>
-            {/* 검색 */}
-            <div className="relative mt-3">
+            {/* 검색 + 마케팅 유형 */}
+            <div className="mt-3 flex items-center gap-2">
+              <div className="relative flex-1">
               <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
               </svg>
@@ -565,6 +579,32 @@ export default function PartnerDashboard() {
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               )}
+              </div>
+
+              {/* 마케팅 유형. 칩으로 늘어놓으니 한 줄을 다 차지하면서도
+                  "지금 걸려 있다"는 사실은 오히려 눈에 안 띄었다. 선택한
+                  값이 그대로 보이는 드롭다운이 낫다. */}
+              {hasMarketing && (
+                <select
+                  value={mktFilter}
+                  onChange={(e) => setMktFilter(e.target.value)}
+                  className={`h-[46px] shrink-0 rounded-lg border px-3 text-sm outline-none transition-colors focus:border-primary ${
+                    mktFilter === "all" ? "border-border text-foreground/60" : "border-primary bg-primary/5 font-medium text-primary"
+                  }`}
+                >
+                  {MARKETING_TYPES.map((t) => {
+                    const count = t.key === "all"
+                      ? requests.filter((r) => r.category === "마케팅 대행").length
+                      : requests.filter((r) => r.category === "마케팅 대행" && mktTypeOf(r) === t.key).length;
+                    if (t.key !== "all" && count === 0) return null;
+                    return (
+                      <option key={t.key} value={t.key}>
+                        {t.key === "all" ? "마케팅 유형 전체" : t.label} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
             </div>
 
             {/* 상태 필터 탭 */}
@@ -583,25 +623,6 @@ export default function PartnerDashboard() {
                 </button>
               ))}
             </div>
-            {hasMarketing && (
-              <div className="mt-2 flex items-center gap-2 overflow-x-auto">
-                <span className="whitespace-nowrap text-xs text-foreground/40">마케팅 유형</span>
-                {MARKETING_TYPES.map((t) => {
-                  const count = t.key === "all"
-                    ? requests.filter((r) => r.category === "마케팅 대행").length
-                    : requests.filter((r) => r.category === "마케팅 대행" && mktTypeOf(r) === t.key).length;
-                  if (t.key !== "all" && count === 0) return null;
-                  return (
-                    <button key={t.key} onClick={() => setMktFilter(t.key)}
-                      className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-                        mktFilter === t.key ? "border-primary bg-primary/10 text-primary" : "border-border bg-surface text-foreground/60 hover:bg-muted"
-                      }`}>
-                      {t.label} {count > 0 && <span className="ml-0.5 opacity-70">{count}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
 
             <div className="mt-4 space-y-4">
               {filteredRequests.length === 0 ? (
