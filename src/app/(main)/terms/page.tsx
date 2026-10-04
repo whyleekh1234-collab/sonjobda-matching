@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "서비스 이용약관",
+  description:
+    "손잡다매칭 서비스의 이용 조건, 의뢰사·파트너사의 권리와 의무, 중개자로서 회사의 책임 범위를 정합니다.",
+  alternates: { canonical: "/terms" },
+};
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-white pt-24 pb-20">

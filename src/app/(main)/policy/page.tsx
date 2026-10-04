@@ -5,6 +5,15 @@
 // 승인 절차, 견적 수정 가능 시점, 연락처 공개 조건 등. 문서와 동작이
 // 어긋나지 않도록, 규칙을 바꾸면 이 문서도 같이 고친다.
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "서비스 운영정책",
+  description:
+    "손잡다매칭의 회원 승인 절차, 견적 수정 가능 시점, 연락처 공개 조건 등 실제로 시스템이 강제하는 운영 규칙입니다.",
+  alternates: { canonical: "/policy" },
+};
+
 export default function PolicyPage() {
   return (
     <div className="min-h-screen bg-white pt-24 pb-20">

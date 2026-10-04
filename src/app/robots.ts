@@ -15,6 +15,9 @@ export default function robots(): MetadataRoute.Robots {
   }
   return {
     rules: { userAgent: "*", allow: "/", disallow: ["/admin", "/api/", "/dashboard", "/mypage"] },
+    // 크롤러가 제일 먼저 읽는 파일에서 사이트맵 위치를 알려 준다.
+    // 검색엔진에 따로 제출하지 않아도 이 줄만으로 찾아간다.
+    sitemap: "https://www.sonjobdamd.com/sitemap.xml",
     host: "https://www.sonjobdamd.com",
   };
 }

@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "정보보호정책",
+  description:
+    "회원사 기밀정보를 어떻게 보호하는지 — 접근 권한 분리, 접속기록 보관, 암호화와 비공개 저장 방식을 안내합니다.",
+  alternates: { canonical: "/security" },
+};
+
 export default function SecurityPage() {
   return (
     <div className="min-h-screen bg-white pt-24 pb-20">
