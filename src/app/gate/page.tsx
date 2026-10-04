@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { siteLockCode } from "@/lib/siteLock";
 
 // 비공개 운영 중 접속 코드 화면. (main) 레이아웃 바깥에 두어 헤더·푸터가
 // 붙지 않고, 서비스가 무엇인지도 드러내지 않는다.
+//
+// 공개로 바꾼 뒤에도 이 주소는 살아 있다. 잠겨 있을 때 이 화면을 북마크했거나
+// 기록에 남겨둔 사람이 들어오면, 이미 없어진 코드를 넣으라는 창 앞에서
+// 막힌다. 그래서 잠금이 없으면 메인으로 돌려보낸다.
 
 export const metadata: Metadata = {
   title: "접속 확인",
@@ -13,6 +19,8 @@ export default async function GatePage({
 }: {
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
+  if (!siteLockCode()) redirect("/");
+
   const { next, error } = await searchParams;
 
   return (
