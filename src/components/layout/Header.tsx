@@ -16,8 +16,8 @@ const navItems = [
 ];
 
 const roleLabels = {
-  client: { label: "의뢰사", color: "bg-blue-100 text-blue-700", switchTo: "파트너사로 전환" },
-  partner: { label: "파트너사", color: "bg-emerald-100 text-emerald-700", switchTo: "의뢰사로 전환" },
+  client: { label: "의뢰사", color: "bg-blue-100 text-blue-700" },
+  partner: { label: "파트너사", color: "bg-emerald-100 text-emerald-700" },
 };
 
 // 알림 페이지가 읽음 처리한 뒤 헤더 배지를 바로 다시 세게 하는 신호.
@@ -66,12 +66,12 @@ export default function Header() {
 
   const canSwitch = user && user.roles && user.roles.length >= 2;
 
-  const handleSwitchRole = () => {
-    if (!canSwitch) return;
+  // 토글에서 지금 역할을 다시 눌러도 아무 일도 없어야 한다.
+  const handleSwitchTo = (role: "client" | "partner") => {
+    if (!canSwitch || user?.activeRole === role) return;
     switchRole();
-    const newRole = user?.activeRole === "client" ? "partner" : "client";
     if (window.location.pathname.startsWith("/dashboard")) {
-      router.push(`/dashboard/${newRole}`);
+      router.push(`/dashboard/${role}`);
     }
   };
 
@@ -93,16 +93,36 @@ export default function Header() {
             </div>
             {/* 좁은 화면에선 숨긴다 — 같은 기능이 햄버거 메뉴 안에 있다. */}
             <div className="hidden flex-shrink-0 items-center gap-3 sm:flex">
+              {/* 두 역할을 나란히 놓고 지금 역할에 표시가 머문다. "무엇으로
+                  바꾼다"가 아니라 "지금 무엇이다"가 바로 보인다. 표시는
+                  뒤에 깔고 자리만 옮기므로 글자가 흔들리지 않는다. */}
               {canSwitch && (
-                <button
-                  onClick={handleSwitchRole}
-                  className="flex items-center gap-1.5 rounded-full border border-white/35 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-white/15"
+                <div
+                  role="group"
+                  aria-label="활동 역할 전환"
+                  className="relative flex flex-shrink-0 items-center rounded-full bg-white/15 p-0.5"
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                  </svg>
-                  {roleLabels[user.activeRole].switchTo}
-                </button>
+                  <span
+                    aria-hidden
+                    className={`absolute inset-y-0.5 left-0.5 w-[4.75rem] rounded-full bg-white transition-transform duration-200 ease-out ${
+                      user.activeRole === "partner" ? "translate-x-[4.75rem]" : "translate-x-0"
+                    }`}
+                  />
+                  {(["client", "partner"] as const).map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => handleSwitchTo(role)}
+                      aria-pressed={user.activeRole === role}
+                      className={`relative z-10 w-[4.75rem] rounded-full py-1 text-xs font-semibold transition-colors ${
+                        user.activeRole === role
+                          ? "text-foreground"
+                          : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {roleLabels[role].label}
+                    </button>
+                  ))}
+                </div>
               )}
               <button
                 onClick={logout}
@@ -245,21 +265,37 @@ export default function Header() {
                         {user.company} {user.name}님
                       </span>
                     </div>
+                    {/* 좁은 화면에서도 같은 모양을 쓴다. 폭만 꽉 채운다. */}
                     {canSwitch && (
-                      <button
-                        onClick={() => {
-                          handleSwitchRole();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full rounded-lg px-3 py-3 text-left text-sm font-medium text-foreground/70 transition-colors hover:bg-muted"
+                      <div
+                        role="group"
+                        aria-label="활동 역할 전환"
+                        className="relative mx-3 my-1 flex items-center rounded-full bg-muted p-0.5"
                       >
-                        <span className="flex items-center gap-2">
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                          </svg>
-                          {roleLabels[user.activeRole].switchTo}
-                        </span>
-                      </button>
+                        <span
+                          aria-hidden
+                          className={`absolute inset-y-0.5 left-0.5 w-[calc(50%-0.125rem)] rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+                            user.activeRole === "partner" ? "translate-x-full" : "translate-x-0"
+                          }`}
+                        />
+                        {(["client", "partner"] as const).map((role) => (
+                          <button
+                            key={role}
+                            onClick={() => {
+                              handleSwitchTo(role);
+                              setIsMenuOpen(false);
+                            }}
+                            aria-pressed={user.activeRole === role}
+                            className={`relative z-10 flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
+                              user.activeRole === role
+                                ? "text-foreground"
+                                : "text-foreground/50"
+                            }`}
+                          >
+                            {roleLabels[role].label}
+                          </button>
+                        ))}
+                      </div>
                     )}
                     <button
                       onClick={() => {
