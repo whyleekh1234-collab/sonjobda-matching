@@ -40,12 +40,21 @@ export async function POST() {
   }
 
   const admin = createAdminClient();
-  const { data: profile } = await admin
+  const { data: profile, error: profileErr } = await admin
     .from("profiles")
     .select("is_platform_admin, mfa_email")
     .eq("id", user.id)
     .single();
 
+  // 조회가 실패한 것과 권한이 없는 것은 다르다. 섞어서 "권한 없음"이라고
+  // 답하면, 마이그레이션을 안 돌려 컬럼이 없는 상황에서도 멀쩡한 운영자가
+  // 권한을 잃은 것처럼 보인다. 실제로 그렇게 헤맸다.
+  if (profileErr) {
+    return NextResponse.json(
+      { message: `계정 정보를 읽지 못했습니다. (${profileErr.message})` },
+      { status: 500 }
+    );
+  }
   if (!profile?.is_platform_admin) {
     return NextResponse.json({ message: "관리자 권한이 없는 계정입니다." }, { status: 403 });
   }

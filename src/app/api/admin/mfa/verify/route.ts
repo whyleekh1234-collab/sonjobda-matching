@@ -41,11 +41,17 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  const { data: profile } = await admin
+  const { data: profile, error: profileErr } = await admin
     .from("profiles")
     .select("is_platform_admin")
     .eq("id", user.id)
     .single();
+  if (profileErr) {
+    return NextResponse.json(
+      { message: `계정 정보를 읽지 못했습니다. (${profileErr.message})` },
+      { status: 500 }
+    );
+  }
   if (!profile?.is_platform_admin) {
     return NextResponse.json({ message: "관리자 권한이 없는 계정입니다." }, { status: 403 });
   }
