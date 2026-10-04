@@ -306,6 +306,39 @@ export default function AdminDashboard() {
     run(() => updateUserApi(userId, key));
   };
 
+  // 등록증을 연다. 비공개 버킷이라 서버가 운영자인지 다시 따진 뒤 5분짜리
+  // 서명 링크를 내준다. 목록과 상세가 같은 경로를 쓴다.
+  const openLicense = async (companyId?: string) => {
+    try {
+      const res = await fetch("/api/admin/license", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message ?? "열 수 없습니다.");
+      window.open(data.url, "_blank", "noopener");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "열 수 없습니다.");
+    }
+  };
+
+  // 승인은 등록증을 보고 판단하는 일이다. 목록 줄에서 바로 승인할 수 있으니
+  // 서류를 안 보고 통과시키기 쉽다. 미제출이면 한 번 되묻는다 — 막지는
+  // 않는다. 전화로 먼저 확인했거나 나중에 받기로 한 경우가 있다.
+  const approveUser = (user: UserData): boolean => {
+    if (
+      !user.licensePath &&
+      !confirm(
+        `"${user.company}"는 사업자등록증을 제출하지 않았습니다.\n서류 없이 그대로 승인하시겠습니까?`
+      )
+    ) {
+      return false;
+    }
+    updateUserField(user.id, "status", "approved");
+    return true;
+  };
+
   const deleteUser = (userId: string) => {
     run(() => deleteUserApi(userId));
   };
@@ -754,6 +787,7 @@ export default function AdminDashboard() {
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">회사명</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">유형</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">상태</th>
+                      <th className="px-4 py-3 text-center font-medium text-foreground/50">등록증</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">가입일</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">프로젝트</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">관리</th>
@@ -761,7 +795,7 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {filtered.length === 0 ? (
-                      <tr><td colSpan={9} className="px-4 py-12 text-center text-foreground/40">{userSearch || userFilterRole !== "all" || userFilterStatus !== "all" ? "검색 결과가 없습니다." : "가입된 회원이 없습니다."}</td></tr>
+                      <tr><td colSpan={10} className="px-4 py-12 text-center text-foreground/40">{userSearch || userFilterRole !== "all" || userFilterStatus !== "all" ? "검색 결과가 없습니다." : "가입된 회원이 없습니다."}</td></tr>
                     ) : filtered.map((user) => {
                       const projectCount = allRequests.filter((r) => r.clientId === user.id || (r.quotes || []).some((q) => q.partnerId === user.id)).length;
                       return (
@@ -780,12 +814,22 @@ export default function AdminDashboard() {
                             {!user.status || user.status === "pending" ? "대기" : user.status === "approved" ? "활성" : user.status === "restricted" ? "제한" : "정지"}
                           </span>
                         </td>
+                        {/* 승인 판단에 쓰는 서류다. 승인 버튼과 같은 줄에
+                            있어야 보고 누른다. */}
+                        <td data-label="등록증" className="px-4 py-3 text-center">
+                          {user.licensePath ? (
+                            <button onClick={() => openLicense(user.companyId)}
+                              className="text-xs font-medium text-primary underline hover:text-primary-dark">보기</button>
+                          ) : (
+                            <span className="text-xs font-medium text-red-500">미제출</span>
+                          )}
+                        </td>
                         <td data-label="가입일" className="px-4 py-3 text-xs text-foreground/50">{user.createdAt ? new Date(user.createdAt).toLocaleDateString("ko-KR") : "-"}</td>
                         <td data-label="프로젝트" className="px-4 py-3 text-sm text-foreground/70">{projectCount}건</td>
                         <td data-label="관리" className="px-4 py-3">
                           <div className="flex gap-1">
                             {(user.status === "pending" || !user.status) && (
-                              <button onClick={() => updateUserField(user.id, "status", "approved")} className={ROW_BTN}>승인</button>
+                              <button onClick={() => approveUser(user)} className={ROW_BTN}>승인</button>
                             )}
                             {(user.status === "suspended" || user.status === "restricted") && (
                               <button onClick={() => updateUserField(user.id, "status", "approved")} className={ROW_BTN}>해제</button>
@@ -1982,20 +2026,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-foreground/40">사업자등록증</p>
                   {selectedUser.licensePath ? (
                     <button
-                      onClick={async () => {
-                        try {
-                          const res = await fetch("/api/admin/license", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ companyId: selectedUser.companyId }),
-                          });
-                          const data = await res.json().catch(() => ({}));
-                          if (!res.ok) throw new Error(data.message ?? "열 수 없습니다.");
-                          window.open(data.url, "_blank", "noopener");
-                        } catch (err) {
-                          alert(err instanceof Error ? err.message : "열 수 없습니다.");
-                        }
-                      }}
+                      onClick={() => openLicense(selectedUser.companyId)}
                       className="mt-1 text-base font-medium text-primary underline hover:text-primary-dark"
                     >
                       {selectedUser.licenseName ?? "등록증 보기"}
@@ -2069,7 +2100,7 @@ export default function AdminDashboard() {
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
               <div className="flex flex-wrap gap-2">
                 {(selectedUser.status === "pending" || !selectedUser.status) && (
-                  <button onClick={() => { updateUserField(selectedUser.id, "status", "approved"); setSelectedUser({ ...selectedUser, status: "approved" }); }}
+                  <button onClick={() => { if (approveUser(selectedUser)) setSelectedUser({ ...selectedUser, status: "approved" }); }}
                     className={ACTION_BTN}>승인</button>
                 )}
                 {(selectedUser.status === "suspended" || selectedUser.status === "restricted") && (
