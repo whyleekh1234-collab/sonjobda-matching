@@ -33,6 +33,7 @@ import {
 } from "@/lib/data/changeRequests";
 import { listPartnerRequests } from "@/lib/data/requests";
 import { changeMyPassword } from "@/lib/data/notices";
+import { setPlatformAdmin, setMfaEmail } from "@/lib/data/admin";
 import PasswordInput from "@/components/PasswordInput";
 import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
@@ -77,6 +78,8 @@ interface UserData {
   createdAt?: string;
   marketingConsent?: boolean;
   marketingConsentAt?: string | null;
+  isPlatformAdmin?: boolean;
+  mfaEmail?: string | null;
 }
 
 // 회원 상세 모달의 동작 버튼. 색을 기능마다 다르게 줬더니 산만해서
@@ -188,6 +191,7 @@ export default function AdminDashboard() {
   const [editInqReplyText, setEditInqReplyText] = useState("");
   const [adminReplyingTo, setAdminReplyingTo] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState("");
+  const [admins, setAdmins] = useState<UserData[]>([]);
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwForm, setPwForm] = useState({ next: "", confirm: "" });
   const [pwBusy, setPwBusy] = useState(false);
@@ -223,6 +227,8 @@ export default function AdminDashboard() {
       // 프로필을 전제로 한다) 회원 목록·통계·회원번호 체계에서는 빼야 한다.
       // 손잡다메디칼 직원이 "의뢰사 회원"으로 세어지면 안 된다.
       setUsers(userList.filter((u) => !u.isPlatformAdmin));
+      // 운영자는 회원 목록에서 빠지므로 따로 들고 있어야 화면에 보여줄 수 있다.
+      setAdmins(userList.filter((u) => u.isPlatformAdmin));
       setInquiries(inquiryList);
       setAllRequests(requestList);
       setNotices(noticeList);
@@ -509,6 +515,66 @@ export default function AdminDashboard() {
           const reviewedChanges = changeRequests.filter((r) => r.status !== "pending");
           return (
           <div className="mt-8">
+            {/* 운영자 목록.
+                계정을 나눠 쓰면 안 되는 이유는 supabase/phase21에 적어 두었다.
+                요약하면 2단계 인증 증명이 계정당 하나라 서로를 로그아웃시키고,
+                누가 무엇을 했는지 남지 않는다. 사람마다 계정을 따로 둔다. */}
+            <div className="mb-6 rounded-2xl border border-border bg-background p-6">
+              <h3 className="text-base font-bold text-foreground">운영자</h3>
+              <p className="mt-1 text-sm leading-relaxed text-foreground/50">
+                운영자 계정은 한 사람이 하나씩 씁니다. 나눠 쓰면 2단계 인증 때문에
+                서로 로그아웃되고, 회원을 제재한 사람이 누구인지 남지 않습니다.
+              </p>
+              <div className="mt-4 space-y-2">
+                {admins.map((a) => (
+                  <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {a.name}
+                        <span className="ml-2 font-mono text-xs font-normal text-foreground/30">{a.memberCode}</span>
+                        {a.id === adminId && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground/50">나</span>}
+                      </p>
+                      <p className="mt-0.5 text-xs text-foreground/50">{a.email}</p>
+                      <p className="mt-0.5 text-xs text-foreground/40">
+                        인증번호 수신: {a.mfaEmail ?? <span className="text-red-500">미설정 — 로그인 불가</span>}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          const next = prompt(`${a.name}님이 인증번호를 받을 주소`, a.mfaEmail ?? "");
+                          if (!next) return;
+                          try { await setMfaEmail(a.id, next); await loadData(); alert("변경했습니다."); }
+                          catch (err) { alert(err instanceof Error ? err.message : "변경하지 못했습니다."); }
+                        }}
+                        className={ACTION_BTN}
+                      >
+                        주소 변경
+                      </button>
+                      {a.id !== adminId && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`${a.name}님의 운영자 권한을 해제하시겠습니까?
+
+즉시 관리자 화면에서 로그아웃됩니다.`)) return;
+                            try { await setPlatformAdmin(a.id, false); await loadData(); }
+                            catch (err) { alert(err instanceof Error ? err.message : "해제하지 못했습니다."); }
+                          }}
+                          className={ACTION_BTN}
+                        >
+                          권한 해제
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-xs text-foreground/40">
+                운영자를 추가하려면 아래 회원 목록에서 해당 회원을 열고 &ldquo;운영자로 지정&rdquo;을 누르세요.
+                그 회원이 먼저 가입하고 승인되어 있어야 합니다.
+              </p>
+            </div>
+
             {/* 회사 정보 변경 요청. 대기 건이 없어도 섹션은 보여 준다 —
                 안 보이면 이런 절차가 있는지조차 모른다. */}
             <div className={`mb-6 rounded-2xl border p-6 ${
@@ -1694,6 +1760,35 @@ export default function AdminDashboard() {
                   className={ACTION_BTN}>
                   {selectedUser.verified ? "검증 해제" : "검증 승인"}
                 </button>
+                {/* 운영자 지정. 승인된 회원에게만 보인다 — 로그인이 막힌
+                    회원에게 권한만 주면 이상한 상태가 된다. 인증번호 주소는
+                    로그인 이메일과 달라야 하고, 서버가 그걸 확인한다. */}
+                {selectedUser.status === "approved" && (
+                  <button
+                    onClick={async () => {
+                      const mail = prompt(
+                        `"${selectedUser.name}" 님을 운영자로 지정합니다.
+
+` +
+                        `2단계 인증번호를 받을 주소를 입력하세요.
+` +
+                        `로그인 이메일(${selectedUser.email})과 달라야 합니다.`
+                      );
+                      if (!mail) return;
+                      try {
+                        await setPlatformAdmin(selectedUser.id, true, mail);
+                        setSelectedUser(null);
+                        await loadData();
+                        alert("운영자로 지정했습니다.");
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : "지정하지 못했습니다.");
+                      }
+                    }}
+                    className={ACTION_BTN}
+                  >
+                    운영자로 지정
+                  </button>
+                )}
                 {selectedUser.roles?.includes("partner") && (
                   <button onClick={() => {
                     updateUserField(selectedUser.id, "allowCategoryEdit", !selectedUser.allowCategoryEdit);

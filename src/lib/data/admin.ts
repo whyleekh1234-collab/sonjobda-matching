@@ -28,6 +28,8 @@ export interface AdminUser {
   // 답할 수 있다.
   marketingConsent?: boolean;
   marketingConsentAt?: string | null;
+  // 운영자가 2단계 인증번호를 받을 주소. 로그인 이메일과 달라야 한다.
+  mfaEmail?: string | null;
 }
 
 export async function listAllUsers(): Promise<AdminUser[]> {
@@ -40,6 +42,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     status: string; is_company_admin: boolean; is_platform_admin: boolean;
     verified: boolean; allow_category_edit: boolean; created_at: string;
     marketing_consent: boolean | null; marketing_consent_at: string | null;
+    mfa_email: string | null;
   }[]).map((r) => ({
     id: r.id,
     memberCode: r.member_code,
@@ -61,6 +64,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     createdAt: r.created_at,
     marketingConsent: r.marketing_consent ?? false,
     marketingConsentAt: r.marketing_consent_at ?? null,
+    mfaEmail: r.mfa_email ?? null,
   }));
 }
 
@@ -280,5 +284,37 @@ export async function sendNotification(profileId: string, message: string): Prom
 
 export async function markNotificationRead(id: string): Promise<void> {
   const { error } = await createClient().from("notifications").update({ read: true }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * 운영자 권한을 주거나 뺀다.
+ *
+ * 계정을 나눠 쓰지 않고 사람마다 따로 두기 위한 것이다. 2단계 인증
+ * 통과 증명이 계정당 하나라 공유하면 서로를 로그아웃시키고, 무엇보다
+ * 누가 무엇을 했는지 남지 않는다.
+ *
+ * 권한을 줄 때는 인증번호를 받을 주소가 반드시 필요하다. 로그인
+ * 이메일과 같으면 서버가 거부한다 — 같은 메일함이면 2단계가 아니다.
+ */
+export async function setPlatformAdmin(
+  profileId: string,
+  on: boolean,
+  mfaEmail?: string
+): Promise<void> {
+  const { error } = await createClient().rpc("admin_set_platform_admin", {
+    p_profile_id: profileId,
+    p_on: on,
+    p_mfa_email: mfaEmail ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+/** 이미 운영자인 사람의 인증번호 수신 주소만 바꾼다. */
+export async function setMfaEmail(profileId: string, mfaEmail: string): Promise<void> {
+  const { error } = await createClient().rpc("admin_set_mfa_email", {
+    p_profile_id: profileId,
+    p_mfa_email: mfaEmail,
+  });
   if (error) throw new Error(error.message);
 }
