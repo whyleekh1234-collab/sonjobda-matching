@@ -77,7 +77,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-foreground/60">
-              임상시험 및 바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼
+              제약·바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼
             </p>
             <div className="mt-6">
               <p className="text-xs font-semibold uppercase tracking-wider text-foreground/40">
@@ -147,13 +147,6 @@ export default function Footer() {
             </div>
           </dl>
 
-          {/* 통신판매중개자 고지. 플랫폼은 거래의 당사자가 아니라는 법적 고지로,
-              중개 플랫폼은 관례적으로 사업자 정보 바로 아래에 둔다. */}
-          <p className="mt-4 max-w-4xl text-xs leading-relaxed text-foreground/45">
-            (주) 손잡다메디칼은 통신판매중개자로서 통신판매의 당사자가 아니며, 위수탁사가
-            제공하는 서비스에 대한 이행, 계약사항 등과 관련한 의무와 책임은 거래당사자에게
-            있습니다.
-          </p>
         </div>
 
         {/* 하단: 저작권 + 약관 */}

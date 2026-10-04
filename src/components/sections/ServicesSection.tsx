@@ -94,7 +94,7 @@ export default function ServicesSection() {
             손잡다매칭 서비스
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-foreground-muted">
-            임상시험부터 바이오 의약품 개발까지, 필요한 전문 파트너를 한 곳에서 찾으세요.
+            제약 마케팅부터 임상시험·생산까지, 필요한 전문 파트너를 한 곳에서 찾으세요.
           </p>
         </div>
 

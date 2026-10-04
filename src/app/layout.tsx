@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: "default", title: "손잡다매칭" },
   title: "손잡다매칭 | 임상시험 & 바이오 매칭 플랫폼",
   description:
-    "임상시험 및 바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼입니다.",
+    "제약·바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼입니다.",
   keywords: [
     "임상시험",
     "바이오",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "손잡다매칭 | 임상시험 & 바이오 매칭 플랫폼",
     description:
-      "임상시험 및 바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼입니다.",
+      "제약·바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼입니다.",
     url: "https://sonjobdamd.com",
     siteName: "손잡다매칭",
     locale: "ko_KR",

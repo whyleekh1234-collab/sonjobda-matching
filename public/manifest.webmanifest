@@ -1,7 +1,7 @@
 {
   "name": "손잡다매칭",
   "short_name": "손잡다매칭",
-  "description": "임상시험 및 바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼",
+  "description": "제약·바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
