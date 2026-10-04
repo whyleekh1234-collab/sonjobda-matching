@@ -36,7 +36,7 @@ import { changeMyPassword } from "@/lib/data/notices";
 import { setPlatformAdmin, setMfaEmail, sanctionMember, listSanctions, resolveInquiry,
   SANCTION_LABELS, type SanctionKind, type SanctionRow } from "@/lib/data/admin";
 import PasswordInput from "@/components/PasswordInput";
-import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile } from "@/lib/data/partnerProfiles";
+import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile , listProfileDocs } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
@@ -213,10 +213,14 @@ export default function AdminDashboard() {
   // 회원 상세 모달의 "정보 수정" 폼. null이면 보기 모드.
   // 선택한 회원 회사의 파트너 프로필(있으면). 운영자가 보고 확인 표시를 한다.
   const [selectedProfile, setSelectedProfile] = useState<PartnerProfile | null | undefined>(undefined);
+  // 회사소개서는 companies에 달려 있어 역량 프로필과 따로 읽는다.
+  // 승인·제재를 판단할 때 쓰는 자료라 운영자도 볼 수 있어야 한다.
+  const [selectedDocName, setSelectedDocName] = useState<string | undefined>(undefined);
   useEffect(() => {
     if (!selectedUser?.companyId || !selectedUser.roles?.includes("partner")) { setSelectedProfile(undefined); return; }
     let alive = true;
     getPartnerProfile(selectedUser.companyId).then((p) => alive && setSelectedProfile(p)).catch(() => alive && setSelectedProfile(null));
+    listProfileDocs([selectedUser.companyId]).then((m) => alive && setSelectedDocName(m[selectedUser.companyId!])).catch(() => {});
     return () => { alive = false; };
   }, [selectedUser?.companyId, selectedUser?.roles]);
   const [userEdit, setUserEdit] = useState<{
@@ -2056,7 +2060,7 @@ export default function AdminDashboard() {
                   </div>
                   {selectedProfile === undefined
                     ? <p className="mt-2 text-xs text-foreground/40">불러오는 중…</p>
-                    : <PartnerProfileCard profile={selectedProfile} categories={selectedUser.partnerCategories ?? []} />}
+                    : <PartnerProfileCard profile={selectedProfile} categories={selectedUser.partnerCategories ?? []} docName={selectedDocName} companyId={selectedUser.companyId} />}
                 </div>
               )}
             </div>

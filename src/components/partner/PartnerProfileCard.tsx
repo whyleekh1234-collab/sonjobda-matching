@@ -9,16 +9,23 @@ import { openProfileDoc } from "@/lib/data/companyProfileDoc";
 // 매칭 전 비공개 원칙은 그대로다.
 
 export default function PartnerProfileCard({
-  profile, categories, expanded = false, docName,
-}: { profile: PartnerProfile | null | undefined; categories: string[]; expanded?: boolean; docName?: string }) {
+  profile, categories, expanded = false, docName, companyId,
+}: { profile: PartnerProfile | null | undefined; categories: string[]; expanded?: boolean; docName?: string; companyId?: string }) {
   const [toggled, setToggled] = useState(false);
   const open = expanded || toggled;
 
   if (!profile) {
+    // 역량 항목은 비어 있어도 회사소개서는 올렸을 수 있다. 그때 "등록하지
+    // 않았습니다"로 끝내면 있는 자료를 못 보게 된다.
     return (
       <div className={`rounded-xl border border-dashed border-border px-4 py-5 text-center ${expanded ? "h-full" : "mt-2"}`}>
         <p className="text-xs font-semibold text-foreground/50">파트너사 역량</p>
         <p className="mt-1 text-xs text-foreground/40">이 파트너사는 아직 회사 역량을 등록하지 않았습니다.</p>
+        {docName && companyId && (
+          <div className="mt-3">
+            <ProfileDocButton companyId={companyId} docName={docName} />
+          </div>
+        )}
       </div>
     );
   }
@@ -76,28 +83,38 @@ export default function PartnerProfileCard({
           {docName && (
             <div>
               <p className="text-xs font-semibold text-foreground/50">회사소개서</p>
-              <button
-                type="button"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  try {
-                    window.open(await openProfileDoc(profile.companyId), "_blank", "noopener");
-                  } catch (err) {
-                    alert(err instanceof Error ? err.message : "열 수 없습니다.");
-                  }
-                }}
-                className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
-                {docName}
-              </button>
+              <div className="mt-1">
+                <ProfileDocButton companyId={companyId ?? profile.companyId} docName={docName} />
+              </div>
             </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+// 회사소개서 열기. 역량을 비워 둔 파트너사도 소개서는 보여야 해서
+// 따로 떼어 두 자리에서 쓴다.
+function ProfileDocButton({ companyId, docName }: { companyId: string; docName: string }) {
+  return (
+    <button
+      type="button"
+      onClick={async (e) => {
+        e.stopPropagation();
+        try {
+          window.open(await openProfileDoc(companyId), "_blank", "noopener");
+        } catch (err) {
+          alert(err instanceof Error ? err.message : "열 수 없습니다.");
+        }
+      }}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
+    >
+      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+      </svg>
+      {docName}
+    </button>
   );
 }
 

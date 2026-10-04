@@ -608,7 +608,7 @@ export default function ClientDashboard() {
 
                               </div>
                               <aside className="lg:col-span-2">
-                                <PartnerProfileCard profile={partnerProfiles[quote.companyId]} categories={quote.partnerCategories ?? []} docName={profileDocs[quote.companyId]} expanded />
+                                <PartnerProfileCard profile={partnerProfiles[quote.companyId]} categories={quote.partnerCategories ?? []} docName={profileDocs[quote.companyId]} companyId={quote.companyId} expanded />
                               </aside>
                               </div>
 
