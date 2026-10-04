@@ -280,17 +280,46 @@ export async function setQuoteStatusAsClient(quoteId: string, status: QuoteStatu
 
 // 1차 선정/해제. 여러 곳 가능(최대 3곳)이고 연락처는 열리지 않는다.
 // 선정된 파트너는 견적을 다시 고칠 수 있다.
+/**
+ * 결과 메일은 DB 작업이 끝난 뒤에 따로 부른다.
+ *
+ * 메일 발송을 트랜잭션 안에 넣으면 메일 서버가 느릴 때 매칭 자체가
+ * 늦어지고, 발송이 실패하면 이미 성사된 매칭까지 되돌아간다. 그래서
+ * 실패해도 삼킨다 — 앱 안 알림은 이미 들어갔고, 메일이 안 갔다고
+ * 매칭을 무를 수는 없다.
+ */
+async function notify(path: string, body: Record<string, string>) {
+  try {
+    await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    // 사용자에게 보일 일이 아니다.
+  }
+}
+
 export async function shortlistQuote(quoteId: string, on: boolean): Promise<void> {
   const { error } = await createClient().rpc("shortlist_quote", {
     p_quote_id: quoteId,
     p_on: on,
   });
   if (error) throw new Error(error.message);
+  // 해제할 때는 보내지 않는다. 알릴 일이 아니다.
+  if (on) await notify("/api/notify/shortlist", { quoteId });
 }
 
 export async function acceptQuote(quoteId: string): Promise<void> {
-  const { error } = await createClient().rpc("accept_quote", { p_quote_id: quoteId });
+  const supabase = createClient();
+  // accept_quote는 갱신된 requests 행을 돌려준다. 그 id가 곧 의뢰 id다.
+  const { data, error } = await supabase
+    .rpc("accept_quote", { p_quote_id: quoteId })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+  const requestId = (data as { id?: string } | null)?.id;
+  if (requestId) await notify("/api/notify/match", { requestId });
 }
 
 // ── 첨부파일 ────────────────────────────────────────────────
