@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { uploadCompanyLicense } from "@/lib/data/companyLicense";
 import { uploadCompanyLogo } from "@/lib/data/companyLogo";
 import type { User, Role, PartnerCategory, UserStatus } from "@/types/auth";
 
@@ -23,7 +24,8 @@ interface AuthContextType {
     inviteToken?: string;
     marketingConsent?: boolean; // 선택. 광고성 정보 수신 동의.
     logo?: File | null; // 선택. 가입 직후 올린다.
-  }) => Promise<{ needsEmailConfirmation: boolean }>;
+    license?: File | null; // 회사를 처음 등록할 때 필수. 사업자등록증.
+  }) => Promise<{ needsEmailConfirmation: boolean; licenseError?: string | null }>;
   findEmailByPhone: (name: string, phone: string) => Promise<string>;
   findEmailByEmail: (name: string, email: string) => Promise<string>;
   // 이름 + 전화번호로 본인을 확인한 뒤, 그 계정 이메일로 Supabase가 실제
@@ -167,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     inviteToken?: string;
     marketingConsent?: boolean;
     logo?: File | null;
+    license?: File | null;
   }) => {
     // 폼 값을 계정 메타데이터로 넘긴다. 회사와 프로필 생성은 auth.users의
     // on_auth_user_created 트리거가 같은 트랜잭션 안에서 처리한다.
@@ -204,23 +207,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Confirm email이 꺼져 있으면 가입 직후 로그인 상태가 된다. 승인 전까지는
     // 로그인 상태가 아니어야 하므로 바로 끊는다. suppress 플래그로 그사이
     // onAuthStateChange가 화면에 잠깐 로그인된 모습을 비추는 걸 막는다.
+    let licenseError: string | null = null;
     if (signUpData.session) {
       suppressAuthEvent.current = true;
       // 로고는 세션이 있는 이 짧은 순간에 올린다. 실패해도 가입은 유효하다 —
       // 마이페이지에서 다시 올릴 수 있으니 조용히 넘어간다.
-      if (data.logo && signUpData.user) {
-        try {
-          const { data: p } = await supabase.from("profiles").select("company_id").eq("id", signUpData.user.id).single();
-          if (p?.company_id) await uploadCompanyLogo(p.company_id, data.logo);
-        } catch (e) {
-          console.error("logo upload at signup", e);
+      if ((data.logo || data.license) && signUpData.user) {
+        const { data: p } = await supabase.from("profiles").select("company_id").eq("id", signUpData.user.id).single();
+        if (p?.company_id) {
+          if (data.logo) {
+            try {
+              await uploadCompanyLogo(p.company_id, data.logo);
+            } catch (e) {
+              console.error("logo upload at signup", e);
+            }
+          }
+          // 사업자등록증은 조용히 넘기지 않는다. 운영자가 승인 판단에 쓰는
+          // 서류라 없으면 심사를 못 한다. 계정은 이미 만들어졌으므로 가입을
+          // 되돌리지는 못하고, 대신 사용자에게 알려 다시 올리게 한다.
+          if (data.license) {
+            try {
+              await uploadCompanyLicense(p.company_id, data.license);
+            } catch (e) {
+              licenseError = e instanceof Error ? e.message : "사업자등록증을 올리지 못했습니다.";
+            }
+          }
         }
       }
       await supabase.auth.signOut();
       suppressAuthEvent.current = false;
     }
 
-    return { needsEmailConfirmation: !signUpData.session };
+    return { needsEmailConfirmation: !signUpData.session, licenseError };
   };
 
   const findEmailByPhone = async (name: string, phone: string) => {

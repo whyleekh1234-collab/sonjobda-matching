@@ -30,6 +30,9 @@ export interface AdminUser {
   marketingConsentAt?: string | null;
   // 운영자가 2단계 인증번호를 받을 주소. 로그인 이메일과 달라야 한다.
   mfaEmail?: string | null;
+  // 사업자등록증. 경로는 비공개라 운영자가 서버를 거쳐 서명 링크로 연다.
+  licensePath?: string | null;
+  licenseName?: string | null;
 }
 
 export async function listAllUsers(): Promise<AdminUser[]> {
@@ -43,6 +46,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     verified: boolean; allow_category_edit: boolean; created_at: string;
     marketing_consent: boolean | null; marketing_consent_at: string | null;
     mfa_email: string | null;
+    license_path: string | null; license_name: string | null;
   }[]).map((r) => ({
     id: r.id,
     memberCode: r.member_code,
@@ -65,6 +69,8 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     marketingConsent: r.marketing_consent ?? false,
     marketingConsentAt: r.marketing_consent_at ?? null,
     mfaEmail: r.mfa_email ?? null,
+    licensePath: r.license_path ?? null,
+    licenseName: r.license_name ?? null,
   }));
 }
 

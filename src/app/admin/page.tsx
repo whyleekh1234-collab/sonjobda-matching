@@ -80,6 +80,8 @@ interface UserData {
   marketingConsentAt?: string | null;
   isPlatformAdmin?: boolean;
   mfaEmail?: string | null;
+  licensePath?: string | null;
+  licenseName?: string | null;
 }
 
 // 회원 상세 모달의 동작 버튼. 색을 기능마다 다르게 줬더니 산만해서
@@ -1771,6 +1773,34 @@ export default function AdminDashboard() {
                 <InfoRow label="회사명" value={selectedUser.company} />
                 <InfoRow label="연락처" value={selectedUser.phone || "-"} />
                 <InfoRow label="사업자등록번호" value={selectedUser.businessNumber || "-"} />
+                {/* 승인 판단에 쓰는 서류다. 비공개 버킷이라 서버에서 한시적인
+                    서명 링크를 받아 연다. */}
+                <div>
+                  <p className="text-sm text-foreground/40">사업자등록증</p>
+                  {selectedUser.licensePath ? (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch("/api/admin/license", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ companyId: selectedUser.companyId }),
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          if (!res.ok) throw new Error(data.message ?? "열 수 없습니다.");
+                          window.open(data.url, "_blank", "noopener");
+                        } catch (err) {
+                          alert(err instanceof Error ? err.message : "열 수 없습니다.");
+                        }
+                      }}
+                      className="mt-1 text-base font-medium text-primary underline hover:text-primary-dark"
+                    >
+                      {selectedUser.licenseName ?? "등록증 보기"}
+                    </button>
+                  ) : (
+                    <p className="mt-1 text-base font-medium text-red-500">미제출</p>
+                  )}
+                </div>
                 <InfoRow label="기업주소" value={selectedUser.address || "-"} />
                 <InfoRow label="유형" value={selectedUser.roles?.map((r) => r === "client" ? "의뢰사" : "파트너사").join(", ") || "-"} />
                 <InfoRow label="상태" value={!selectedUser.status || selectedUser.status === "pending" ? "대기" : selectedUser.status === "approved" ? "활성" : selectedUser.status === "restricted" ? "제한" : "정지"} />

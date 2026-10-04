@@ -68,8 +68,8 @@ export default function PrivacyPage() {
                 <tbody>
                   <tr>
                     <td className="border border-border px-3 py-2 align-top">회원가입(공통)</td>
-                    <td className="border border-border px-3 py-2 align-top">[필수] 기업유형, 국가, 기업명, 사업자등록번호, 아이디, 비밀번호, 이름, 이메일, 전화번호, 휴대폰번호<br />[선택] 기업주소, 기업로고, 부서명, 직함</td>
-                    <td className="border border-border px-3 py-2 align-top">이용자 식별, 고지사항 전달</td>
+                    <td className="border border-border px-3 py-2 align-top">[필수] 기업유형, 국가, 기업명, 사업자등록번호, 사업자등록증 사본, 아이디, 비밀번호, 이름, 이메일, 전화번호, 휴대폰번호<br />[선택] 기업주소, 기업로고, 부서명, 직함</td>
+                    <td className="border border-border px-3 py-2 align-top">이용자 식별, 사업자 확인, 고지사항 전달</td>
                   </tr>
                   <tr>
                     <td className="border border-border px-3 py-2 align-top">마케팅 정보 수신</td>

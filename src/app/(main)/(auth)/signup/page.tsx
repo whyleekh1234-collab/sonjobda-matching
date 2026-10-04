@@ -1,5 +1,6 @@
 "use client";
 
+import { validateLicense, LICENSE_ACCEPT } from "@/lib/data/companyLicense";
 import PasswordInput from "@/components/PasswordInput";
 import { useState, useEffect, Suspense } from "react";
 import { validateLogo } from "@/lib/data/companyLogo";
@@ -52,6 +53,7 @@ function SignupContent() {
   const [inviteInfo, setInviteInfo] = useState<{ company: string; businessNumber: string; invitedBy: string } | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
+  const [license, setLicense] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // 쿼리 파라미터로 전달된 카테고리 미리 선택 / 초대 링크 처리
@@ -180,6 +182,7 @@ function SignupContent() {
     // 연락처
     const phoneDigits = form.phone.replace(/\D/g, "").length;
     if (phoneDigits < 10 || phoneDigits > 11) return "연락처를 정확히 입력해주세요.";
+    if (!inviteInfo && !license) return "사업자등록증을 첨부해주세요.";
     if (!form.agreeTerms) return "이용약관에 동의해주세요.";
     if (!form.agreePrivacy) return "개인정보처리방침에 동의해주세요.";
     return null;
@@ -214,7 +217,7 @@ function SignupContent() {
         }
       }
 
-      const { needsEmailConfirmation } = await signup({
+      const { needsEmailConfirmation, licenseError } = await signup({
         email: form.email,
         password: form.password,
         name: form.name,
@@ -227,7 +230,19 @@ function SignupContent() {
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
         marketingConsent: form.agreeMarketing,
         logo,
+        license,
       });
+      if (licenseError) {
+        // 계정은 이미 만들어졌으므로 가입을 되돌리지는 못한다. 운영자가
+        // 승인 판단에 쓰는 서류라 없으면 심사가 막히니, 숨기지 않고 알린다.
+        alert(`회원가입은 접수되었으나 사업자등록증을 올리지 못했습니다.
+
+${licenseError}
+
+고객센터로 서류를 보내주세요: contact@sonjobdamd.com`);
+        router.push("/login");
+        return;
+      }
       alert(
         needsEmailConfirmation
           ? "회원가입이 접수되었습니다.\n\n1. 방금 보낸 메일의 링크를 눌러 이메일을 인증해주세요.\n2. 관리자 승인 후 로그인할 수 있습니다."
@@ -500,6 +515,33 @@ function SignupContent() {
               </div>
               <p className="mt-1 text-xs text-foreground/40">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
             </div>
+
+            {/* 사업자등록증 (필수).
+                사업자등록번호는 세금계산서·홈페이지에 적혀 있어 사실상 공개
+                정보다. 번호만으로는 "그 회사 사람인지"를 가릴 수 없어 서류를
+                함께 받는다. 초대로 합류하는 멤버는 회사가 이미 검증됐으므로
+                묻지 않는다 — 같은 서류를 사람 수만큼 쌓을 이유가 없다. */}
+            {!inviteInfo && (
+              <div>
+                <label className="block text-sm font-medium text-foreground">
+                  사업자등록증 <span className="text-xs font-normal text-primary">*</span>
+                </label>
+                <input type="file" accept={LICENSE_ACCEPT} id="license"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    if (!f) { setLicense(null); return; }
+                    const err = validateLicense(f);
+                    if (err) { setError(err); e.target.value = ""; setLicense(null); return; }
+                    setLicense(f); setError("");
+                  }}
+                  className="mt-1 block w-full text-sm text-foreground/70 file:mr-3 file:rounded-lg file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground/70 hover:file:bg-muted" />
+                {license && <p className="mt-1 text-xs text-emerald-600">{license.name}</p>}
+                <p className="mt-1 text-xs text-foreground/50">
+                  PDF·PNG·JPG, 5MB 이하. 사업자 확인 용도로만 쓰이며 운영자만 열람합니다.
+                  회원 탈퇴 시 파기됩니다.
+                </p>
+              </div>
+            )}
 
             {/* 회사 로고 (선택). 초대로 합류하는 멤버는 회사 로고가 이미 있으니 묻지 않는다. */}
             {!inviteInfo && (
