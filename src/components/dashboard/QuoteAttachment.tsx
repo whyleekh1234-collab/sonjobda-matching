@@ -49,7 +49,7 @@ export default function QuoteAttachment({
       <span className="text-primary">{icon}</span>
       <span className="min-w-0">
         <span className="block text-sm font-medium text-primary">{busy ? "여는 중…" : "견적서 열기"}</span>
-        <span className="block break-all text-xs text-foreground/40">{name}</span>
+        <span className="block break-all text-xs text-foreground/60">{name}</span>
       </span>
     </button>
   );

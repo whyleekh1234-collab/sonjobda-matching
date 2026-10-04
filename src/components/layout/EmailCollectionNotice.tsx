@@ -13,7 +13,7 @@ export default function EmailCollectionNotice() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-foreground/40 transition-colors hover:text-primary"
+        className="text-foreground/60 transition-colors hover:text-primary"
       >
         이메일 무단수집거부
       </button>

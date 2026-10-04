@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
             {sentTo && (
               <p className="mt-2 text-sm font-semibold text-foreground">{maskEmail(sentTo)}</p>
             )}
-            <p className="mt-3 text-xs text-foreground/40">
+            <p className="mt-3 text-xs text-foreground/60">
               메일이 보이지 않으면 스팸함도 확인해주세요. 링크는 발송 후 일정 시간이 지나면 만료됩니다.
             </p>
             <Link

@@ -75,7 +75,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
     }
   };
 
-  if (loading) return <div className="rounded-2xl border border-border bg-background p-6 text-sm text-foreground/40">불러오는 중…</div>;
+  if (loading) return <div className="rounded-2xl border border-border bg-background p-6 text-sm text-foreground/60">불러오는 중…</div>;
 
   const current = editing ? draft : (saved ?? EMPTY_PROFILE);
   const pct = profileCompleteness(current, categories);
@@ -96,7 +96,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-xs text-foreground/40">전체 작성률</p>
+              <p className="text-xs text-foreground/60">전체 작성률</p>
               <p className={`text-lg font-bold ${tone(pct)}`}>{pct}%</p>
             </div>
             {saved?.verifiedAt && !editing && (
@@ -136,9 +136,17 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
       <Card title="회사 소개" sub="모든 분야에 공통으로 보이는 정보">
         {editing ? (
           <div className="space-y-5">
+            {/* 한 줄이라고 해놓고 길이를 안 알려주면, 쓰다가 갑자기 글자가
+                안 들어가는 순간에야 제한이 있다는 걸 알게 된다. 남은 수를
+                내내 띄워 두고, 끝이 가까우면 색으로도 알린다. */}
             <Field label="강점 한 줄" hint="의뢰사에게 가장 먼저 보이는 문장입니다.">
-              <input value={draft.intro} onChange={(e) => setDraft({ ...draft, intro: e.target.value })} maxLength={120}
+              <input value={draft.intro} onChange={(e) => setDraft({ ...draft, intro: e.target.value })} maxLength={INTRO_MAX}
                 placeholder="예: 종양 Phase II·III 임상 15년, 수도권 대형병원 네트워크 보유" className={inputCls} />
+              <p className={`mt-1 text-right text-xs tabular-nums ${
+                draft.intro.length >= INTRO_MAX ? "text-amber-600" : "text-foreground/60"
+              }`}>
+                {draft.intro.length} / {INTRO_MAX}자
+              </p>
             </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field label="직원 수">
@@ -183,7 +191,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
                   finally { setDocBusy(false); e.target.value = ""; }
                 }}
                 className="block w-full text-sm text-foreground/70 file:mr-3 file:rounded-lg file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground/70 hover:file:bg-muted" />
-              {docBusy && <p className="mt-1 text-xs text-foreground/40">처리 중...</p>}
+              {docBusy && <p className="mt-1 text-xs text-foreground/60">처리 중...</p>}
             </Field>
             <Field label="대표 실적" hint="회사명·품목을 밝히기 어려우면 '국내 제약사 A, 고혈압 Phase III, 2024' 정도로 적어도 됩니다.">
               <textarea value={draft.trackRecord} onChange={(e) => setDraft({ ...draft, trackRecord: e.target.value })} rows={4} maxLength={1500}
@@ -210,7 +218,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
           <Card key={cat} title={`${cat} 역량`} sub={`${cat} 의뢰를 받을 때 의뢰사가 보는 항목`}
             badge={<span className={`text-sm font-bold ${tone(cpct)}`}>{cpct}%</span>}>
             {fields.length === 0 ? (
-              <p className="text-sm text-foreground/40">이 분야는 추가로 물어보는 항목이 없습니다.</p>
+              <p className="text-sm text-foreground/60">이 분야는 추가로 물어보는 항목이 없습니다.</p>
             ) : editing ? (
               <div className="space-y-5">
                 {fields.map((f) => <Field key={f.key} label={f.label}>{renderField(f)}</Field>)}
@@ -226,7 +234,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
       })}
 
       {!editing && saved && (
-        <p className="px-1 text-xs text-foreground/30">
+        <p className="px-1 text-xs text-foreground/50">
           {saved.updatedAt && `마지막 수정 ${new Date(saved.updatedAt).toLocaleDateString("ko-KR")}`}
           {saved.verifiedAt ? " · 운영자 확인됨" : " · 운영자 확인 대기"}
         </p>
@@ -241,7 +249,7 @@ function Card({ title, sub, badge, children }: { title: string; sub?: string; ba
       <div className="flex items-start justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-foreground">{title}</h4>
-          {sub && <p className="mt-0.5 text-xs text-foreground/40">{sub}</p>}
+          {sub && <p className="mt-0.5 text-xs text-foreground/60">{sub}</p>}
         </div>
         {badge}
       </div>
@@ -250,10 +258,18 @@ function Card({ title, sub, badge, children }: { title: string; sub?: string; ba
   );
 }
 
+// 강점 한 줄의 길이 제한.
+//
+// 의뢰사 목록에서 카드 한 장에 들어가야 하는 문장이다. 길면 줄바꿈이
+// 늘어나 카드 높이가 제각각이 되고, 여러 곳을 나란히 비교하기 어려워진다.
+// DB에도 같은 제한을 걸어 뒀다(phase27) — 화면 제한만으로는 API로 직접
+// 넣는 값을 막지 못한다.
+const INTRO_MAX = 100;
+
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground">{label}{hint && <span className="ml-2 text-xs font-normal text-foreground/40">{hint}</span>}</label>
+      <label className="block text-sm font-medium text-foreground">{label}{hint && <span className="ml-2 text-xs font-normal text-foreground/60">{hint}</span>}</label>
       <div className="mt-1.5">{children}</div>
     </div>
   );
@@ -277,21 +293,21 @@ function Chips({ options, selected, onToggle }: { options: string[]; selected: s
 function ReadRows({ rows, longText }: { rows: [string, string][]; longText?: [string, string] }) {
   const filled = rows.filter(([, v]) => v);
   if (filled.length === 0 && !(longText && longText[1])) {
-    return <p className="text-sm text-foreground/40">아직 작성하지 않았습니다.</p>;
+    return <p className="text-sm text-foreground/60">아직 작성하지 않았습니다.</p>;
   }
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
         {filled.map(([k, v]) => (
           <div key={k}>
-            <p className="text-xs text-foreground/40">{k}</p>
+            <p className="text-xs text-foreground/60">{k}</p>
             <p className="mt-0.5 break-keep text-sm text-foreground">{v}</p>
           </div>
         ))}
       </div>
       {longText && longText[1] && (
         <div>
-          <p className="text-xs text-foreground/40">{longText[0]}</p>
+          <p className="text-xs text-foreground/60">{longText[0]}</p>
           <p className="mt-1 whitespace-pre-line rounded-lg bg-muted p-3 text-sm text-foreground/80">{longText[1]}</p>
         </div>
       )}

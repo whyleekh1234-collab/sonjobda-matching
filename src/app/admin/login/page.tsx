@@ -171,7 +171,7 @@ export default function AdminLoginPage() {
               >
                 인증번호 다시 받기
               </button>
-              <p className="mt-3 text-center text-xs text-foreground/40">
+              <p className="mt-3 text-center text-xs text-foreground/60">
                 메일이 보이지 않으면 스팸함도 확인해주세요.
               </p>
             </>

@@ -290,7 +290,7 @@ export default function ClientDashboard() {
               <div>
                 <p className="text-sm font-medium text-foreground/50">등록한 의뢰</p>
                 <p className="mt-1 text-2xl font-bold sm:text-3xl text-primary">{requests.length}</p>
-                <p className="mt-1 text-xs text-foreground/40">대기 {requests.filter((r) => r.status === "pending").length} | 진행 {requests.filter((r) => r.status === "matching").length}</p>
+                <p className="mt-1 text-xs text-foreground/60">대기 {requests.filter((r) => r.status === "pending").length} | 진행 {requests.filter((r) => r.status === "matching").length}</p>
               </div>
               <div className="hidden rounded-xl bg-gradient-to-br sm:block from-primary to-primary-light p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
@@ -303,7 +303,7 @@ export default function ClientDashboard() {
               <div>
                 <p className="text-sm font-medium text-foreground/50">받은 견적</p>
                 <p className="mt-1 text-2xl font-bold sm:text-3xl text-emerald-600">{totalQuotes}</p>
-                <p className="mt-1 text-xs text-foreground/40">{quotedRequests.length}개 의뢰에 대한 견적</p>
+                <p className="mt-1 text-xs text-foreground/60">{quotedRequests.length}개 의뢰에 대한 견적</p>
               </div>
               <div className="hidden rounded-xl bg-gradient-to-br sm:block from-emerald-500 to-emerald-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -316,7 +316,7 @@ export default function ClientDashboard() {
               <div>
                 <p className="text-sm font-medium text-foreground/50">매칭 성사</p>
                 <p className="mt-1 text-2xl font-bold sm:text-3xl text-amber-600">{completedRequests.length}</p>
-                <p className="mt-1 text-xs text-foreground/40">완료된 프로젝트</p>
+                <p className="mt-1 text-xs text-foreground/60">완료된 프로젝트</p>
               </div>
               <div className="hidden rounded-xl bg-gradient-to-br sm:block from-amber-500 to-amber-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
@@ -337,7 +337,7 @@ export default function ClientDashboard() {
                 <p className="text-xl font-bold text-green-600">{totalSavings > 0 ? formatKoreanAmount(totalSavings) : "-"}</p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-foreground/40">매칭 성사된 프로젝트의 예상 예산 대비 실제 견적 금액 차이입니다. 손잡다매칭을 통해 절감된 비용을 확인하세요.</p>
+            <p className="mt-3 text-xs text-foreground/60">매칭 성사된 프로젝트의 예상 예산 대비 실제 견적 금액 차이입니다. 손잡다매칭을 통해 절감된 비용을 확인하세요.</p>
           </div>
           <button onClick={() => setActiveSection("undecided")}
             className={`rounded-xl border p-5 text-left transition-all ${activeSection === "undecided" ? "border-orange-500 bg-orange-50 shadow-md" : "border-border bg-surface shadow-card hover:border-orange-300 hover:shadow-md"}`}>
@@ -347,10 +347,10 @@ export default function ClientDashboard() {
               </div>
               <div>
                 <p className="text-xs font-medium text-foreground/50">미결정 프로젝트</p>
-                <p className="text-xl font-bold text-orange-600">{undecidedRate}%<span className="ml-2 text-sm font-medium text-foreground/40">({undecidedRequests.length}건)</span></p>
+                <p className="text-xl font-bold text-orange-600">{undecidedRate}%<span className="ml-2 text-sm font-medium text-foreground/60">({undecidedRequests.length}건)</span></p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-foreground/40">견적을 받았지만 아직 파트너사를 선택하지 않은 비율입니다. 보류도 미결정으로 포함되어 계산됩니다.</p>
+            <p className="mt-3 text-xs text-foreground/60">견적을 받았지만 아직 파트너사를 선택하지 않은 비율입니다. 보류도 미결정으로 포함되어 계산됩니다.</p>
           </button>
         </div>
 
@@ -401,7 +401,7 @@ export default function ClientDashboard() {
                         <div className="flex-1 rounded-xl border border-border bg-surface shadow-card p-4 transition-all hover:border-primary/30 hover:shadow-md">
                           <p className="text-sm font-medium text-foreground">{act.title}</p>
                           <p className="mt-0.5 text-xs text-foreground/50">{act.detail}</p>
-                          <p className="mt-1 text-xs text-foreground/30">{new Date(act.date).toLocaleString("ko-KR")}</p>
+                          <p className="mt-1 text-xs text-foreground/50">{new Date(act.date).toLocaleString("ko-KR")}</p>
                         </div>
                       </div>
                     );
@@ -482,13 +482,13 @@ export default function ClientDashboard() {
                         </div>
                         <h3 className="mt-2 text-lg font-semibold text-foreground">{req.title}</h3>
                         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                          <div className="text-xs"><span className="text-foreground/40">견적 범위</span><p className="mt-0.5 font-semibold text-primary">{amounts.length > 0 ? (minAmount === maxAmount ? `${formatKRW(minAmount)}원` : `${formatKRW(minAmount)} ~ ${formatKRW(maxAmount)}원`) : "-"}</p></div>
-                          <div className="text-xs"><span className="text-foreground/40">의뢰 예산</span><p className="mt-0.5 font-medium text-foreground">{req.budget}</p></div>
-                          <div className="text-xs"><span className="text-foreground/40">마감일</span><p className="mt-0.5 font-medium text-foreground">{deadlineDate.toLocaleDateString("ko-KR")}</p></div>
-                          <div className="text-xs"><span className="text-foreground/40">파트너사</span><p className="mt-0.5 font-medium text-foreground">{quotes.length}곳</p></div>
+                          <div className="text-xs"><span className="text-foreground/60">견적 범위</span><p className="mt-0.5 font-semibold text-primary">{amounts.length > 0 ? (minAmount === maxAmount ? `${formatKRW(minAmount)}원` : `${formatKRW(minAmount)} ~ ${formatKRW(maxAmount)}원`) : "-"}</p></div>
+                          <div className="text-xs"><span className="text-foreground/60">의뢰 예산</span><p className="mt-0.5 font-medium text-foreground">{req.budget}</p></div>
+                          <div className="text-xs"><span className="text-foreground/60">마감일</span><p className="mt-0.5 font-medium text-foreground">{deadlineDate.toLocaleDateString("ko-KR")}</p></div>
+                          <div className="text-xs"><span className="text-foreground/60">파트너사</span><p className="mt-0.5 font-medium text-foreground">{quotes.length}곳</p></div>
                         </div>
                       </div>
-                      <svg className={`ml-4 h-5 w-5 flex-shrink-0 text-foreground/30 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`ml-4 h-5 w-5 flex-shrink-0 text-foreground/50 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
@@ -505,9 +505,9 @@ export default function ClientDashboard() {
                                 <div className="flex items-center gap-3">
                                   <CompanyLogo path={quote.partnerLogo} name={quote.partnerCompany} size={40} />
                                   <div>
-                                    <p className="break-all text-base font-semibold text-foreground">{quote.partnerCompany} {quote.quoteCode && <span className="ml-1 font-mono text-xs text-foreground/30">{quote.quoteCode}</span>}</p>
+                                    <p className="break-all text-base font-semibold text-foreground">{quote.partnerCompany} {quote.quoteCode && <span className="ml-1 font-mono text-xs text-foreground/50">{quote.quoteCode}</span>}</p>
                                     {/* 담당자 이름은 매칭 성사 전에는 공개되지 않는다. 성사 후 아래 연락처 칸에 나온다. */}
-                                    <p className="text-xs text-foreground/40">제출일: {new Date(quote.createdAt).toLocaleDateString("ko-KR")}</p>
+                                    <p className="text-xs text-foreground/60">제출일: {new Date(quote.createdAt).toLocaleDateString("ko-KR")}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -515,7 +515,7 @@ export default function ClientDashboard() {
                                     {quote.status === "accepted" ? "수락됨" : quote.status === "client_rejected" ? "거절됨" : quote.status === "not_selected" ? "미결정" : quote.status === "client_hold" ? "보류" : quote.status === "client_reviewing" ? "검토중" : quote.status === "quoted" ? "신규" : "대기"}
                                   </span>
                                   {quote.amount && <span className="text-sm font-bold text-primary">{quote.amount}</span>}
-                                  <svg className={`h-4 w-4 text-foreground/30 transition-transform ${isQuoteOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                  <svg className={`h-4 w-4 text-foreground/50 transition-transform ${isQuoteOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                 </div>
                               </button>
 
@@ -530,11 +530,11 @@ export default function ClientDashboard() {
                                   <p className="mt-1 text-lg font-bold text-primary">{quote.amount}</p>
                                 </div>
                                 <div className="rounded-lg border border-border bg-muted/20 p-3 text-center">
-                                  <p className="text-xs text-foreground/40">소요 기간</p>
+                                  <p className="text-xs text-foreground/60">소요 기간</p>
                                   <p className="mt-1 text-base font-semibold text-foreground">{quote.duration || "-"}</p>
                                 </div>
                                 <div className="rounded-lg border border-border bg-muted/20 p-3 text-center">
-                                  <p className="text-xs text-foreground/40">제출일</p>
+                                  <p className="text-xs text-foreground/60">제출일</p>
                                   <p className="mt-1 text-sm font-semibold text-foreground">{new Date(quote.createdAt).toLocaleDateString("ko-KR")}</p>
                                 </div>
                               </div>
@@ -542,7 +542,7 @@ export default function ClientDashboard() {
                               {/* 업무범위 요약 */}
                               {quote.timeline && quote.timeline.length > 0 && (
                                 <div className="mt-3">
-                                  <p className="text-xs text-foreground/40">업무범위별 소요기간</p>
+                                  <p className="text-xs text-foreground/60">업무범위별 소요기간</p>
                                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                                     {quote.timeline.filter((t: { months: string }) => t.months).map((t: { label: string; months: string }, ti: number) => (
                                       <span key={ti} className="rounded-md border border-border bg-muted/50 px-2 py-1 text-xs">
@@ -558,7 +558,7 @@ export default function ClientDashboard() {
                                 const partnerUser = { partnerCategories: quote.partnerCategories };
                                 return partnerUser.partnerCategories?.length ? (
                                   <div className="mt-3">
-                                    <p className="text-xs text-foreground/40">회사유형</p>
+                                    <p className="text-xs text-foreground/60">회사유형</p>
                                     <div className="mt-1 flex flex-wrap gap-1">
                                       {partnerUser.partnerCategories.map((cat: string) => (
                                         <span key={cat} className="rounded-md bg-muted px-2 py-0.5 text-xs text-foreground/60">{cat}</span>
@@ -573,19 +573,19 @@ export default function ClientDashboard() {
                                 <div className="mt-3 grid grid-cols-3 gap-3">
                                   {quote.expectedCra && (
                                     <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
-                                      <p className="text-xs text-foreground/40">예상 투입 CRA</p>
+                                      <p className="text-xs text-foreground/60">예상 투입 CRA</p>
                                       <p className="mt-0.5 text-sm font-semibold text-foreground">{quote.expectedCra}명</p>
                                     </div>
                                   )}
                                   {quote.monitoringPerSite && (
                                     <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
-                                      <p className="text-xs text-foreground/40">기관별 모니터링</p>
+                                      <p className="text-xs text-foreground/60">기관별 모니터링</p>
                                       <p className="mt-0.5 text-sm font-semibold text-foreground">{quote.monitoringPerSite}회</p>
                                     </div>
                                   )}
                                   {quote.edcBrand && (
                                     <div className="rounded-lg border border-border bg-muted/20 p-2.5 text-center">
-                                      <p className="text-xs text-foreground/40">EDC 브랜드</p>
+                                      <p className="text-xs text-foreground/60">EDC 브랜드</p>
                                       <p className="mt-0.5 text-sm font-semibold text-foreground">{quote.edcBrand}</p>
                                     </div>
                                   )}
@@ -595,7 +595,7 @@ export default function ClientDashboard() {
                               {/* 메모 */}
                               {quote.memo && (
                                 <div className="mt-3 rounded-lg bg-muted/30 p-3">
-                                  <p className="text-xs text-foreground/40">메모</p>
+                                  <p className="text-xs text-foreground/60">메모</p>
                                   <p className="mt-0.5 text-sm text-foreground/70">{quote.memo}</p>
                                 </div>
                               )}
@@ -615,7 +615,7 @@ export default function ClientDashboard() {
                               {/* 마감일 + 수락/거절/보류 */}
                               {(quote.status === "client_reviewing" || quote.status === "client_hold" || !!quote.shortlistedAt) && quote.status !== "accepted" && quote.status !== "not_selected" && req.status === "pending" && (
                                 <div className="mt-4 border-t border-border pt-4">
-                                  <div className="mb-3 text-xs text-foreground/40">
+                                  <div className="mb-3 text-xs text-foreground/60">
                                     마감일: {(() => { const d = new Date(req.createdAt); d.setDate(d.getDate() + 7); return d.toLocaleDateString("ko-KR"); })()}
                                   </div>
                                   <div className="flex flex-wrap gap-2">
@@ -692,7 +692,7 @@ export default function ClientDashboard() {
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono text-foreground/40">{req.requestCode}</span>
+                            <span className="text-xs font-mono text-foreground/60">{req.requestCode}</span>
                             <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-600">{req.category}</span>
                           </div>
                           <h3 className="mt-1 text-base font-semibold text-foreground">{req.title}</h3>
@@ -768,7 +768,7 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
       <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex w-full items-center justify-between p-5 text-left">
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            {(request as MatchRequest & { requestCode?: string }).requestCode && <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/40">{(request as MatchRequest & { requestCode?: string }).requestCode}</span>}
+            {(request as MatchRequest & { requestCode?: string }).requestCode && <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/60">{(request as MatchRequest & { requestCode?: string }).requestCode}</span>}
             <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">{request.category}</span>
             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${status.color}`}>{status.label}</span>
           </div>
@@ -780,7 +780,7 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
             <span>견적: {(request.quotes || []).filter((q) => q.status === "quoted").length}건</span>
           </div>
         </div>
-        <svg className={`h-5 w-5 flex-shrink-0 text-foreground/30 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className={`h-5 w-5 flex-shrink-0 text-foreground/50 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
@@ -794,11 +794,11 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
             {/* 기본 정보 카드 */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border border-border p-3">
-                <p className="text-xs text-foreground/40">등록일</p>
+                <p className="text-xs text-foreground/60">등록일</p>
                 <p className="mt-1 text-sm font-medium text-foreground">{new Date(request.createdAt).toLocaleDateString("ko-KR")}</p>
               </div>
               <div className="rounded-lg border border-border p-3">
-                <p className="text-xs text-foreground/40">마감일</p>
+                <p className="text-xs text-foreground/60">마감일</p>
                 <p className="mt-1 text-sm font-medium text-foreground">{(() => { const d = new Date(request.createdAt); d.setDate(d.getDate() + 7); return d.toLocaleDateString("ko-KR"); })()}</p>
               </div>
             </div>
@@ -819,7 +819,7 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
                     const isLong = value.length > 30 || label === "위탁업무" || label === "추가 요구사항" || label === "임상시험 목적";
                     return (
                       <div key={i} className={isLong ? "col-span-2" : ""}>
-                        <p className="text-xs text-foreground/40">{label}</p>
+                        <p className="text-xs text-foreground/60">{label}</p>
                         <p className="mt-0.5 text-sm font-medium text-foreground">{value}</p>
                       </div>
                     );
@@ -847,7 +847,7 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
                     {quote.memo && <p className="mt-1 text-xs text-foreground/50">{quote.memo}</p>}
                     {quote.attachmentName && (
                       <div className="mt-1 flex items-center gap-1.5">
-                        <svg className="h-3.5 w-3.5 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                        <svg className="h-3.5 w-3.5 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                         <span className="text-xs text-primary/70">{quote.attachmentName}</span>
                       </div>
                     )}
@@ -857,7 +857,7 @@ function RequestCard({ request, onWithdraw, onExtendDeadline, defaultOpen }: { r
             </div>
           )}
           {(request.quotes || []).length === 0 && request.status === "pending" && (
-            <p className="mt-3 text-sm text-foreground/40">손잡다매칭에서 최적의 파트너를 검토 중입니다.</p>
+            <p className="mt-3 text-sm text-foreground/60">손잡다매칭에서 최적의 파트너를 검토 중입니다.</p>
           )}
           {request.status === "pending" && (
             <div className="mt-4 flex gap-2 border-t border-border pt-3">

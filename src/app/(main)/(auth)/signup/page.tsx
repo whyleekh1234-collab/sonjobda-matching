@@ -304,7 +304,7 @@ ${licenseError}
           {/* 회원 유형 선택 (복수 선택 가능) */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-foreground">
-              회원 유형 * <span className="text-xs font-normal text-foreground/40">(복수 선택 가능)</span>
+              회원 유형 * <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span>
             </label>
             <div className="mt-2 grid grid-cols-2 gap-3">
               <button
@@ -318,7 +318,7 @@ ${licenseError}
               >
                 <Building2 className="mx-auto h-6 w-6" strokeWidth={1.75} />
                 <span className="mt-1.5 block">의뢰사</span>
-                <span className="mt-1 block text-xs font-normal text-foreground/40">파트너를 찾고 있어요</span>
+                <span className="mt-1 block text-xs font-normal text-foreground/60">파트너를 찾고 있어요</span>
               </button>
               <button
                 type="button"
@@ -331,13 +331,13 @@ ${licenseError}
               >
                 <Handshake className="mx-auto h-6 w-6" strokeWidth={1.75} />
                 <span className="mt-1.5 block">파트너사</span>
-                <span className="mt-1 block text-xs font-normal text-foreground/40">프로젝트를 수주하고 싶어요</span>
+                <span className="mt-1 block text-xs font-normal text-foreground/60">프로젝트를 수주하고 싶어요</span>
               </button>
             </div>
             {form.roles.includes("partner") && (
               <div className="mt-3">
                 <label className="block text-sm font-medium text-foreground">
-                  회사유형 * <span className="text-xs font-normal text-foreground/40">(복수 선택 가능)</span>
+                  회사유형 * <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span>
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {partnerCategories.map((cat) => {
@@ -359,7 +359,7 @@ ${licenseError}
                       }}
                       className={`rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
                         isBlocked
-                          ? "border-border bg-foreground/5 text-foreground/30 cursor-not-allowed"
+                          ? "border-border bg-foreground/5 text-foreground/50 cursor-not-allowed"
                           : form.partnerCategories.includes(cat)
                           ? "border-secondary bg-secondary/10 text-secondary"
                           : "border-border text-foreground/60 hover:border-foreground/30"
@@ -451,7 +451,7 @@ ${licenseError}
                 placeholder="8~12자, 영문/숫자/특수문자 중 2종 이상"
                 className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               />
-              <p className="mt-1 text-xs text-foreground/40">영문, 숫자, 특수문자 중 2종 이상 조합</p>
+              <p className="mt-1 text-xs text-foreground/60">영문, 숫자, 특수문자 중 2종 이상 조합</p>
             </div>
 
             {/* 비밀번호 확인 */}
@@ -625,7 +625,7 @@ ${licenseError}
                   주소 검색
                 </button>
               </div>
-              <p className="mt-1 text-xs text-foreground/40">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
+              <p className="mt-1 text-xs text-foreground/60">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
             </div>
 
             {/* 사업자등록증 (필수).
@@ -665,7 +665,7 @@ ${licenseError}
                   <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
                     {logoPreview
                       ? <img src={logoPreview} alt="로고 미리보기" className="h-full w-full object-contain" />
-                      : <span className="text-lg font-bold text-foreground/30">{form.company.trim().charAt(0) || "로고"}</span>}
+                      : <span className="text-lg font-bold text-foreground/50">{form.company.trim().charAt(0) || "로고"}</span>}
                   </div>
                   <div className="flex-1">
                     <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" id="logo"
@@ -677,7 +677,7 @@ ${licenseError}
                         setLogo(f); setLogoPreview(URL.createObjectURL(f)); setError("");
                       }}
                       className="block w-full text-sm text-foreground/70 file:mr-3 file:rounded-lg file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground/70 hover:file:bg-muted" />
-                    <p className="mt-1 text-xs text-foreground/40">PNG·JPG·WEBP·SVG, 2MB 이하. 견적 카드와 상단 바에 표시됩니다. 나중에 마이페이지에서도 올릴 수 있어요.</p>
+                    <p className="mt-1 text-xs text-foreground/60">PNG·JPG·WEBP·SVG, 2MB 이하. 견적 카드와 상단 바에 표시됩니다. 나중에 마이페이지에서도 올릴 수 있어요.</p>
                   </div>
                   {logo && (
                     <button type="button" onClick={() => { setLogo(null); setLogoPreview(null); }} className="text-xs text-foreground/50 hover:text-red-500">삭제</button>
@@ -731,7 +731,7 @@ ${licenseError}
                 마케팅 정보 수신에 동의합니다. <span className="text-foreground/60">(선택)</span>
               </span>
             </label>
-            <p className="ml-7 text-xs text-foreground/40">
+            <p className="ml-7 text-xs text-foreground/60">
               새로운 서비스와 이벤트 소식을 이메일로 보내드립니다. 동의하지 않아도
               가입할 수 있으며, 마이페이지에서 언제든 철회할 수 있습니다. 승인 완료,
               견적 도착, 매칭 성사 등 서비스 이용에 필요한 안내는 동의 여부와

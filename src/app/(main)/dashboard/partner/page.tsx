@@ -461,7 +461,7 @@ export default function PartnerDashboard() {
               <div>
                 <p className="text-sm font-medium text-foreground/50">받은 의뢰</p>
                 <p className="mt-1 text-2xl font-bold sm:text-3xl text-primary">{stats.total}</p>
-                <p className="mt-1 text-xs text-foreground/40">신규 {stats.newCount} | 검토중 {stats.reviewing}</p>
+                <p className="mt-1 text-xs text-foreground/60">신규 {stats.newCount} | 검토중 {stats.reviewing}</p>
               </div>
               <div className="hidden rounded-xl bg-gradient-to-br sm:block from-primary to-primary-light p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
@@ -474,7 +474,7 @@ export default function PartnerDashboard() {
               <div>
                 <p className="text-sm font-medium text-foreground/50">보낸 견적</p>
                 <p className="mt-1 text-2xl font-bold sm:text-3xl text-emerald-600">{stats.quoted}</p>
-                <p className="mt-1 text-xs text-foreground/40">제출 완료된 견적서</p>
+                <p className="mt-1 text-xs text-foreground/60">제출 완료된 견적서</p>
               </div>
               <div className="hidden rounded-xl bg-gradient-to-br sm:block from-emerald-500 to-emerald-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
@@ -487,7 +487,7 @@ export default function PartnerDashboard() {
               <div>
                 <p className="text-sm font-medium text-foreground/50">매칭 성사</p>
                 <p className="mt-1 text-2xl font-bold sm:text-3xl text-amber-600">{stats.won}</p>
-                <p className="mt-1 text-xs text-foreground/40">매칭 성사된 프로젝트</p>
+                <p className="mt-1 text-xs text-foreground/60">매칭 성사된 프로젝트</p>
               </div>
               <div className="hidden rounded-xl bg-gradient-to-br sm:block from-amber-500 to-amber-400 p-3 text-white shadow-sm">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
@@ -555,7 +555,7 @@ export default function PartnerDashboard() {
                         <div className="flex-1 rounded-xl border border-border bg-surface shadow-card p-4 transition-all hover:border-primary/30 hover:shadow-md">
                           <p className="text-sm font-medium text-foreground">{act.title}</p>
                           <p className="mt-0.5 text-xs text-foreground/50">{act.detail}</p>
-                          <p className="mt-1 text-xs text-foreground/30">{new Date(act.date).toLocaleString("ko-KR")}</p>
+                          <p className="mt-1 text-xs text-foreground/50">{new Date(act.date).toLocaleString("ko-KR")}</p>
                         </div>
                       </div>
                     );
@@ -576,7 +576,7 @@ export default function PartnerDashboard() {
             {/* 검색 + 마케팅 유형 */}
             <div className="mt-3 flex items-center gap-2">
               <div className="relative flex-1">
-              <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
               </svg>
               <input
@@ -591,7 +591,7 @@ export default function PartnerDashboard() {
                   type="button"
                   onClick={() => setSearchTerm("")}
                   aria-label="검색어 지우기"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-foreground/30 hover:bg-muted hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-foreground/50 hover:bg-muted hover:text-foreground"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -646,7 +646,7 @@ export default function PartnerDashboard() {
               {filteredRequests.length === 0 ? (
                 <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">{requests.length === 0 ? "아직 받은 의뢰가 없습니다." : searchTerm.trim() ? `"${searchTerm.trim()}"에 대한 검색 결과가 없습니다.` : "해당 상태의 의뢰가 없습니다."}</p>
-                  {!user?.partnerCategories?.length && <p className="mt-2 text-sm text-foreground/40">파트너 카테고리가 설정되지 않았습니다.</p>}
+                  {!user?.partnerCategories?.length && <p className="mt-2 text-sm text-foreground/60">파트너 카테고리가 설정되지 않았습니다.</p>}
                 </div>
               ) : (
                 filteredRequests.map((req) => {
@@ -676,7 +676,7 @@ export default function PartnerDashboard() {
                         <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">
                           {req.category}
                           {req.category === "마케팅 대행" && mktTypeOf(req) && (
-                            <span className="text-foreground/40"> · {MARKETING_TYPES.find((t) => t.key === mktTypeOf(req))?.label ?? mktTypeOf(req)}</span>
+                            <span className="text-foreground/60"> · {MARKETING_TYPES.find((t) => t.key === mktTypeOf(req))?.label ?? mktTypeOf(req)}</span>
                           )}
                         </span>
                         {shortlisted && (
@@ -687,7 +687,7 @@ export default function PartnerDashboard() {
                         ) : (
                           <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusInfo.color}`}>{statusInfo.label}</span>
                         )}
-                        <span className="text-xs text-foreground/40">{new Date(req.createdAt).toLocaleDateString("ko-KR")}</span>
+                        <span className="text-xs text-foreground/60">{new Date(req.createdAt).toLocaleDateString("ko-KR")}</span>
                       </div>
                       <h3 className="mt-2 text-base font-semibold text-foreground">{req.title}</h3>
                       <div className="mt-1 flex flex-wrap gap-4 text-xs text-foreground/50">
@@ -771,22 +771,22 @@ export default function PartnerDashboard() {
                                     {/* 견적 상세 */}
                                     <div className="grid grid-cols-3 gap-3">
                                       <div className="rounded-lg border border-border bg-surface p-3 text-center">
-                                        <p className="text-xs text-foreground/40">견적 금액</p>
+                                        <p className="text-xs text-foreground/60">견적 금액</p>
                                         <p className="mt-1 text-lg font-bold text-primary">{myQuote?.amount}원</p>
                                       </div>
                                       <div className="rounded-lg border border-border bg-surface p-3 text-center">
-                                        <p className="text-xs text-foreground/40">소요 기간</p>
+                                        <p className="text-xs text-foreground/60">소요 기간</p>
                                         <p className="mt-1 text-base font-semibold text-foreground">{myQuote?.duration || "-"}</p>
                                       </div>
                                       <div className="rounded-lg border border-border bg-surface p-3 text-center">
-                                        <p className="text-xs text-foreground/40">의뢰 예산</p>
+                                        <p className="text-xs text-foreground/60">의뢰 예산</p>
                                         <p className="mt-1 text-sm font-semibold text-foreground">{req.budget}</p>
                                       </div>
                                     </div>
                                     {/* 업무범위 */}
                                     {myQuote?.timeline && myQuote.timeline.filter((t: { months: string }) => t.months).length > 0 && (
                                       <div>
-                                        <p className="text-xs text-foreground/40">업무범위별 소요기간</p>
+                                        <p className="text-xs text-foreground/60">업무범위별 소요기간</p>
                                         <div className="mt-1.5 flex flex-wrap gap-1.5">
                                           {myQuote.timeline.filter((t: { months: string }) => t.months).map((t: { label: string; months: string }, ti: number) => (
                                             <span key={ti} className="rounded-md border border-border bg-surface px-2 py-1 text-xs">
@@ -806,7 +806,7 @@ export default function PartnerDashboard() {
                                     )}
                                     {/* 메모 */}
                                     {myQuote?.memo && (
-                                      <div className="rounded-lg bg-surface p-3"><p className="text-xs text-foreground/40">메모</p><p className="mt-0.5 text-sm text-foreground/70">{myQuote.memo}</p></div>
+                                      <div className="rounded-lg bg-surface p-3"><p className="text-xs text-foreground/60">메모</p><p className="mt-0.5 text-sm text-foreground/70">{myQuote.memo}</p></div>
                                     )}
                                     {/* 첨부파일 */}
                                     {myQuote?.attachmentName && (
@@ -868,7 +868,7 @@ export default function PartnerDashboard() {
               {wonRequests.length === 0 ? (
                 <div className="rounded-xl border border-border bg-surface shadow-card p-12 text-center">
                   <p className="text-foreground/50">아직 매칭 성사한 프로젝트가 없습니다.</p>
-                  <p className="mt-1 text-sm text-foreground/40">견적서를 제출하고 의뢰사의 선택을 기다려보세요.</p>
+                  <p className="mt-1 text-sm text-foreground/60">견적서를 제출하고 의뢰사의 선택을 기다려보세요.</p>
                 </div>
               ) : wonRequests.map((req) => {
                 const myQuote = (req.quotes || []).find((q) => q.companyId === user?.companyId);
@@ -917,7 +917,7 @@ export default function PartnerDashboard() {
                     의뢰사 신고
                   </Link>
                 )}
-                <button onClick={() => { setSelectedRequest(null); setIsEditing(false); }} className="rounded-lg p-1 text-foreground/40 hover:bg-muted hover:text-foreground">
+                <button onClick={() => { setSelectedRequest(null); setIsEditing(false); }} className="rounded-lg p-1 text-foreground/60 hover:bg-muted hover:text-foreground">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -946,23 +946,23 @@ export default function PartnerDashboard() {
               {/* 기본 정보 카드 - 2x2 */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-xl border border-border p-4 overflow-hidden">
-                  <p className="text-sm text-foreground/40">의뢰사</p>
+                  <p className="text-sm text-foreground/60">의뢰사</p>
                   <p className="mt-1 flex items-center gap-2 text-base font-semibold text-foreground break-words">
                     {selectedRequest.clientCompany && <CompanyLogo path={selectedRequest.clientLogo} name={selectedRequest.clientCompany} size={32} />}
                     {clientLabel(selectedRequest)}
-                    {!selectedRequest.clientCompany && <span className="text-xs font-normal text-foreground/40">{clientHint(selectedRequest).trim()}</span>}
+                    {!selectedRequest.clientCompany && <span className="text-xs font-normal text-foreground/60">{clientHint(selectedRequest).trim()}</span>}
                   </p>
                 </div>
                 <div className="rounded-xl border border-border p-4">
-                  <p className="text-sm text-foreground/40">예산</p>
+                  <p className="text-sm text-foreground/60">예산</p>
                   <p className="mt-1 text-base font-semibold text-primary">{selectedRequest.budget}</p>
                 </div>
                 <div className="rounded-xl border border-border p-4">
-                  <p className="text-sm text-foreground/40">희망 마감일</p>
+                  <p className="text-sm text-foreground/60">희망 마감일</p>
                   <p className="mt-1 text-base font-semibold text-foreground">{selectedRequest.deadline === "미정" ? "미정" : new Date(selectedRequest.deadline + "T00:00:00").toLocaleDateString("ko-KR")}</p>
                 </div>
                 <div className="rounded-xl border border-border p-4">
-                  <p className="text-sm text-foreground/40">등록일</p>
+                  <p className="text-sm text-foreground/60">등록일</p>
                   <p className="mt-1 text-base font-semibold text-foreground">{new Date(selectedRequest.createdAt).toLocaleDateString("ko-KR")}</p>
                 </div>
               </div>
@@ -984,7 +984,7 @@ export default function PartnerDashboard() {
                       const isLong = value.length > 30 || label === "위탁업무" || label === "추가 요구사항";
                       return (
                         <div key={i} className={isLong ? "col-span-2" : ""}>
-                          <p className="text-sm text-foreground/40">{label}</p>
+                          <p className="text-sm text-foreground/60">{label}</p>
                           <p className="mt-0.5 text-base font-medium text-foreground">{value}</p>
                         </div>
                       );
@@ -1149,7 +1149,7 @@ export default function PartnerDashboard() {
                     {selectedRequest?.category !== "기업보험" && (
                     <div className="rounded-xl border border-border p-4">
                       <h5 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                        <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <svg className="h-4 w-4 text-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         업무범위별 소요기간
                       </h5>
                       <p className="mt-1 text-xs text-foreground/50">준비 기간을 포함해 각 업무를 마치는 데 걸리는 개월 수를 적어 주세요.</p>
@@ -1203,7 +1203,7 @@ export default function PartnerDashboard() {
                     <div>
                       <label className="block text-sm font-medium text-foreground">견적 금액 (원화) *</label>
                       <div className="relative mt-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40">&#8361;</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60">&#8361;</span>
                         <input type="text" inputMode="numeric" value={quoteForm.amount}
                           onChange={(e) => {
                             const raw = e.target.value.replace(/[^\d]/g, "");
@@ -1211,10 +1211,10 @@ export default function PartnerDashboard() {
                             setQuoteForm({ ...quoteForm, amount: formatted });
                           }}
                           placeholder="숫자만 입력" className="w-full rounded-lg border border-border py-2.5 pl-8 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-foreground/30">원</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-foreground/50">원</span>
                       </div>
                       {quoteForm.amount && (
-                        <p className="mt-1 text-xs text-foreground/40">
+                        <p className="mt-1 text-xs text-foreground/60">
                           {(() => {
                             const num = Number(quoteForm.amount.replace(/,/g, ""));
                             if (num >= 100000000) return `${(num / 100000000).toFixed(1)}억원`;
@@ -1232,13 +1232,13 @@ export default function PartnerDashboard() {
                         {attachment ? (
                           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-2.5">
                             <div className="flex items-center gap-2">
-                              <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                              <svg className="h-4 w-4 text-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                               <span className="text-sm text-foreground/70">{attachment.name}</span>
                             </div>
                             <button onClick={() => setAttachment(null)} className="text-xs text-red-500 hover:underline">삭제</button>
                           </div>
                         ) : (
-                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-foreground/40 transition-colors hover:border-primary hover:text-primary">
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-foreground/60 transition-colors hover:border-primary hover:text-primary">
                             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
                             파일 선택 (PDF 또는 Word 문서만 업로드 가능, 최대 10MB)
                             <input type="file" className="hidden" onChange={handleFileChange} accept={ATTACHMENT_ACCEPT} />

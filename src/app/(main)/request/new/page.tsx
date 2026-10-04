@@ -1050,15 +1050,15 @@ function NewRequestForm() {
               )}
               {/* 원 (연결선 위에 표시) */}
               <div className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
-                step >= s.num ? "bg-primary text-white" : "bg-muted text-foreground/30 border border-border"
+                step >= s.num ? "bg-primary text-white" : "bg-muted text-foreground/50 border border-border"
               }`}>
                 {step > s.num ? (
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 ) : s.num}
               </div>
               {/* 라벨: 원과 같은 컨테이너(items-center)라 원 정중앙 아래에 중앙 정렬 */}
-              <p className={`mt-2 text-center text-xs font-medium ${step >= s.num ? "text-primary" : "text-foreground/30"}`}>{s.title}</p>
-              <p className="text-center text-[10px] text-foreground/30">{s.sub}</p>
+              <p className={`mt-2 text-center text-xs font-medium ${step >= s.num ? "text-primary" : "text-foreground/50"}`}>{s.title}</p>
+              <p className="text-center text-[10px] text-foreground/50">{s.sub}</p>
             </div>
           ))}
         </div>
@@ -1107,7 +1107,7 @@ function NewRequestForm() {
                       : serviceType === type.id ? "border-primary bg-primary/5 shadow-md"
                       : "border-border hover:-translate-y-0.5 hover:border-primary hover:bg-primary/5 hover:shadow-lg"
                     }`}>
-                    <div className={`mt-0.5 rounded-lg p-2 transition-colors ${serviceType === type.id ? "bg-primary/10 text-primary" : "bg-muted text-foreground/40"} ${blocked ? "" : "group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                    <div className={`mt-0.5 rounded-lg p-2 transition-colors ${serviceType === type.id ? "bg-primary/10 text-primary" : "bg-muted text-foreground/60"} ${blocked ? "" : "group-hover:bg-primary/10 group-hover:text-primary"}`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={type.icon} /></svg>
                     </div>
                     <div>
@@ -1305,7 +1305,7 @@ function NewRequestForm() {
 
                     {insKind && (
                       <div>
-                        <label className="block text-sm font-medium text-foreground">선호 보험사 <span className="text-xs font-normal text-foreground/40">(최대 2개)</span></label>
+                        <label className="block text-sm font-medium text-foreground">선호 보험사 <span className="text-xs font-normal text-foreground/60">(최대 2개)</span></label>
                         <div className="mt-2 flex flex-wrap gap-3">
                           {insurerOptions.map((ins) => (
                             <label key={ins} className="flex cursor-pointer items-center gap-2">
@@ -1313,7 +1313,7 @@ function NewRequestForm() {
                                 disabled={!preferredInsurers.includes(ins) && preferredInsurers.length >= 2}
                                 onChange={() => setPreferredInsurers((prev) => prev.includes(ins) ? prev.filter((i) => i !== ins) : [...prev, ins])}
                                 className="h-4 w-4 rounded border-border accent-primary disabled:opacity-30" />
-                              <span className={`text-sm ${!preferredInsurers.includes(ins) && preferredInsurers.length >= 2 ? "text-foreground/30" : "text-foreground/70"}`}>{ins}</span>
+                              <span className={`text-sm ${!preferredInsurers.includes(ins) && preferredInsurers.length >= 2 ? "text-foreground/50" : "text-foreground/70"}`}>{ins}</span>
                             </label>
                           ))}
                         </div>
@@ -1409,7 +1409,7 @@ function NewRequestForm() {
                       <label className="block text-sm font-medium text-foreground">실시기관명 *</label>
                       <input type="text" value={insSiteNames} onChange={(e) => setInsSiteNames(e.target.value)}
                         placeholder="예: 서울대학교병원, 연세대학교 세브란스병원" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                      <p className="mt-1 text-xs text-foreground/40">여러 기관은 쉼표(,)로 구분해주세요</p>
+                      <p className="mt-1 text-xs text-foreground/60">여러 기관은 쉼표(,)로 구분해주세요</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-foreground">예상 보험 기간 (개월) *</label>
@@ -1508,7 +1508,7 @@ function NewRequestForm() {
                       <div>
                         <label className="block text-sm font-medium text-foreground">납품 희망일</label>
                         <div className="relative mt-1">
-                          <button type="button" className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary"
+                          <button type="button" className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-primary"
                             onClick={() => { const el = document.getElementById("supplyDeliveryDateInput") as HTMLInputElement; el?.showPicker?.(); el?.focus(); }}>
                             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>
                           </button>
@@ -1548,7 +1548,7 @@ function NewRequestForm() {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-foreground">인쇄 품목 <span className="text-xs font-normal text-foreground/40">(복수 선택 가능)</span></label>
+                          <label className="block text-sm font-medium text-foreground">인쇄 품목 <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span></label>
                           <div className="mt-2 flex flex-wrap gap-2">
                             {printItemOptions.map((item) => (
                               <button key={item} type="button"
@@ -1574,7 +1574,7 @@ function NewRequestForm() {
                             주소 검색
                           </button>
                         </div>
-                        <p className="mt-1 text-xs text-foreground/40">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
+                        <p className="mt-1 text-xs text-foreground/60">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
                       </div>
                     )}
                   </>
@@ -1598,7 +1598,7 @@ function NewRequestForm() {
                       <input type="text" value={matName} onChange={(e) => setMatName(e.target.value)}
                         placeholder="예: Metformin HCl, 미결정셀룰로오스"
                         className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                      <p className="mt-1 text-xs text-foreground/40">
+                      <p className="mt-1 text-xs text-foreground/60">
                         CAS 번호나 규격이 있으면 함께 적어주세요. 정확할수록 맞는 공급처를 찾기 쉽습니다.
                       </p>
                     </div>
@@ -1839,7 +1839,7 @@ function NewRequestForm() {
                     <div className="flex items-center justify-between">
                       <div>
                         <label className="block text-sm font-medium text-foreground">위탁업무 세부 선택</label>
-                        <p className="mt-0.5 text-xs text-foreground/40">선택한 위탁업무의 세부 항목을 체크해주세요</p>
+                        <p className="mt-0.5 text-xs text-foreground/60">선택한 위탁업무의 세부 항목을 체크해주세요</p>
                       </div>
                       <label className="flex cursor-pointer items-center gap-1.5">
                         <input type="checkbox"
@@ -1923,7 +1923,7 @@ function NewRequestForm() {
                 <div>
                   <label className="block text-sm font-medium text-foreground">희망 업무 시작일 *</label>
                   <div className="relative mt-1">
-                    <button type="button" className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary"
+                    <button type="button" className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60 hover:text-primary"
                       onClick={() => { const el = document.getElementById("startDateInput") as HTMLInputElement; el?.showPicker?.(); el?.focus(); }}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" /></svg>
                     </button>
@@ -1945,14 +1945,14 @@ function NewRequestForm() {
                     {attachment ? (
                       <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-2.5">
                         <div className="flex items-center gap-2">
-                          <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                          <svg className="h-4 w-4 text-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                           <span className="text-sm text-foreground/70">{attachment.name}</span>
                         </div>
                         <button onClick={() => setAttachment(null)} className="text-xs text-red-500 hover:underline">삭제</button>
                       </div>
                     ) : (
                       <label
-                        className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-8 text-foreground/40 transition-colors hover:border-primary hover:text-primary"
+                        className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-8 text-foreground/60 transition-colors hover:border-primary hover:text-primary"
                         onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-primary", "text-primary", "bg-primary/5"); }}
                         onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove("border-primary", "text-primary", "bg-primary/5"); }}
                         onDrop={(e) => {
@@ -1997,16 +1997,16 @@ function NewRequestForm() {
                 <div className="border-b border-border pb-4">
                   <h3 className="text-base font-bold text-foreground">프로젝트 기본 정보</h3>
                   <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                    <div><span className="text-foreground/40">프로젝트명</span><p className="font-medium text-foreground">{projectName}</p></div>
-                    <div><span className="text-foreground/40">구분</span><p className="font-medium text-foreground">{serviceType === "cmo-cdmo" ? (cmoCategoryOptions.find((c) => c.value === cmoCategory)?.label || "-") : (categoryOptions.find((c) => c.value === productCategory)?.label || "-")}</p></div>
+                    <div><span className="text-foreground/60">프로젝트명</span><p className="font-medium text-foreground">{projectName}</p></div>
+                    <div><span className="text-foreground/60">구분</span><p className="font-medium text-foreground">{serviceType === "cmo-cdmo" ? (cmoCategoryOptions.find((c) => c.value === cmoCategory)?.label || "-") : (categoryOptions.find((c) => c.value === productCategory)?.label || "-")}</p></div>
                     {["cro", "smo", "cmo-cdmo"].includes(serviceType) && trialPurpose && (
-                      <div className="col-span-2"><span className="text-foreground/40">{serviceType === "cmo-cdmo" ? "의뢰 목적" : "임상시험 목적"}</span><p className="font-medium text-foreground">{trialPurpose}</p></div>
+                      <div className="col-span-2"><span className="text-foreground/60">{serviceType === "cmo-cdmo" ? "의뢰 목적" : "임상시험 목적"}</span><p className="font-medium text-foreground">{trialPurpose}</p></div>
                     )}
                     {serviceType !== "cro" && serviceType !== "cmo-cdmo" && serviceType !== "smo" && serviceType !== "insurance" && (
-                      <div><span className="text-foreground/40">단계</span><p className="font-medium text-foreground">{phaseOptions.find((p) => p.value === phase)?.label || "-"}</p></div>
+                      <div><span className="text-foreground/60">단계</span><p className="font-medium text-foreground">{phaseOptions.find((p) => p.value === phase)?.label || "-"}</p></div>
                     )}
                     {serviceType !== "insurance" && tasks.length > 0 && (
-                      <div className="col-span-2"><span className="text-foreground/40">위탁업무</span><p className="font-medium text-foreground">{tasks.join(", ")}</p>
+                      <div className="col-span-2"><span className="text-foreground/60">위탁업무</span><p className="font-medium text-foreground">{tasks.join(", ")}</p>
                         {tasks.filter((t) => (taskDetails[t] || []).length > 0).length > 0 && (
                           <div className="mt-2 space-y-1">
                             {tasks.filter((t) => (taskDetails[t] || []).length > 0).map((t) => (
@@ -2021,13 +2021,13 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">임상시험 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">적응증</span><p className="font-medium text-foreground">{indication || "-"}</p></div>
-                        <div><span className="text-foreground/40">임상시험 단계</span><p className="font-medium text-foreground">{trialPhase || "-"}</p></div>
-                        <div><span className="text-foreground/40">대상자 수</span><p className="font-medium text-foreground">{subjectCount || "-"}명</p></div>
-                        <div><span className="text-foreground/40">실시기관</span><p className="font-medium text-foreground">수도권 {siteCount.capital || 0} / 지방 {siteCount.local || 0}</p></div>
-                        <div><span className="text-foreground/40">등록기간</span><p className="font-medium text-foreground">{enrollmentPeriod || "-"}개월</p></div>
-                        <div><span className="text-foreground/40">치료/추적관찰</span><p className="font-medium text-foreground">{treatmentPeriod || "-"}개월</p></div>
-                        <div><span className="text-foreground/40">CRF</span><p className="font-medium text-foreground">{crfType} / {crfPages || "-"}페이지</p></div>
+                        <div><span className="text-foreground/60">적응증</span><p className="font-medium text-foreground">{indication || "-"}</p></div>
+                        <div><span className="text-foreground/60">임상시험 단계</span><p className="font-medium text-foreground">{trialPhase || "-"}</p></div>
+                        <div><span className="text-foreground/60">대상자 수</span><p className="font-medium text-foreground">{subjectCount || "-"}명</p></div>
+                        <div><span className="text-foreground/60">실시기관</span><p className="font-medium text-foreground">수도권 {siteCount.capital || 0} / 지방 {siteCount.local || 0}</p></div>
+                        <div><span className="text-foreground/60">등록기간</span><p className="font-medium text-foreground">{enrollmentPeriod || "-"}개월</p></div>
+                        <div><span className="text-foreground/60">치료/추적관찰</span><p className="font-medium text-foreground">{treatmentPeriod || "-"}개월</p></div>
+                        <div><span className="text-foreground/60">CRF</span><p className="font-medium text-foreground">{crfType} / {crfPages || "-"}페이지</p></div>
                       </div>
                     </div>
                   )}
@@ -2035,13 +2035,13 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">SMO 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">적응증</span><p className="font-medium text-foreground">{smoIndication || "-"}</p></div>
-                        <div><span className="text-foreground/40">임상시험 단계</span><p className="font-medium text-foreground">{smoTrialPhase || "-"}</p></div>
-                        <div><span className="text-foreground/40">실시기관</span><p className="font-medium text-foreground">수도권 {smoSiteCount.capital || 0} / 지방 {smoSiteCount.local || 0}</p></div>
-                        <div><span className="text-foreground/40">기관 유형</span><p className="font-medium text-foreground">{siteTypes.map((v) => siteTypeOptions.find((o) => o.value === v)?.label).join(", ") || "-"}</p></div>
-                        <div><span className="text-foreground/40">목표 대상자 수</span><p className="font-medium text-foreground">{smoSubjectCount || "-"}명</p></div>
-                        <div><span className="text-foreground/40">예상 등록 기간</span><p className="font-medium text-foreground">{smoEnrollmentPeriod || "-"}개월</p></div>
-                        {crcCount && <div><span className="text-foreground/40">CRC 투입 인원</span><p className="font-medium text-foreground">{crcCount}명</p></div>}
+                        <div><span className="text-foreground/60">적응증</span><p className="font-medium text-foreground">{smoIndication || "-"}</p></div>
+                        <div><span className="text-foreground/60">임상시험 단계</span><p className="font-medium text-foreground">{smoTrialPhase || "-"}</p></div>
+                        <div><span className="text-foreground/60">실시기관</span><p className="font-medium text-foreground">수도권 {smoSiteCount.capital || 0} / 지방 {smoSiteCount.local || 0}</p></div>
+                        <div><span className="text-foreground/60">기관 유형</span><p className="font-medium text-foreground">{siteTypes.map((v) => siteTypeOptions.find((o) => o.value === v)?.label).join(", ") || "-"}</p></div>
+                        <div><span className="text-foreground/60">목표 대상자 수</span><p className="font-medium text-foreground">{smoSubjectCount || "-"}명</p></div>
+                        <div><span className="text-foreground/60">예상 등록 기간</span><p className="font-medium text-foreground">{smoEnrollmentPeriod || "-"}개월</p></div>
+                        {crcCount && <div><span className="text-foreground/60">CRC 투입 인원</span><p className="font-medium text-foreground">{crcCount}명</p></div>}
                       </div>
                     </div>
                   )}
@@ -2049,18 +2049,18 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">기업보험 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">보험 종류</span><p className="font-medium text-foreground">{insuranceKindOptions.find((o) => o.value === insKind)?.label || "-"}</p></div>
-                        {insKind !== "clinical" && <div className="col-span-2"><span className="text-foreground/40">내용</span><p className="whitespace-pre-line font-medium text-foreground">{insTargetScale || "-"}</p></div>}
-                        {insKind === "clinical" && <div><span className="text-foreground/40">임상시험 단계</span><p className="font-medium text-foreground">{insTrialPhase || "-"}</p></div>}
-                        {insKind === "clinical" && <div><span className="text-foreground/40">적응증</span><p className="font-medium text-foreground">{insIndication || "-"}</p></div>}
-                        {insKind === "clinical" && <div><span className="text-foreground/40">대상자 수</span><p className="font-medium text-foreground">{insSubjectCount || "-"}명</p></div>}
-                        {insKind === "clinical" && <div><span className="text-foreground/40">대상자 유형</span><p className="font-medium text-foreground">{subjectTypeOptions.find((o) => o.value === subjectType)?.label || "-"}</p></div>}
-                        {insKind === "clinical" && <div className="col-span-2"><span className="text-foreground/40">실시기관명</span><p className="font-medium text-foreground">{insSiteNames || "-"}</p></div>}
-                        <div><span className="text-foreground/40">예상 보험 기간</span><p className="font-medium text-foreground">{insurancePeriod || "-"}개월</p></div>
-                        {(compensationPerPerson || compensationTotal) && <div><span className="text-foreground/40">보상 한도</span><p className="font-medium text-foreground">1인당 {compensationPerPerson || "-"} / 총 {compensationTotal || "-"}</p></div>}
-                        {insContractorType && <div><span className="text-foreground/40">계약자</span><p className="font-medium text-foreground">{insContractorType === "individual" ? "개인" : "법인"}</p></div>}
-                        {insContractorId && <div><span className="text-foreground/40">{insContractorType === "individual" ? "주민등록번호" : "사업자등록번호"}</span><p className="font-medium text-foreground">{insContractorId}</p></div>}
-                        {preferredInsurers.length > 0 && <div><span className="text-foreground/40">선호 보험사</span><p className="font-medium text-foreground">{insurerLabel() || "-"}</p></div>}
+                        <div><span className="text-foreground/60">보험 종류</span><p className="font-medium text-foreground">{insuranceKindOptions.find((o) => o.value === insKind)?.label || "-"}</p></div>
+                        {insKind !== "clinical" && <div className="col-span-2"><span className="text-foreground/60">내용</span><p className="whitespace-pre-line font-medium text-foreground">{insTargetScale || "-"}</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/60">임상시험 단계</span><p className="font-medium text-foreground">{insTrialPhase || "-"}</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/60">적응증</span><p className="font-medium text-foreground">{insIndication || "-"}</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/60">대상자 수</span><p className="font-medium text-foreground">{insSubjectCount || "-"}명</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/60">대상자 유형</span><p className="font-medium text-foreground">{subjectTypeOptions.find((o) => o.value === subjectType)?.label || "-"}</p></div>}
+                        {insKind === "clinical" && <div className="col-span-2"><span className="text-foreground/60">실시기관명</span><p className="font-medium text-foreground">{insSiteNames || "-"}</p></div>}
+                        <div><span className="text-foreground/60">예상 보험 기간</span><p className="font-medium text-foreground">{insurancePeriod || "-"}개월</p></div>
+                        {(compensationPerPerson || compensationTotal) && <div><span className="text-foreground/60">보상 한도</span><p className="font-medium text-foreground">1인당 {compensationPerPerson || "-"} / 총 {compensationTotal || "-"}</p></div>}
+                        {insContractorType && <div><span className="text-foreground/60">계약자</span><p className="font-medium text-foreground">{insContractorType === "individual" ? "개인" : "법인"}</p></div>}
+                        {insContractorId && <div><span className="text-foreground/60">{insContractorType === "individual" ? "주민등록번호" : "사업자등록번호"}</span><p className="font-medium text-foreground">{insContractorId}</p></div>}
+                        {preferredInsurers.length > 0 && <div><span className="text-foreground/60">선호 보험사</span><p className="font-medium text-foreground">{insurerLabel() || "-"}</p></div>}
                       </div>
                     </div>
                   )}
@@ -2068,10 +2068,10 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">RA/인허가 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        {raDeviceGrade && <div><span className="text-foreground/40">의료기기 등급</span><p className="font-medium text-foreground">{raDeviceGrade}</p></div>}
-                        {raDrugType && <div><span className="text-foreground/40">의약품 유형</span><p className="font-medium text-foreground">{raDrugTypeOptions.find((o) => o.value === raDrugType)?.label || "-"}</p></div>}
-                        {phase && <div><span className="text-foreground/40">단계</span><p className="font-medium text-foreground">{phaseOptions.find((p) => p.value === phase)?.label || "-"}</p></div>}
-                        <div className="col-span-2"><span className="text-foreground/40">제품 정보</span><p className="font-medium text-foreground">{raProductInfo || "-"}</p></div>
+                        {raDeviceGrade && <div><span className="text-foreground/60">의료기기 등급</span><p className="font-medium text-foreground">{raDeviceGrade}</p></div>}
+                        {raDrugType && <div><span className="text-foreground/60">의약품 유형</span><p className="font-medium text-foreground">{raDrugTypeOptions.find((o) => o.value === raDrugType)?.label || "-"}</p></div>}
+                        {phase && <div><span className="text-foreground/60">단계</span><p className="font-medium text-foreground">{phaseOptions.find((p) => p.value === phase)?.label || "-"}</p></div>}
+                        <div className="col-span-2"><span className="text-foreground/60">제품 정보</span><p className="font-medium text-foreground">{raProductInfo || "-"}</p></div>
                       </div>
                     </div>
                   )}
@@ -2079,12 +2079,12 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">원료·첨가제 공급 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">원료 구분</span><p className="font-medium text-foreground">{materialKindOptions.find((o) => o.value === matKind)?.label || "-"}</p></div>
-                        <div><span className="text-foreground/40">원료명</span><p className="font-medium text-foreground">{matName || "-"}</p></div>
-                        <div><span className="text-foreground/40">등급</span><p className="font-medium text-foreground">{materialGradeOptions.find((o) => o.value === matGrade)?.label || "-"}</p></div>
-                        <div><span className="text-foreground/40">필요 수량</span><p className="font-medium text-foreground">{matQty || "-"}</p></div>
-                        {matDeliveryDate && <div><span className="text-foreground/40">납품 희망일</span><p className="font-medium text-foreground">{matDeliveryDate}</p></div>}
-                        {matDocs.length > 0 && <div className="col-span-2"><span className="text-foreground/40">필요 서류</span><p className="font-medium text-foreground">{matDocs.join(", ")}</p></div>}
+                        <div><span className="text-foreground/60">원료 구분</span><p className="font-medium text-foreground">{materialKindOptions.find((o) => o.value === matKind)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/60">원료명</span><p className="font-medium text-foreground">{matName || "-"}</p></div>
+                        <div><span className="text-foreground/60">등급</span><p className="font-medium text-foreground">{materialGradeOptions.find((o) => o.value === matGrade)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/60">필요 수량</span><p className="font-medium text-foreground">{matQty || "-"}</p></div>
+                        {matDeliveryDate && <div><span className="text-foreground/60">납품 희망일</span><p className="font-medium text-foreground">{matDeliveryDate}</p></div>}
+                        {matDocs.length > 0 && <div className="col-span-2"><span className="text-foreground/60">필요 서류</span><p className="font-medium text-foreground">{matDocs.join(", ")}</p></div>}
                       </div>
                     </div>
                   )}
@@ -2092,14 +2092,14 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">소모품 공급 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">공급 유형</span><p className="font-medium text-foreground">{supplyTypeOptions.find((o) => o.value === supplyType)?.label || "-"}</p></div>
-                        <div><span className="text-foreground/40">납품 수량</span><p className="font-medium text-foreground">{supplyQty || "-"}</p></div>
-                        {supplyDeliveryDate && <div><span className="text-foreground/40">납품 희망일</span><p className="font-medium text-foreground">{supplyDeliveryDate}</p></div>}
-                        {supplyDeliveryMethod && <div><span className="text-foreground/40">납품 방식</span><p className="font-medium text-foreground">{supplyDeliveryOptions.find((o) => o.value === supplyDeliveryMethod)?.label || "-"}</p></div>}
-                        {printClinicalCode && <div><span className="text-foreground/40">임상코드번호</span><p className="font-medium text-foreground">{printClinicalCode}</p></div>}
-                        {printSites && <div><span className="text-foreground/40">해당 기관</span><p className="font-medium text-foreground">{printSites}</p></div>}
-                        {printItems.length > 0 && <div className="col-span-2"><span className="text-foreground/40">인쇄 품목</span><p className="font-medium text-foreground">{printItems.join(", ")}</p></div>}
-                        {printDeliveryAddress && <div className="col-span-2"><span className="text-foreground/40">배송 장소</span><p className="font-medium text-foreground">{printDeliveryAddress}</p></div>}
+                        <div><span className="text-foreground/60">공급 유형</span><p className="font-medium text-foreground">{supplyTypeOptions.find((o) => o.value === supplyType)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/60">납품 수량</span><p className="font-medium text-foreground">{supplyQty || "-"}</p></div>
+                        {supplyDeliveryDate && <div><span className="text-foreground/60">납품 희망일</span><p className="font-medium text-foreground">{supplyDeliveryDate}</p></div>}
+                        {supplyDeliveryMethod && <div><span className="text-foreground/60">납품 방식</span><p className="font-medium text-foreground">{supplyDeliveryOptions.find((o) => o.value === supplyDeliveryMethod)?.label || "-"}</p></div>}
+                        {printClinicalCode && <div><span className="text-foreground/60">임상코드번호</span><p className="font-medium text-foreground">{printClinicalCode}</p></div>}
+                        {printSites && <div><span className="text-foreground/60">해당 기관</span><p className="font-medium text-foreground">{printSites}</p></div>}
+                        {printItems.length > 0 && <div className="col-span-2"><span className="text-foreground/60">인쇄 품목</span><p className="font-medium text-foreground">{printItems.join(", ")}</p></div>}
+                        {printDeliveryAddress && <div className="col-span-2"><span className="text-foreground/60">배송 장소</span><p className="font-medium text-foreground">{printDeliveryAddress}</p></div>}
                       </div>
                     </div>
                   )}
@@ -2107,14 +2107,14 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">마케팅 대행 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">마케팅 유형</span><p className="font-medium text-foreground">{marketingTypeOptions.find((o) => o.value === mktType)?.label || "-"}</p></div>
-                        <div><span className="text-foreground/40">성분명</span><p className="font-medium text-foreground">{mktIngredientName || "-"}</p></div>
-                        {mktEventName && <div><span className="text-foreground/40">행사명</span><p className="font-medium text-foreground">{mktEventName}</p></div>}
-                        {mktEventDate && <div><span className="text-foreground/40">행사 희망 일정</span><p className="font-medium text-foreground">{mktEventDate}</p></div>}
-                        {mktAttendees && <div><span className="text-foreground/40">예상 참석자</span><p className="font-medium text-foreground">{mktAttendees}명</p></div>}
-                        {mktVenue && <div><span className="text-foreground/40">희망 장소</span><p className="font-medium text-foreground">{mktVenue}</p></div>}
-                        {mktNeedStay && <div><span className="text-foreground/40">숙박</span><p className="font-medium text-foreground">{mktNeedStay === "yes" ? "필요" : "불필요"}</p></div>}
-                        {mktNeedFnb && <div><span className="text-foreground/40">F&B</span><p className="font-medium text-foreground">{mktNeedFnb === "yes" ? "필요" : "불필요"}</p></div>}
+                        <div><span className="text-foreground/60">마케팅 유형</span><p className="font-medium text-foreground">{marketingTypeOptions.find((o) => o.value === mktType)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/60">성분명</span><p className="font-medium text-foreground">{mktIngredientName || "-"}</p></div>
+                        {mktEventName && <div><span className="text-foreground/60">행사명</span><p className="font-medium text-foreground">{mktEventName}</p></div>}
+                        {mktEventDate && <div><span className="text-foreground/60">행사 희망 일정</span><p className="font-medium text-foreground">{mktEventDate}</p></div>}
+                        {mktAttendees && <div><span className="text-foreground/60">예상 참석자</span><p className="font-medium text-foreground">{mktAttendees}명</p></div>}
+                        {mktVenue && <div><span className="text-foreground/60">희망 장소</span><p className="font-medium text-foreground">{mktVenue}</p></div>}
+                        {mktNeedStay && <div><span className="text-foreground/60">숙박</span><p className="font-medium text-foreground">{mktNeedStay === "yes" ? "필요" : "불필요"}</p></div>}
+                        {mktNeedFnb && <div><span className="text-foreground/60">F&B</span><p className="font-medium text-foreground">{mktNeedFnb === "yes" ? "필요" : "불필요"}</p></div>}
                       </div>
                     </div>
                   )}
@@ -2122,12 +2122,12 @@ function NewRequestForm() {
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
                       <h4 className="text-sm font-semibold text-foreground">CMO/CDMO 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">구분</span><p className="font-medium text-foreground">{cmoCategoryOptions.find((c) => c.value === cmoCategory)?.label || "-"}</p></div>
-                        <div><span className="text-foreground/40">생산 단계</span><p className="font-medium text-foreground">{cmoPhaseOptions.find((p) => p.value === cmoPhase)?.label || "-"}</p></div>
-                        <div><span className="text-foreground/40">제형</span><p className="font-medium text-foreground">{formulationOptions.find((f) => f.value === formulation)?.label || "-"}</p></div>
-                        <div><span className="text-foreground/40">Batch 수 / 생산 규모</span><p className="font-medium text-foreground">{batchCount || "-"}회 / {productionVolume || "-"}</p></div>
+                        <div><span className="text-foreground/60">구분</span><p className="font-medium text-foreground">{cmoCategoryOptions.find((c) => c.value === cmoCategory)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/60">생산 단계</span><p className="font-medium text-foreground">{cmoPhaseOptions.find((p) => p.value === cmoPhase)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/60">제형</span><p className="font-medium text-foreground">{formulationOptions.find((f) => f.value === formulation)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/60">Batch 수 / 생산 규모</span><p className="font-medium text-foreground">{batchCount || "-"}회 / {productionVolume || "-"}</p></div>
                         {gmpRequirements.length > 0 && (
-                          <div className="col-span-2"><span className="text-foreground/40">GMP 인증</span><p className="font-medium text-foreground">{gmpRequirements.join(", ")}</p></div>
+                          <div className="col-span-2"><span className="text-foreground/60">GMP 인증</span><p className="font-medium text-foreground">{gmpRequirements.join(", ")}</p></div>
                         )}
                       </div>
                     </div>
@@ -2136,18 +2136,18 @@ function NewRequestForm() {
                 <div>
                   <h3 className="text-base font-bold text-foreground">세부 요구사항</h3>
                   <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                    <div><span className="text-foreground/40">예산 범위</span><p className="font-medium text-foreground">{budget}</p></div>
-                    <div><span className="text-foreground/40">우선순위</span><p className="font-medium text-foreground">{priorityOptions.find((p) => p.value === priority)?.label}</p></div>
-                    <div><span className="text-foreground/40">희망 업무 시작일</span><p className="font-medium text-foreground">{new Date(startDate + "T00:00:00").toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}</p></div>
+                    <div><span className="text-foreground/60">예산 범위</span><p className="font-medium text-foreground">{budget}</p></div>
+                    <div><span className="text-foreground/60">우선순위</span><p className="font-medium text-foreground">{priorityOptions.find((p) => p.value === priority)?.label}</p></div>
+                    <div><span className="text-foreground/60">희망 업무 시작일</span><p className="font-medium text-foreground">{new Date(startDate + "T00:00:00").toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}</p></div>
                   </div>
                   {attachment && (
                     <div className="mt-3 flex items-center gap-2 text-sm">
-                      <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                      <svg className="h-4 w-4 text-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                       <span className="text-foreground/70">{attachment.name}</span>
                     </div>
                   )}
                   {additionalNotes && (
-                    <div className="mt-3"><span className="text-sm text-foreground/40">추가 요구사항</span><p className="mt-0.5 text-sm text-foreground/70">{additionalNotes}</p></div>
+                    <div className="mt-3"><span className="text-sm text-foreground/60">추가 요구사항</span><p className="mt-0.5 text-sm text-foreground/70">{additionalNotes}</p></div>
                   )}
                 </div>
               </div>

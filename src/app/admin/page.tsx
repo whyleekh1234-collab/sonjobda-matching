@@ -506,14 +506,14 @@ export default function AdminDashboard() {
               <div className="rounded-2xl border border-border bg-background p-6">
                 <h3 className="text-base font-bold text-foreground">최근 가입자</h3>
                 <div className="mt-4 space-y-3">
-                  {users.length === 0 ? <p className="text-sm text-foreground/40">가입된 회원이 없습니다.</p> : (
+                  {users.length === 0 ? <p className="text-sm text-foreground/60">가입된 회원이 없습니다.</p> : (
                     [...users].sort((a, b) => (a.status === "pending" ? -1 : 1) - (b.status === "pending" ? -1 : 1)).slice(0, 5).map((user) => (
                       <div key={user.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground/60">{user.name?.charAt(0) || "?"}</div>
                           <div>
                             <p className="text-sm font-medium text-foreground">{user.name} {user.verified && <span className="text-xs text-primary">&#10003; 검증</span>}</p>
-                            <p className="text-xs text-foreground/40">{user.company}</p>
+                            <p className="text-xs text-foreground/60">{user.company}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -531,12 +531,12 @@ export default function AdminDashboard() {
               <div className="rounded-2xl border border-border bg-background p-6">
                 <h3 className="text-base font-bold text-foreground">최근 문의</h3>
                 <div className="mt-4 space-y-3">
-                  {inquiries.length === 0 ? <p className="text-sm text-foreground/40">문의 내역이 없습니다.</p> : (
+                  {inquiries.length === 0 ? <p className="text-sm text-foreground/60">문의 내역이 없습니다.</p> : (
                     [...inquiries].reverse().slice(0, 5).map((inq) => (
                       <div key={inq.id} className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-foreground">{inq.company} - {inq.name}</p>
-                          <p className="text-xs text-foreground/40">{typeLabels[inq.type] || inq.type}</p>
+                          <p className="text-xs text-foreground/60">{typeLabels[inq.type] || inq.type}</p>
                         </div>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inq.status === "new" ? "bg-yellow-100 text-yellow-700" : inq.status === "read" ? "bg-purple-100 text-purple-700" : inq.status === "replied" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>
                           {inq.status === "new" ? "신규" : inq.status === "read" ? "확인됨" : inq.status === "replied" ? "답변완료" : "종료"}
@@ -585,11 +585,11 @@ export default function AdminDashboard() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground">
                         {a.name}
-                        <span className="ml-2 font-mono text-xs font-normal text-foreground/30">{a.memberCode}</span>
+                        <span className="ml-2 font-mono text-xs font-normal text-foreground/50">{a.memberCode}</span>
                         {a.id === adminId && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground/50">나</span>}
                       </p>
                       <p className="mt-0.5 text-xs text-foreground/50">{a.email}</p>
-                      <p className="mt-0.5 text-xs text-foreground/40">
+                      <p className="mt-0.5 text-xs text-foreground/60">
                         인증번호 수신: {a.mfaEmail ?? <span className="text-red-500">미설정 — 로그인 불가</span>}
                       </p>
                     </div>
@@ -623,7 +623,7 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-xs text-foreground/40">
+              <p className="mt-4 text-xs text-foreground/60">
                 운영자는 의뢰사·파트너사 회원과 다릅니다. 회원가입을 거치지 않고 여기서
                 계정을 바로 만듭니다.
               </p>
@@ -647,7 +647,7 @@ export default function AdminDashboard() {
                   승인하면 회사 정보에 그대로 반영되고 요청자에게 알림이 갑니다.
                 </p>
                 {pendingChanges.length === 0 && (
-                  <p className="mt-4 rounded-xl border border-dashed border-border py-5 text-center text-sm text-foreground/40">
+                  <p className="mt-4 rounded-xl border border-dashed border-border py-5 text-center text-sm text-foreground/60">
                     대기 중인 변경 요청이 없습니다.
                   </p>
                 )}
@@ -658,7 +658,7 @@ export default function AdminDashboard() {
                         <p className="text-sm font-semibold text-foreground">
                           {r.companyName} <span className="font-normal text-foreground/50">· {r.requesterName}</span>
                         </p>
-                        <span className="text-xs text-foreground/40">
+                        <span className="text-xs text-foreground/60">
                           {new Date(r.createdAt).toLocaleString("ko-KR")}
                         </span>
                       </div>
@@ -666,8 +666,8 @@ export default function AdminDashboard() {
                       <div className="mt-3 space-y-1 text-sm">
                         {Object.entries(r.after).map(([key, value]) => (
                           <p key={key}>
-                            <span className="text-foreground/40">{FIELD_LABELS[key] ?? key}</span>{" "}
-                            <span className="text-foreground/40 line-through">
+                            <span className="text-foreground/60">{FIELD_LABELS[key] ?? key}</span>{" "}
+                            <span className="text-foreground/60 line-through">
                               {String(r.before[key as keyof typeof r.before] ?? "-")}
                             </span>{" "}
                             → <span className="font-semibold text-foreground">{String(value)}</span>
@@ -713,7 +713,7 @@ export default function AdminDashboard() {
                           <span className="text-foreground/50">
                             {Object.keys(r.after).map((k) => FIELD_LABELS[k] ?? k).join(", ")}
                           </span>
-                          <span className="ml-auto text-foreground/40">
+                          <span className="ml-auto text-foreground/60">
                             {new Date(r.reviewedAt ?? r.createdAt).toLocaleDateString("ko-KR")}
                           </span>
                         </div>
@@ -725,7 +725,7 @@ export default function AdminDashboard() {
             {/* 검색 + 필터 */}
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative flex-1 max-w-md">
-                <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 <input type="text" value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
                   placeholder="회원번호, 이름, 이메일, 회사명으로 검색..."
                   className="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
@@ -795,7 +795,7 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {filtered.length === 0 ? (
-                      <tr><td colSpan={10} className="px-4 py-12 text-center text-foreground/40">{userSearch || userFilterRole !== "all" || userFilterStatus !== "all" ? "검색 결과가 없습니다." : "가입된 회원이 없습니다."}</td></tr>
+                      <tr><td colSpan={10} className="px-4 py-12 text-center text-foreground/60">{userSearch || userFilterRole !== "all" || userFilterStatus !== "all" ? "검색 결과가 없습니다." : "가입된 회원이 없습니다."}</td></tr>
                     ) : filtered.map((user) => {
                       const projectCount = allRequests.filter((r) => r.clientId === user.id || (r.quotes || []).some((q) => q.partnerId === user.id)).length;
                       return (
@@ -868,8 +868,8 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-foreground/50">전체 의뢰</p>
-                    <p className="mt-1 text-3xl font-bold text-primary">{allRequests.length}<span className="ml-1 text-sm font-normal text-foreground/40">건</span></p>
-                    <p className="mt-1 text-xs text-foreground/40">진행중 {allRequests.filter((r) => r.status === "pending").length} | 완료 {allRequests.filter((r) => r.status === "matched").length} | 회수 {allRequests.filter((r) => r.status === "cancelled").length}</p>
+                    <p className="mt-1 text-3xl font-bold text-primary">{allRequests.length}<span className="ml-1 text-sm font-normal text-foreground/60">건</span></p>
+                    <p className="mt-1 text-xs text-foreground/60">진행중 {allRequests.filter((r) => r.status === "pending").length} | 완료 {allRequests.filter((r) => r.status === "matched").length} | 회수 {allRequests.filter((r) => r.status === "cancelled").length}</p>
                   </div>
                   <div className="rounded-xl bg-primary/10 p-3 text-primary">
                     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
@@ -881,8 +881,8 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-foreground/50">견적 제출</p>
-                    <p className="mt-1 text-3xl font-bold text-emerald-600">{allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status)).length, 0)}<span className="ml-1 text-sm font-normal text-foreground/40">건</span></p>
-                    <p className="mt-1 text-xs text-foreground/40">수락 {allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "accepted").length, 0)} | 검토중 {allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "client_reviewing" || q.status === "quoted").length, 0)} | 거절 {allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "client_rejected" || q.status === "rejected").length, 0)}</p>
+                    <p className="mt-1 text-3xl font-bold text-emerald-600">{allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => ["quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected"].includes(q.status)).length, 0)}<span className="ml-1 text-sm font-normal text-foreground/60">건</span></p>
+                    <p className="mt-1 text-xs text-foreground/60">수락 {allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "accepted").length, 0)} | 검토중 {allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "client_reviewing" || q.status === "quoted").length, 0)} | 거절 {allRequests.reduce((sum, r) => sum + (r.quotes || []).filter((q) => q.status === "client_rejected" || q.status === "rejected").length, 0)}</p>
                   </div>
                   <div className="rounded-xl bg-emerald-100 p-3 text-emerald-600">
                     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -940,15 +940,15 @@ export default function AdminDashboard() {
                                 {isOpen && (
                                   <tr><td colSpan={9} className="bg-muted/10 px-6 py-4">
                                     <div className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-white p-4 sm:grid-cols-4">
-                                      <div><p className="text-xs text-foreground/40">견적 금액</p><p className="mt-0.5 text-lg font-bold text-primary">{q.amount}원</p></div>
-                                      <div><p className="text-xs text-foreground/40">소요 기간</p><p className="mt-0.5 text-base font-semibold text-foreground">{q.duration || "-"}</p></div>
-                                      <div><p className="text-xs text-foreground/40">파트너사</p><p className="mt-0.5 text-sm font-medium text-foreground">{q.partnerCompany} <span className="font-mono text-xs text-foreground/30">{partnerUser?.memberCode || ""}</span></p></div>
-                                      <div><p className="text-xs text-foreground/40">의뢰번호</p><p className="mt-0.5 font-mono text-sm text-foreground/60">{q.requestCode || "-"}</p></div>
+                                      <div><p className="text-xs text-foreground/60">견적 금액</p><p className="mt-0.5 text-lg font-bold text-primary">{q.amount}원</p></div>
+                                      <div><p className="text-xs text-foreground/60">소요 기간</p><p className="mt-0.5 text-base font-semibold text-foreground">{q.duration || "-"}</p></div>
+                                      <div><p className="text-xs text-foreground/60">파트너사</p><p className="mt-0.5 text-sm font-medium text-foreground">{q.partnerCompany} <span className="font-mono text-xs text-foreground/50">{partnerUser?.memberCode || ""}</span></p></div>
+                                      <div><p className="text-xs text-foreground/60">의뢰번호</p><p className="mt-0.5 font-mono text-sm text-foreground/60">{q.requestCode || "-"}</p></div>
                                     </div>
                                     {(q as { timeline?: { label: string; months: string }[] }).timeline?.filter((t) => t.months).length ? (
-                                      <div className="mt-3"><p className="text-xs text-foreground/40">업무범위</p><div className="mt-1 flex flex-wrap gap-1">{(q as { timeline?: { label: string; months: string }[] }).timeline!.filter((t) => t.months).map((t, i) => (<span key={i} className="rounded-md border border-border bg-white px-2 py-0.5 text-xs"><span className="text-foreground/60">{t.label}</span> <span className="font-semibold">{t.months}개월</span></span>))}</div></div>
+                                      <div className="mt-3"><p className="text-xs text-foreground/60">업무범위</p><div className="mt-1 flex flex-wrap gap-1">{(q as { timeline?: { label: string; months: string }[] }).timeline!.filter((t) => t.months).map((t, i) => (<span key={i} className="rounded-md border border-border bg-white px-2 py-0.5 text-xs"><span className="text-foreground/60">{t.label}</span> <span className="font-semibold">{t.months}개월</span></span>))}</div></div>
                                     ) : null}
-                                    {q.memo && <div className="mt-3 rounded-lg bg-white p-3"><p className="text-xs text-foreground/40">메모</p><p className="mt-0.5 text-sm text-foreground/70">{q.memo}</p></div>}
+                                    {q.memo && <div className="mt-3 rounded-lg bg-white p-3"><p className="text-xs text-foreground/60">메모</p><p className="mt-0.5 text-sm text-foreground/70">{q.memo}</p></div>}
                                     <QuoteAttachment path={q.attachmentData} name={q.attachmentName} variant="inline" />
                                     <BackToList onClick={() => setSelectedRequestDetail(null)} />
                                   </td></tr>
@@ -967,7 +967,7 @@ export default function AdminDashboard() {
               const filtered = allRequests;
               return filtered.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                <svg className="mx-auto h-12 w-12 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                 <h3 className="mt-4 text-lg font-semibold text-foreground/60">등록된 의뢰가 없습니다</h3>
               </div>
             ) : (
@@ -1024,7 +1024,7 @@ export default function AdminDashboard() {
                                               const label = parts[0];
                                               const value = parts.slice(1).join(": ");
                                               const isLong = value.length > 30 || label === "위탁업무" || label === "추가 요구사항" || label === "임상시험 목적";
-                                              return <div key={i} className={isLong ? "col-span-2" : ""}><p className="text-xs text-foreground/40">{label}</p><p className="mt-1 text-sm font-medium text-foreground">{value}</p></div>;
+                                              return <div key={i} className={isLong ? "col-span-2" : ""}><p className="text-xs text-foreground/60">{label}</p><p className="mt-1 text-sm font-medium text-foreground">{value}</p></div>;
                                             }
                                             return <p key={i} className="col-span-2 text-sm text-foreground/70">{line}</p>;
                                           })}
@@ -1034,9 +1034,9 @@ export default function AdminDashboard() {
 
                                     {/* 파트너사 견적 */}
                                     <div>
-                                      <h5 className="text-base font-semibold text-foreground">파트너사 견적 현황 <span className="ml-1 text-sm font-normal text-foreground/40">{allQuoteCount > 0 ? `${allQuoteCount}건` : ""}</span></h5>
+                                      <h5 className="text-base font-semibold text-foreground">파트너사 견적 현황 <span className="ml-1 text-sm font-normal text-foreground/60">{allQuoteCount > 0 ? `${allQuoteCount}건` : ""}</span></h5>
                                       {allQuoteCount === 0 ? (
-                                        <p className="mt-3 text-sm text-foreground/40">아직 제출된 견적이 없습니다.</p>
+                                        <p className="mt-3 text-sm text-foreground/60">아직 제출된 견적이 없습니다.</p>
                                       ) : (
                                         <div className="mt-3 space-y-3">
                                           {(req.quotes || []).map((quote) => (
@@ -1046,7 +1046,7 @@ export default function AdminDashboard() {
                                                   <CompanyLogo path={quote.partnerLogo} name={quote.partnerCompany} size={36} />
                                                   <div>
                                                     <p className="text-sm font-semibold text-foreground">{quote.partnerCompany}</p>
-                                                    <p className="text-xs text-foreground/40">
+                                                    <p className="text-xs text-foreground/60">
                                                       {quote.quoteCode && <span className="font-mono">{quote.quoteCode} | </span>}
                                                       담당자: {users.find((u) => u.id === quote.partnerId)?.name || "-"} | {new Date(quote.createdAt).toLocaleString("ko-KR")}
                                                     </p>
@@ -1057,7 +1057,7 @@ export default function AdminDashboard() {
                                                     {quote.status === "quoted" ? "견적완료" : quote.status === "client_reviewing" ? "의뢰사 검토중" : quote.status === "reviewing" ? "파트너 검토중" : quote.status === "accepted" ? "수락됨" : quote.status === "client_rejected" ? "거절됨" : quote.status === "rejected" ? "파트너 거절" : quote.status === "not_selected" ? "미결정" : quote.status === "client_hold" ? "의뢰사 보류" : quote.status === "hold" ? "파트너 보류" : "신규"}
                                                   </span>
                                                   {quote.amount && <span className="text-sm font-bold text-primary">{quote.amount}</span>}
-                                                  <svg className={`h-4 w-4 text-foreground/30 transition-transform ${expandedQuoteId === quote.id ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                  <svg className={`h-4 w-4 text-foreground/50 transition-transform ${expandedQuoteId === quote.id ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                                 </div>
                                               </button>
                                               {expandedQuoteId === quote.id && (
@@ -1065,26 +1065,26 @@ export default function AdminDashboard() {
                                                   {/* 핵심 정보 */}
                                                   <div className="grid grid-cols-2 gap-4 rounded-lg border border-border bg-muted/20 p-4 sm:grid-cols-4">
                                                     <div>
-                                                      <p className="text-xs text-foreground/40">견적 금액</p>
+                                                      <p className="text-xs text-foreground/60">견적 금액</p>
                                                       <p className="mt-0.5 text-lg font-bold text-primary">{quote.amount || "-"}</p>
                                                     </div>
                                                     <div>
-                                                      <p className="text-xs text-foreground/40">소요 기간</p>
+                                                      <p className="text-xs text-foreground/60">소요 기간</p>
                                                       <p className="mt-0.5 text-base font-semibold text-foreground">{quote.duration || "-"}</p>
                                                     </div>
                                                     <div>
-                                                      <p className="text-xs text-foreground/40">담당자</p>
+                                                      <p className="text-xs text-foreground/60">담당자</p>
                                                       <p className="mt-0.5 text-sm font-medium text-foreground">{users.find((u) => u.id === quote.partnerId)?.name || "-"}</p>
                                                     </div>
                                                     <div>
-                                                      <p className="text-xs text-foreground/40">회원번호</p>
+                                                      <p className="text-xs text-foreground/60">회원번호</p>
                                                       <p className="mt-0.5 font-mono text-sm text-foreground/60">{users.find((u) => u.id === quote.partnerId)?.memberCode || "-"}</p>
                                                     </div>
                                                   </div>
                                                   {/* 업무범위 */}
                                                   {(quote as { timeline?: { label: string; months: string }[] }).timeline?.filter((t) => t.months).length ? (
                                                     <div className="mt-3">
-                                                      <p className="text-xs text-foreground/40">업무범위별 소요기간</p>
+                                                      <p className="text-xs text-foreground/60">업무범위별 소요기간</p>
                                                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                                                         {(quote as { timeline?: { label: string; months: string }[] }).timeline!.filter((t) => t.months).map((t, ti) => (
                                                           <span key={ti} className="rounded-md border border-border bg-muted/50 px-2 py-1 text-xs">
@@ -1097,7 +1097,7 @@ export default function AdminDashboard() {
                                                   {/* 메모 */}
                                                   {quote.memo && (
                                                     <div className="mt-3 rounded-lg bg-muted/30 p-3">
-                                                      <p className="text-xs text-foreground/40">메모</p>
+                                                      <p className="text-xs text-foreground/60">메모</p>
                                                       <p className="mt-0.5 text-sm text-foreground/70">{quote.memo}</p>
                                                     </div>
                                                   )}
@@ -1154,7 +1154,7 @@ export default function AdminDashboard() {
             </div>
             {matchedRequests.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
+                <svg className="mx-auto h-12 w-12 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0" /></svg>
                 <h3 className="mt-4 text-lg font-semibold text-foreground/60">매칭 성사된 건이 없습니다</h3>
               </div>
             ) : (
@@ -1201,9 +1201,9 @@ export default function AdminDashboard() {
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                       {/* 의뢰사 */}
                                       <div className="rounded-xl border border-border p-4">
-                                        <p className="text-xs font-medium text-foreground/40">의뢰사</p>
+                                        <p className="text-xs font-medium text-foreground/60">의뢰사</p>
                                         <p className="mt-1 break-all text-base font-semibold text-foreground">{req.clientCompany}</p>
-                                        <p className="mt-0.5 font-mono text-xs text-foreground/30">{users.find((u) => u.id === req.clientId)?.memberCode || ""}</p>
+                                        <p className="mt-0.5 font-mono text-xs text-foreground/50">{users.find((u) => u.id === req.clientId)?.memberCode || ""}</p>
                                         <div className="mt-2 flex gap-3 text-xs text-foreground/50">
                                           <span>예산: <span className="font-medium text-foreground">{req.budget}</span></span>
                                           <span>등록일: {new Date(req.createdAt).toLocaleDateString("ko-KR")}</span>
@@ -1214,10 +1214,10 @@ export default function AdminDashboard() {
                                         <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                                           <p className="text-xs font-medium text-primary/60">파트너사 (수락됨)</p>
                                           <p className="mt-1 break-all text-base font-semibold text-foreground">{acceptedQuote.partnerCompany}</p>
-                                          <p className="mt-0.5 font-mono text-xs text-foreground/30">{acceptedQuote.quoteCode || ""} | {users.find((u) => u.id === acceptedQuote.partnerId)?.memberCode || ""}</p>
+                                          <p className="mt-0.5 font-mono text-xs text-foreground/50">{acceptedQuote.quoteCode || ""} | {users.find((u) => u.id === acceptedQuote.partnerId)?.memberCode || ""}</p>
                                           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                                            <div><span className="text-foreground/40">견적 금액</span><p className="mt-0.5 text-base font-bold text-primary">{acceptedQuote.amount}원</p></div>
-                                            <div><span className="text-foreground/40">소요 기간</span><p className="mt-0.5 font-semibold text-foreground">{acceptedQuote.duration || "-"}</p></div>
+                                            <div><span className="text-foreground/60">견적 금액</span><p className="mt-0.5 text-base font-bold text-primary">{acceptedQuote.amount}원</p></div>
+                                            <div><span className="text-foreground/60">소요 기간</span><p className="mt-0.5 font-semibold text-foreground">{acceptedQuote.duration || "-"}</p></div>
                                           </div>
                                           <QuoteAttachment path={(acceptedQuote as { attachmentData?: string }).attachmentData} name={acceptedQuote.attachmentName} variant="box" />
                                         </div>
@@ -1225,7 +1225,7 @@ export default function AdminDashboard() {
                                     </div>
 
                                     {/* 전체 견적 요약 */}
-                                    <div className="flex flex-wrap gap-2 text-xs text-foreground/40">
+                                    <div className="flex flex-wrap gap-2 text-xs text-foreground/60">
                                       <span>전체 견적 {(req.quotes || []).length}건</span>
                                       <span>|</span>
                                       <span>수락 {(req.quotes || []).filter((q) => q.status === "accepted").length}건</span>
@@ -1273,9 +1273,9 @@ export default function AdminDashboard() {
             </div>
             {inquiries.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+                <svg className="mx-auto h-12 w-12 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
                 <h3 className="mt-4 text-lg font-semibold text-foreground/60">문의 내역이 없습니다</h3>
-                <p className="mt-2 text-sm text-foreground/40">새로운 문의가 들어오면 여기에 표시됩니다.</p>
+                <p className="mt-2 text-sm text-foreground/60">새로운 문의가 들어오면 여기에 표시됩니다.</p>
               </div>
             ) : (
               <div className="rounded-2xl border border-border bg-background">
@@ -1317,9 +1317,9 @@ export default function AdminDashboard() {
                                   <div>
                                     {/* 문의자 정보 */}
                                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                                      <div className="text-xs"><span className="text-foreground/40">문의자</span><p className="mt-0.5 font-medium text-foreground">{inq.company} {inq.name}</p></div>
-                                      <div className="text-xs"><span className="text-foreground/40">이메일</span><p className="mt-0.5 font-medium text-foreground">{inq.email}</p></div>
-                                      <div className="text-xs"><span className="text-foreground/40">연락처</span><p className="mt-0.5 font-medium text-foreground">{inq.phone || "-"}</p></div>
+                                      <div className="text-xs"><span className="text-foreground/60">문의자</span><p className="mt-0.5 font-medium text-foreground">{inq.company} {inq.name}</p></div>
+                                      <div className="text-xs"><span className="text-foreground/60">이메일</span><p className="mt-0.5 font-medium text-foreground">{inq.email}</p></div>
+                                      <div className="text-xs"><span className="text-foreground/60">연락처</span><p className="mt-0.5 font-medium text-foreground">{inq.phone || "-"}</p></div>
                                     </div>
 
                                     {/* 신고 처리.
@@ -1411,7 +1411,7 @@ export default function AdminDashboard() {
                                               onKeyDown={(e) => { if (e.key === "Enter" && editInqReplyText.trim()) updateInqReply(inq.id, ri); }}
                                               className="flex-1 rounded-lg border border-border px-3 py-1.5 text-sm outline-none focus:border-primary" />
                                             <button onClick={() => updateInqReply(inq.id, ri)} className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5">저장</button>
-                                            <button onClick={() => setEditingInqReply(null)} className="rounded px-2 py-1 text-xs text-foreground/40 hover:bg-muted">취소</button>
+                                            <button onClick={() => setEditingInqReply(null)} className="rounded px-2 py-1 text-xs text-foreground/60 hover:bg-muted">취소</button>
                                           </div>
                                         ) : (
                                           <>
@@ -1419,9 +1419,9 @@ export default function AdminDashboard() {
                                               <p className="text-xs text-primary/60">{reply.from} · {new Date(reply.createdAt).toLocaleString("ko-KR")}</p>
                                               <div className="flex gap-1">
                                                 <button onClick={() => { setEditingInqReply({ inqId: inq.id, replyIdx: ri }); setEditInqReplyText(reply.message); }}
-                                                  className="rounded px-1.5 py-0.5 text-xs text-foreground/30 hover:text-primary">수정</button>
+                                                  className="rounded px-1.5 py-0.5 text-xs text-foreground/50 hover:text-primary">수정</button>
                                                 <button onClick={() => deleteInqReply(inq.id, ri)}
-                                                  className="rounded px-1.5 py-0.5 text-xs text-foreground/30 hover:text-red-500">삭제</button>
+                                                  className="rounded px-1.5 py-0.5 text-xs text-foreground/50 hover:text-red-500">삭제</button>
                                               </div>
                                             </div>
                                             <p className="mt-0.5 text-sm text-foreground/70">{reply.message}</p>
@@ -1482,7 +1482,7 @@ export default function AdminDashboard() {
             <div className="mt-6 space-y-4">
               {notices.length === 0 ? (
                 <div className="rounded-2xl border border-border bg-background p-12 text-center">
-                  <p className="text-sm text-foreground/40">등록된 공지사항이 없습니다.</p>
+                  <p className="text-sm text-foreground/60">등록된 공지사항이 없습니다.</p>
                 </div>
               ) : [...notices].reverse().map((notice) => (
                 <div key={notice.id} className="rounded-2xl border border-border bg-background p-6">
@@ -1490,7 +1490,7 @@ export default function AdminDashboard() {
                     <div>
                       <h4 className="font-semibold text-foreground">{notice.title}</h4>
                       <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/70">{notice.content}</p>
-                      <p className="mt-2 text-xs text-foreground/30">{new Date(notice.createdAt).toLocaleString("ko-KR")}</p>
+                      <p className="mt-2 text-xs text-foreground/50">{new Date(notice.createdAt).toLocaleString("ko-KR")}</p>
                     </div>
                     <button onClick={() => deleteNotice(notice.id)} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50">삭제</button>
                   </div>
@@ -1512,7 +1512,7 @@ export default function AdminDashboard() {
             </div>
             {adminNotifications.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                <svg className="mx-auto h-12 w-12 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
                 <h3 className="mt-4 text-lg font-semibold text-foreground/60">받은 알림이 없습니다</h3>
               </div>
             ) : (
@@ -1568,7 +1568,7 @@ export default function AdminDashboard() {
                                     {/* 답변 이력 */}
                                     {notif.replies?.map((reply, ri) => (
                                       <div key={ri} className="mt-2 rounded-lg bg-muted/50 p-3">
-                                        <p className="text-xs text-foreground/40">{reply.company} {reply.from} · {new Date(reply.createdAt).toLocaleString("ko-KR")}</p>
+                                        <p className="text-xs text-foreground/60">{reply.company} {reply.from} · {new Date(reply.createdAt).toLocaleString("ko-KR")}</p>
                                         <p className="mt-0.5 text-sm text-foreground/70">{reply.message}</p>
                                       </div>
                                     ))}
@@ -1647,7 +1647,7 @@ export default function AdminDashboard() {
                   <div className="flex justify-between text-sm"><span className="text-foreground/70">종료</span><span className="font-semibold">{inquiries.filter(i => i.status === "closed").length}건</span></div>
                 </div>
                 <div className="mt-4 border-t border-border pt-3">
-                  <h5 className="text-xs font-medium text-foreground/40">문의 유형별</h5>
+                  <h5 className="text-xs font-medium text-foreground/60">문의 유형별</h5>
                   <div className="mt-2 space-y-1.5">
                     {Object.entries(typeLabels).map(([key, label]) => {
                       const count = inquiries.filter(i => i.type === key).length;
@@ -1696,7 +1696,7 @@ export default function AdminDashboard() {
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-foreground/40">
+            <p className="mt-1 text-xs text-foreground/60">
               경고는 상태를 바꾸지 않고 이력만 남깁니다. 제한은 일부 기능이 막히고, 정지는 로그인이 막힙니다.
             </p>
 
@@ -1713,7 +1713,7 @@ export default function AdminDashboard() {
                     <div key={h.id} className="rounded-lg border border-border px-3 py-2 text-xs">
                       <p className="font-medium text-foreground">
                         {SANCTION_LABELS[h.kind]}
-                        <span className="ml-2 font-normal text-foreground/40">
+                        <span className="ml-2 font-normal text-foreground/60">
                           {new Date(h.createdAt).toLocaleDateString("ko-KR")}
                           {h.decidedByName ? ` · ${h.decidedByName}` : ""}
                         </span>
@@ -1795,7 +1795,7 @@ export default function AdminDashboard() {
                   placeholder="8자 이상"
                   className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
-                <p className="mt-1 text-xs text-foreground/40">
+                <p className="mt-1 text-xs text-foreground/60">
                   본인에게 전달하고, 첫 로그인 뒤 바꾸게 하세요.
                 </p>
               </div>
@@ -1808,7 +1808,7 @@ export default function AdminDashboard() {
                   placeholder="개인 메일 주소"
                   className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
-                <p className="mt-1 text-xs text-foreground/40">
+                <p className="mt-1 text-xs text-foreground/60">
                   로그인 이메일과 <b>다른</b> 주소여야 합니다. 같으면 메일함 하나만 뚫려도
                   비밀번호 재설정과 인증번호 수신이 함께 되어 2단계 인증이 되지 않습니다.
                 </p>
@@ -1943,7 +1943,7 @@ export default function AdminDashboard() {
                     정보 수정
                   </button>
                 )}
-                <button onClick={() => { setSelectedUser(null); setUserEdit(null); }} className="rounded-lg p-1 text-foreground/40 hover:bg-muted hover:text-foreground">
+                <button onClick={() => { setSelectedUser(null); setUserEdit(null); }} className="rounded-lg p-1 text-foreground/60 hover:bg-muted hover:text-foreground">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -1970,40 +1970,40 @@ export default function AdminDashboard() {
                   <p className="text-xs font-semibold text-foreground/50">회원 개인 정보</p>
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     <label className="block">
-                      <span className="text-xs text-foreground/40">회원명</span>
+                      <span className="text-xs text-foreground/60">회원명</span>
                       <input value={userEdit.name} onChange={(e) => setUserEdit({ ...userEdit, name: e.target.value })} required
                         className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
                     </label>
                     <label className="block">
-                      <span className="text-xs text-foreground/40">연락처</span>
+                      <span className="text-xs text-foreground/60">연락처</span>
                       <input value={userEdit.phone} onChange={(e) => setUserEdit({ ...userEdit, phone: e.target.value })}
                         className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
                     </label>
                   </div>
-                  <p className="mt-2 text-[11px] text-foreground/40">이메일({selectedUser.email})은 로그인 계정이라 여기서 바꿀 수 없습니다.</p>
+                  <p className="mt-2 text-[11px] text-foreground/60">이메일({selectedUser.email})은 로그인 계정이라 여기서 바꿀 수 없습니다.</p>
                 </div>
                 <div className="rounded-xl bg-muted p-4">
                   <p className="text-xs font-semibold text-foreground/50">회사 정보 <span className="font-normal">— 같은 회사 멤버 전체에 반영</span></p>
                   <div className="mt-3 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <label className="block">
-                        <span className="text-xs text-foreground/40">회사명</span>
+                        <span className="text-xs text-foreground/60">회사명</span>
                         <input value={userEdit.company} onChange={(e) => setUserEdit({ ...userEdit, company: e.target.value })} required
                           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
                       </label>
                       <label className="block">
-                        <span className="text-xs text-foreground/40">사업자등록번호</span>
+                        <span className="text-xs text-foreground/60">사업자등록번호</span>
                         <input value={userEdit.businessNumber} onChange={(e) => setUserEdit({ ...userEdit, businessNumber: e.target.value })} required
                           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
                       </label>
                     </div>
                     <label className="block">
-                      <span className="text-xs text-foreground/40">기업주소</span>
+                      <span className="text-xs text-foreground/60">기업주소</span>
                       <input value={userEdit.address} onChange={(e) => setUserEdit({ ...userEdit, address: e.target.value })}
                         className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
                     </label>
                   </div>
-                  <p className="mt-2 text-[11px] text-foreground/40">사업자등록번호를 바꾸면 국세청 검증 상태가 초기화됩니다.</p>
+                  <p className="mt-2 text-[11px] text-foreground/60">사업자등록번호를 바꾸면 국세청 검증 상태가 초기화됩니다.</p>
                 </div>
                 <div className="flex justify-end gap-2 border-t border-border pt-4">
                   <button type="button" onClick={() => setUserEdit(null)} className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-foreground/70 hover:bg-muted">취소</button>
@@ -2023,7 +2023,7 @@ export default function AdminDashboard() {
                 {/* 승인 판단에 쓰는 서류다. 비공개 버킷이라 서버에서 한시적인
                     서명 링크를 받아 연다. */}
                 <div>
-                  <p className="text-sm text-foreground/40">사업자등록증</p>
+                  <p className="text-sm text-foreground/60">사업자등록증</p>
                   {selectedUser.licensePath ? (
                     <button
                       onClick={() => openLicense(selectedUser.companyId)}
@@ -2055,7 +2055,7 @@ export default function AdminDashboard() {
               {selectedUser.roles?.includes("partner") && (
                 <div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-foreground/40">회사유형 (파트너 카테고리)</p>
+                    <p className="text-sm text-foreground/60">회사유형 (파트너 카테고리)</p>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {["CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행"].map((cat) => (
@@ -2078,7 +2078,7 @@ export default function AdminDashboard() {
               {selectedUser.roles?.includes("partner") && (
                 <div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-foreground/40">회사 역량 (파트너 프로필)</p>
+                    <p className="text-sm text-foreground/60">회사 역량 (파트너 프로필)</p>
                     {selectedProfile && (
                       <button type="button" onClick={async () => {
                         const next = !selectedProfile.verifiedAt;
@@ -2090,7 +2090,7 @@ export default function AdminDashboard() {
                     )}
                   </div>
                   {selectedProfile === undefined
-                    ? <p className="mt-2 text-xs text-foreground/40">불러오는 중…</p>
+                    ? <p className="mt-2 text-xs text-foreground/60">불러오는 중…</p>
                     : <PartnerProfileCard profile={selectedProfile} categories={selectedUser.partnerCategories ?? []} docName={selectedDocName} companyId={selectedUser.companyId} />}
                 </div>
               )}
@@ -2164,7 +2164,7 @@ export default function AdminDashboard() {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-sm text-foreground/40">{label}</p>
+      <p className="text-sm text-foreground/60">{label}</p>
       <p className="mt-1 break-keep text-base font-medium text-foreground">{value}</p>
     </div>
   );

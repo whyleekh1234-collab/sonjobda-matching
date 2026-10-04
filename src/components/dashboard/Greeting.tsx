@@ -46,9 +46,9 @@ export default function Greeting({ name, company }: { name?: string; company?: s
         {timeGreeting(now.getHours())}, {name ? `${name}님` : "반갑습니다"}
       </h1>
       <p className="mt-1.5 text-sm text-foreground/60">
-        <span className="text-foreground/40">{date}</span>
-        {company && <span className="text-foreground/40"> · {company}</span>}
-        <span className="mx-2 text-foreground/20">|</span>
+        <span className="text-foreground/60">{date}</span>
+        {company && <span className="text-foreground/60"> · {company}</span>}
+        <span className="mx-2 text-foreground/50">|</span>
         {line}
       </p>
     </div>

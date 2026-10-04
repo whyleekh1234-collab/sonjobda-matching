@@ -159,10 +159,10 @@ export default function NotificationsPage() {
             )}
             {notifications.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="mx-auto h-12 w-12 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
-                <p className="mt-4 text-sm text-foreground/40">받은 알림이 없습니다.</p>
+                <p className="mt-4 text-sm text-foreground/60">받은 알림이 없습니다.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -174,7 +174,7 @@ export default function NotificationsPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3">
-                        <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${notif.read ? "bg-muted text-foreground/30" : "bg-blue-100 text-blue-600"}`}>
+                        <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${notif.read ? "bg-muted text-foreground/50" : "bg-blue-100 text-blue-600"}`}>
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                           </svg>
@@ -182,7 +182,7 @@ export default function NotificationsPage() {
                         <div>
                           <p className="mb-0.5 text-xs text-primary/60">손잡다매칭 관리자</p>
                           <p className={`text-sm ${notif.read ? "text-foreground/60" : "font-medium text-foreground"}`}>{notif.message}</p>
-                          <p className="mt-1 text-xs text-foreground/30">{new Date(notif.createdAt).toLocaleString("ko-KR")}</p>
+                          <p className="mt-1 text-xs text-foreground/50">{new Date(notif.createdAt).toLocaleString("ko-KR")}</p>
                         </div>
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); setReplyingTo(replyingTo === notif.id ? null : notif.id); setReplyText(""); }}
@@ -199,18 +199,18 @@ export default function NotificationsPage() {
                               onKeyDown={(e) => { if (e.key === "Enter" && editReplyText.trim()) updateReply(notif.id, ri); }}
                               className="flex-1 rounded-lg border border-border px-3 py-1.5 text-sm outline-none focus:border-primary" />
                             <button onClick={() => updateReply(notif.id, ri)} className="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5">저장</button>
-                            <button onClick={() => setEditingReply(null)} className="rounded px-2 py-1 text-xs text-foreground/40 hover:bg-muted">취소</button>
+                            <button onClick={() => setEditingReply(null)} className="rounded px-2 py-1 text-xs text-foreground/60 hover:bg-muted">취소</button>
                           </div>
                         ) : (
                           <>
                             <div className="flex items-start justify-between">
-                              <p className="text-xs text-foreground/40">{reply.company} {reply.from} · {new Date(reply.createdAt).toLocaleString("ko-KR")}</p>
+                              <p className="text-xs text-foreground/60">{reply.company} {reply.from} · {new Date(reply.createdAt).toLocaleString("ko-KR")}</p>
                               {reply.from === user?.name && (
                                 <div className="flex gap-1">
                                   <button onClick={() => { setEditingReply({ notifId: notif.id, replyIdx: ri }); setEditReplyText(reply.message); }}
-                                    className="rounded px-1.5 py-0.5 text-xs text-foreground/30 hover:text-primary">수정</button>
+                                    className="rounded px-1.5 py-0.5 text-xs text-foreground/50 hover:text-primary">수정</button>
                                   <button onClick={() => deleteReply(notif.id, ri)}
-                                    className="rounded px-1.5 py-0.5 text-xs text-foreground/30 hover:text-red-500">삭제</button>
+                                    className="rounded px-1.5 py-0.5 text-xs text-foreground/50 hover:text-red-500">삭제</button>
                                 </div>
                               )}
                             </div>
@@ -247,10 +247,10 @@ export default function NotificationsPage() {
             )}
             {notices.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="mx-auto h-12 w-12 text-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46" />
                 </svg>
-                <p className="mt-4 text-sm text-foreground/40">등록된 공지사항이 없습니다.</p>
+                <p className="mt-4 text-sm text-foreground/60">등록된 공지사항이 없습니다.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -267,8 +267,8 @@ export default function NotificationsPage() {
                             {!isRead && <span className="h-2 w-2 rounded-full bg-amber-500" />}
                             <h3 className={`text-sm ${isRead ? "font-medium text-foreground/60" : "font-semibold text-foreground"}`}>{notice.title}</h3>
                           </div>
-                          <p className={`mt-2 whitespace-pre-wrap text-sm ${isRead ? "text-foreground/40" : "text-foreground/70"}`}>{notice.content}</p>
-                          <p className="mt-2 text-xs text-foreground/30">{new Date(notice.createdAt).toLocaleString("ko-KR")}</p>
+                          <p className={`mt-2 whitespace-pre-wrap text-sm ${isRead ? "text-foreground/60" : "text-foreground/70"}`}>{notice.content}</p>
+                          <p className="mt-2 text-xs text-foreground/50">{new Date(notice.createdAt).toLocaleString("ko-KR")}</p>
                         </div>
                         {!isRead && (
                           <button onClick={() => markNoticeRead(notice.id)} className="flex-shrink-0 rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-100">

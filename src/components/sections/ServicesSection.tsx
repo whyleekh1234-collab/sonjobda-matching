@@ -147,7 +147,7 @@ export default function ServicesSection() {
                           </div>
                           <div>
                             <p className={`text-sm font-semibold ${q.highlight ? "text-primary" : "text-foreground"}`}>{q.company}</p>
-                            <p className="text-xs text-foreground/40">{q.duration}</p>
+                            <p className="text-xs text-foreground/60">{q.duration}</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -396,7 +396,7 @@ export default function ServicesSection() {
                       <div className="flex items-start gap-3">
                         <span
                           className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
-                            s.open ? "bg-primary text-white" : "bg-foreground/10 text-foreground/40"
+                            s.open ? "bg-primary text-white" : "bg-foreground/10 text-foreground/60"
                           }`}
                         >
                           {s.open ? <LockOpen className="h-4 w-4" strokeWidth={2} /> : <Lock className="h-4 w-4" strokeWidth={2} />}

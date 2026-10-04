@@ -136,7 +136,7 @@ function InquiryPageInner() {
                   rows={5} placeholder="문의 내용을 상세히 작성해주세요."
                   className="mt-1 w-full resize-none rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
               </div>
-              <div className="rounded-lg bg-muted/50 p-3 text-xs text-foreground/40">
+              <div className="rounded-lg bg-muted/50 p-3 text-xs text-foreground/60">
                 <p>문의자: {user.company} {user.name} ({user.email})</p>
               </div>
             </div>
@@ -172,9 +172,9 @@ function InquiryPageInner() {
                             </span>
                           </div>
                           <h3 className="mt-2 text-base font-semibold text-foreground">{inq.title || inq.message.slice(0, 30)}</h3>
-                          <p className="mt-1 text-xs text-foreground/40">{new Date(inq.createdAt).toLocaleString("ko-KR")}</p>
+                          <p className="mt-1 text-xs text-foreground/60">{new Date(inq.createdAt).toLocaleString("ko-KR")}</p>
                         </div>
-                        <svg className={`h-5 w-5 flex-shrink-0 text-foreground/30 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`h-5 w-5 flex-shrink-0 text-foreground/50 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
@@ -196,7 +196,7 @@ function InquiryPageInner() {
                             </div>
                           )}
                           {inq.status === "new" && (
-                            <p className="text-xs text-foreground/40">관리자 확인 후 답변드리겠습니다.</p>
+                            <p className="text-xs text-foreground/60">관리자 확인 후 답변드리겠습니다.</p>
                           )}
                         </div>
                       )}

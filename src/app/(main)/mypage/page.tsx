@@ -316,7 +316,7 @@ export default function MyPage() {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-foreground/40">이름</p>
+                  <p className="text-xs text-foreground/60">이름</p>
                   {editMode ? (
                     <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} maxLength={6}
                       className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary" />
@@ -325,11 +325,11 @@ export default function MyPage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-foreground/40">이메일 <span className="text-foreground/20">(수정 불가)</span></p>
+                  <p className="text-xs text-foreground/60">이메일 <span className="text-foreground/50">(수정 불가)</span></p>
                   <p className="mt-1 text-sm font-medium text-foreground">{user.email}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-foreground/40">연락처</p>
+                  <p className="text-xs text-foreground/60">연락처</p>
                   {editMode ? (
                     <input type="text" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} maxLength={13}
                       className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary" />
@@ -338,19 +338,19 @@ export default function MyPage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-foreground/40">회사명 <span className="text-foreground/20">(수정 불가)</span></p>
+                  <p className="text-xs text-foreground/60">회사명 <span className="text-foreground/50">(수정 불가)</span></p>
                   <p className="mt-1 text-sm font-medium text-foreground">{user.company}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-foreground/40">사업자등록번호 <span className="text-foreground/20">(수정 불가)</span></p>
+                  <p className="text-xs text-foreground/60">사업자등록번호 <span className="text-foreground/50">(수정 불가)</span></p>
                   <p className="mt-1 text-sm font-medium text-foreground">{user.businessNumber}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-foreground/40">기업주소</p>
+                  <p className="text-xs text-foreground/60">기업주소</p>
                   <p className="mt-1 text-sm font-medium text-foreground">{user.address || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-foreground/40">회원 유형</p>
+                  <p className="text-xs text-foreground/60">회원 유형</p>
                   <div className="mt-1 flex gap-1">
                     {user.roles?.map((role) => (
                       <span key={role} className={`rounded-full px-2 py-0.5 text-xs font-medium ${role === "partner" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
@@ -362,7 +362,7 @@ export default function MyPage() {
                 {user.partnerCategories && user.partnerCategories.length > 0 && (
                   <div className="col-span-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-foreground/40">회사유형</p>
+                      <p className="text-xs text-foreground/60">회사유형</p>
                       {user.allowCategoryEdit && !editingCategories && (
                         <button onClick={() => { setEditingCategories(true); setSelectedCategories([...(user.partnerCategories || [])]); }}
                           className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/20">수정</button>
@@ -469,7 +469,7 @@ export default function MyPage() {
                 </span>
               </label>
               {marketingOn && marketingAt && (
-                <p className="ml-7 mt-1 text-xs text-foreground/40">
+                <p className="ml-7 mt-1 text-xs text-foreground/60">
                   {new Date(marketingAt).toLocaleDateString("ko-KR")} 동의함
                 </p>
               )}
@@ -536,7 +536,7 @@ export default function MyPage() {
               <div className="mt-4 flex items-center gap-4">
                 <CompanyLogo path={logoPath} name={user.company} size={64} />
                 <div className="text-sm">
-                  <p className="text-foreground/40">회사 로고</p>
+                  <p className="text-foreground/60">회사 로고</p>
                   {isAdmin ? (
                     <div className="mt-1 flex items-center gap-3">
                       <label className="cursor-pointer text-xs font-medium text-primary hover:underline">
@@ -557,15 +557,15 @@ export default function MyPage() {
                       )}
                     </div>
                   ) : (
-                    <p className="mt-1 text-xs text-foreground/40">회사 관리자가 변경할 수 있습니다.</p>
+                    <p className="mt-1 text-xs text-foreground/60">회사 관리자가 변경할 수 있습니다.</p>
                   )}
-                  <p className="mt-1 text-[11px] text-foreground/30">PNG·JPG·WEBP·SVG, 2MB 이하</p>
+                  <p className="mt-1 text-[11px] text-foreground/50">PNG·JPG·WEBP·SVG, 2MB 이하</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-foreground/40">회사명</span><p className="mt-0.5 font-medium text-foreground">{user.company}</p></div>
-                <div><span className="text-foreground/40">사업자등록번호</span><p className="mt-0.5 font-medium text-foreground">{user.businessNumber}</p></div>
-                <div className="col-span-2"><span className="text-foreground/40">주소</span><p className="mt-0.5 font-medium text-foreground">{user.address || "-"}</p></div>
+                <div><span className="text-foreground/60">회사명</span><p className="mt-0.5 font-medium text-foreground">{user.company}</p></div>
+                <div><span className="text-foreground/60">사업자등록번호</span><p className="mt-0.5 font-medium text-foreground">{user.businessNumber}</p></div>
+                <div className="col-span-2"><span className="text-foreground/60">주소</span><p className="mt-0.5 font-medium text-foreground">{user.address || "-"}</p></div>
               </div>
               {isAdmin && <p className="mt-3 text-xs text-primary/60">회사 관리자로 지정되어 있습니다</p>}
 
@@ -583,15 +583,15 @@ export default function MyPage() {
                             : "bg-red-100 text-red-600"}`}>
                             {r.status === "pending" ? "처리 대기" : r.status === "approved" ? "반영됨" : "반려됨"}
                           </span>
-                          <span className="text-foreground/40">
+                          <span className="text-foreground/60">
                             {new Date(r.createdAt).toLocaleDateString("ko-KR")}
                           </span>
                         </div>
                         <div className="mt-2 space-y-1">
                           {Object.entries(r.after).map(([key, value]) => (
                             <p key={key} className="text-foreground/70">
-                              <span className="text-foreground/40">{FIELD_LABELS[key] ?? key}</span>{" "}
-                              <span className="line-through text-foreground/30">
+                              <span className="text-foreground/60">{FIELD_LABELS[key] ?? key}</span>{" "}
+                              <span className="line-through text-foreground/50">
                                 {String(r.before[key as keyof typeof r.before] ?? "-")}
                               </span>{" "}
                               → <span className="font-medium text-foreground">{String(value)}</span>
@@ -612,7 +612,7 @@ export default function MyPage() {
             {isAdmin && (
               <div className="rounded-xl border border-border bg-surface shadow-card p-6">
                 <h3 className="text-base font-semibold text-foreground">멤버 초대</h3>
-                <p className="mt-1 text-xs text-foreground/40">같은 회사 직원을 초대할 수 있습니다.</p>
+                <p className="mt-1 text-xs text-foreground/60">같은 회사 직원을 초대할 수 있습니다.</p>
                 <div className="mt-4 flex gap-2">
                   <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="초대할 이메일 주소" className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
@@ -624,7 +624,7 @@ export default function MyPage() {
             {/* 소속 멤버 */}
             <div className="rounded-xl border border-border bg-surface shadow-card p-6">
               <h3 className="text-base font-semibold text-foreground">소속 멤버 ({companyMembers.length}명)</h3>
-              <p className="mt-1 text-xs text-foreground/40">같은 사업자등록번호로 가입한 멤버입니다.</p>
+              <p className="mt-1 text-xs text-foreground/60">같은 사업자등록번호로 가입한 멤버입니다.</p>
               <div className="mt-4 space-y-3">
                 {companyMembers.map((member) => (
                   <div key={member.id} className="flex items-center justify-between rounded-lg border border-border p-3">
@@ -639,7 +639,7 @@ export default function MyPage() {
                           {member.isCompanyAdmin && <span className="ml-1 rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary">관리자</span>}
                           {member.status === "suspended" && <span className="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-600">정지</span>}
                         </p>
-                        <p className="text-xs text-foreground/40">{member.email}</p>
+                        <p className="text-xs text-foreground/60">{member.email}</p>
                       </div>
                     </div>
                     {/* 회사 관리자만 다른 멤버 관리 가능 */}
@@ -676,7 +676,7 @@ export default function MyPage() {
             <div className="mt-4 space-y-3">
               <div>
                 <label className="block text-xs font-medium text-foreground/60">회사명</label>
-                <p className="mt-0.5 text-xs text-foreground/40">현재: {user.company}</p>
+                <p className="mt-0.5 text-xs text-foreground/60">현재: {user.company}</p>
                 <input type="text" value={changeForm.name}
                   onChange={(e) => setChangeForm({ ...changeForm, name: e.target.value })}
                   placeholder="변경할 회사명"
@@ -684,7 +684,7 @@ export default function MyPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-foreground/60">사업자등록번호</label>
-                <p className="mt-0.5 text-xs text-foreground/40">현재: {user.businessNumber}</p>
+                <p className="mt-0.5 text-xs text-foreground/60">현재: {user.businessNumber}</p>
                 <input type="text" value={changeForm.businessNumber}
                   onChange={(e) => setChangeForm({ ...changeForm, businessNumber: e.target.value })}
                   placeholder="000-00-00000"
@@ -693,7 +693,7 @@ export default function MyPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-foreground/60">주소</label>
-                <p className="mt-0.5 text-xs text-foreground/40">현재: {user.address || "-"}</p>
+                <p className="mt-0.5 text-xs text-foreground/60">현재: {user.address || "-"}</p>
                 <input type="text" value={changeForm.address}
                   onChange={(e) => setChangeForm({ ...changeForm, address: e.target.value })}
                   placeholder="변경할 주소"

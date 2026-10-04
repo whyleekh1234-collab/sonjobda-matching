@@ -90,7 +90,7 @@ export default function Footer() {
               전문 매칭 플랫폼
             </p>
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-foreground/40">
+              <p className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
                 Contact
               </p>
               <a
@@ -100,7 +100,7 @@ export default function Footer() {
                 contact@sonjobdamd.com
               </a>
               <p className="mt-0.5 text-sm text-foreground/70">{CONTACT_PHONE}</p>
-              <p className="mt-1 text-xs text-foreground/40">
+              <p className="mt-1 text-xs text-foreground/60">
                 평일 09:00 – 18:00 (주말 · 공휴일 휴무)
               </p>
             </div>
@@ -157,7 +157,7 @@ export default function Footer() {
 
         {/* 하단: 저작권 + 약관 */}
         <div className="flex flex-col gap-3 border-t border-border py-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-foreground/40">
+          <p className="text-xs text-foreground/60">
             &copy; {new Date().getFullYear()} 손잡다메디칼. All rights reserved.
           </p>
           <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -166,7 +166,7 @@ export default function Footer() {
                 <Link
                   href={item.href}
                   className={`transition-colors hover:text-primary ${
-                    item.emphasis ? "font-semibold text-foreground/70" : "text-foreground/40"
+                    item.emphasis ? "font-semibold text-foreground/70" : "text-foreground/60"
                   }`}
                 >
                   {item.label}

@@ -34,7 +34,7 @@ export default function PasswordInput({ className = "", ...props }: Props) {
         tabIndex={-1}
         aria-label={visible ? "비밀번호 숨기기" : "비밀번호 표시"}
         aria-pressed={visible}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-foreground/35 transition-colors hover:bg-muted hover:text-foreground/70"
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground/70"
       >
         {visible ? (
           // 보이는 중 — 눈에 사선을 그어 "누르면 가려진다"를 나타낸다.

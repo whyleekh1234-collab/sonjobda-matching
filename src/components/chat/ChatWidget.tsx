@@ -143,7 +143,7 @@ export default function ChatWidget() {
                 전송
               </button>
             </div>
-            <p className="mt-2 text-center text-[11px] text-foreground/40">
+            <p className="mt-2 text-center text-[11px] text-foreground/60">
               사람에게 문의하려면 <Link href="/inquiry" className="underline hover:text-primary">문의하기</Link>
             </p>
           </form>

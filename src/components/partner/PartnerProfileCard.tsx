@@ -20,7 +20,7 @@ export default function PartnerProfileCard({
     return (
       <div className={`rounded-xl border border-dashed border-border px-4 py-5 text-center ${expanded ? "h-full" : "mt-2"}`}>
         <p className="text-xs font-semibold text-foreground/50">파트너사 역량</p>
-        <p className="mt-1 text-xs text-foreground/40">이 파트너사는 아직 회사 역량을 등록하지 않았습니다.</p>
+        <p className="mt-1 text-xs text-foreground/60">이 파트너사는 아직 회사 역량을 등록하지 않았습니다.</p>
         {docName && companyId && (
           <div className="mt-3">
             <ProfileDocButton companyId={companyId} docName={docName} />
@@ -127,7 +127,7 @@ function Section({ title, rows }: { title: string; rows: [string, string][] }) {
       <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
         {filled.map(([k, v]) => (
           <div key={k}>
-            <dt className="text-foreground/40">{k}</dt>
+            <dt className="text-foreground/60">{k}</dt>
             <dd className="mt-0.5 break-keep text-foreground">{v}</dd>
           </div>
         ))}

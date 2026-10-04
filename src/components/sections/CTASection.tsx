@@ -37,7 +37,7 @@ export default function CTASection() {
               <p className="text-base font-bold text-foreground">의뢰사로 가입</p>
               <p className="text-sm text-foreground-muted">파트너를 찾고 있어요</p>
             </div>
-            <ArrowRight className="ml-auto h-5 w-5 text-foreground/30 transition-transform group-hover:translate-x-1" strokeWidth={2} />
+            <ArrowRight className="ml-auto h-5 w-5 text-foreground/50 transition-transform group-hover:translate-x-1" strokeWidth={2} />
           </Link>
 
           {/* 파트너사로 가입 */}
