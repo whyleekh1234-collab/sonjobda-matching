@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import PasswordInput from "@/components/PasswordInput";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -77,9 +78,7 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-lg font-bold text-white">
-            손
-          </div>
+          <Image src="/logo-mark.png" alt="" width={48} height={48} className="mx-auto h-12 w-12" />
           <h1 className="mt-4 text-xl font-bold text-foreground">손잡다매칭</h1>
           <p className="mt-1 text-sm text-foreground/50">
             {step === "password" ? "관리자 로그인" : "2단계 인증"}

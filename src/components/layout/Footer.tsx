@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import EmailCollectionNotice from "./EmailCollectionNotice";
 
@@ -67,7 +68,8 @@ export default function Footer() {
             {/* 특허 배지는 브랜드 바로 옆에 둔다. 오른쪽 끝에 떨어뜨려 두면
                 어느 컬럼에 딸린 것인지 읽히지 않는다. */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <Link href="/" className="inline-flex items-center">
+              <Link href="/" className="inline-flex items-center gap-2">
+                <Image src="/logo-mark.png" alt="" width={28} height={28} className="h-7 w-7" />
                 <span className="text-lg font-bold text-foreground">손잡다매칭</span>
               </Link>
               <span className="inline-block whitespace-nowrap rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground/50">

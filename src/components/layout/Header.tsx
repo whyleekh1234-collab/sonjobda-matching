@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import CompanyLogo from "@/components/CompanyLogo";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { Workflow } from "lucide-react";
 import { listMyNotifications, listNotices, listReadNoticeIds } from "@/lib/data/notices";
 
 const navItems = [
@@ -124,9 +124,9 @@ export default function Header() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* 로고 */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-light text-white shadow-soft">
-              <Workflow className="h-5 w-5" strokeWidth={2.2} />
-            </span>
+            {/* 로고는 라운드 사각형 안에 여백까지 포함된 그림이라, 배경이나
+                테두리를 덧씌우지 않는다. 겹치면 모서리가 두 겹으로 보인다. */}
+            <Image src="/logo-mark.png" alt="" width={32} height={32} priority className="h-8 w-8" />
             <span className="text-xl font-bold tracking-tight text-foreground">손잡다매칭</span>
           </Link>
 
