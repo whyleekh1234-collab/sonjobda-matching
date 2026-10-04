@@ -80,15 +80,15 @@ export default function Header() {
       {/* 로그인 시 최상단 역할 바 */}
       {user && (
         <div className="fixed top-0 z-50 w-full bg-foreground text-white">
-          <div className="mx-auto flex h-11 max-w-7xl items-center justify-between overflow-x-auto px-4 text-xs sm:px-6 lg:px-8">
+          <div className="mx-auto flex h-12 max-w-7xl items-center justify-between overflow-x-auto px-4 text-sm sm:px-6 lg:px-8">
             <div className="flex min-w-0 items-center gap-2">
-              <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${roleLabels[user.activeRole].color}`}>
+              <span className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${roleLabels[user.activeRole].color}`}>
                 {roleLabels[user.activeRole].label}
               </span>
-              <Link href="/mypage" className="whitespace-nowrap text-white/70 transition-colors hover:text-white">
+              <Link href="/mypage" className="whitespace-nowrap text-white/85 transition-colors hover:text-white">
                 <CompanyLogo path={user.companyLogo} name={user.company} size={22} className="mr-1.5 align-middle" />
                 <span className="font-medium text-white">{user.company}</span>
-                <span className="hidden sm:inline"> {user.name}님</span>
+                <span className="hidden sm:inline"> · {user.name}님</span>
               </Link>
             </div>
             {/* 좁은 화면에선 숨긴다 — 같은 기능이 햄버거 메뉴 안에 있다. */}
@@ -96,9 +96,9 @@ export default function Header() {
               {canSwitch && (
                 <button
                   onClick={handleSwitchRole}
-                  className="flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-0.5 text-xs text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                  className="flex items-center gap-1.5 rounded-full border border-white/35 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-white/15"
                 >
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                   </svg>
                   {roleLabels[user.activeRole].switchTo}
@@ -106,7 +106,7 @@ export default function Header() {
               )}
               <button
                 onClick={logout}
-                className="text-white/60 transition-colors hover:text-white"
+                className="text-sm font-medium text-white/80 transition-colors hover:text-white"
               >
                 로그아웃
               </button>
