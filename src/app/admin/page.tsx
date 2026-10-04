@@ -32,6 +32,8 @@ import {
   type CompanyChangeRequest,
 } from "@/lib/data/changeRequests";
 import { listPartnerRequests } from "@/lib/data/requests";
+import { changeMyPassword } from "@/lib/data/notices";
+import PasswordInput from "@/components/PasswordInput";
 import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -186,6 +188,9 @@ export default function AdminDashboard() {
   const [editInqReplyText, setEditInqReplyText] = useState("");
   const [adminReplyingTo, setAdminReplyingTo] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState("");
+  const [showPwModal, setShowPwModal] = useState(false);
+  const [pwForm, setPwForm] = useState({ next: "", confirm: "" });
+  const [pwBusy, setPwBusy] = useState(false);
   const [userFilterRole, setUserFilterRole] = useState<"all" | "client" | "partner">("all");
   const [userFilterStatus, setUserFilterStatus] = useState<"all" | "approved" | "pending" | "restricted" | "suspended">("all");
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
@@ -382,7 +387,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => { setActiveTab("overview"); window.scrollTo({ top: 0 }); }}
               className="flex items-center transition-opacity hover:opacity-70" title="관리자 첫 화면으로">
-              <span className="text-xl font-bold text-primary">손잡다매칭</span>
+              <span className="text-xl font-bold text-foreground">손잡다매칭</span>
             </button>
             <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/50">관리자</span>
           </div>
@@ -391,6 +396,11 @@ export default function AdminDashboard() {
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
               {(pendingUsers > 0 || newInquiries > 0) && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />}
             </button>
+            {/* 관리자에게는 마이페이지가 없어 비밀번호를 바꾸려면 Supabase
+                대시보드까지 들어가야 했다. 쓰는 사람이 못 바꾸는 비밀번호는
+                결국 안 바뀐다. */}
+            <button onClick={() => { setPwForm({ next: "", confirm: "" }); setShowPwModal(true); }}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted">비밀번호 변경</button>
             <button onClick={() => { logout(); router.push("/admin/login"); }} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted">로그아웃</button>
           </div>
         </div>
@@ -1425,6 +1435,60 @@ export default function AdminDashboard() {
       </div>
 
       {/* ════════════ 알림 발송 모달 ════════════ */}
+      {/* 비밀번호 변경 */}
+      {showPwModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" onClick={() => setShowPwModal(false)}>
+          <div className="w-full max-w-sm rounded-2xl bg-background p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-foreground">비밀번호 변경</h3>
+            <p className="mt-1 text-sm text-foreground/50">8자 이상으로 지정해주세요.</p>
+            <div className="mt-4 space-y-3">
+              <PasswordInput
+                value={pwForm.next}
+                onChange={(e) => setPwForm({ ...pwForm, next: e.target.value })}
+                placeholder="새 비밀번호"
+                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              <PasswordInput
+                value={pwForm.confirm}
+                onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
+                placeholder="새 비밀번호 확인"
+                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={async () => {
+                  if (pwForm.next.length < 8) { alert("8자 이상 입력해주세요."); return; }
+                  if (pwForm.next !== pwForm.confirm) { alert("두 번 입력한 비밀번호가 다릅니다."); return; }
+                  setPwBusy(true);
+                  try {
+                    await changeMyPassword(pwForm.next);
+                    setShowPwModal(false);
+                    // 비밀번호를 바꿨으면 그 비밀번호로 다시 들어오는 것이
+                    // 맞다. 바뀐 줄 모르고 쓰다가 다음 로그인에서 막히는
+                    // 것보다, 지금 끊고 새로 들어오게 한다.
+                    alert("비밀번호를 변경했습니다. 새 비밀번호로 다시 로그인해주세요.");
+                    logout();
+                    router.push("/admin/login");
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : "변경하지 못했습니다.");
+                  } finally {
+                    setPwBusy(false);
+                  }
+                }}
+                disabled={pwBusy}
+                className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
+              >
+                {pwBusy ? "변경 중..." : "변경"}
+              </button>
+              <button onClick={() => setShowPwModal(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/60 transition-colors hover:bg-muted">
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showNotificationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowNotificationModal(false)}>
           <div className="mx-4 w-full max-w-xl rounded-2xl bg-background p-8 shadow-xl" onClick={(e) => e.stopPropagation()}>
