@@ -56,7 +56,7 @@ export default function PartnerDashboard() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<"all" | "closed" | QuoteStatus>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "closed" | "submitted" | QuoteStatus>("all");
   const [sentSortBy, setSentSortBy] = useState<"quoteCode" | "title" | "category" | "client" | "amount" | "status" | "date">("date");
   const [sentSortDir, setSentSortDir] = useState<"asc" | "desc">("desc");
   const toggleSentSort = (key: typeof sentSortBy) => {
@@ -132,6 +132,13 @@ export default function PartnerDashboard() {
 
   const getMyQuoteStatus = (request: MatchRequest): QuoteStatus =>
     getMyQuote(request)?.status ?? "new";
+
+  // 견적을 이미 낸 상태들. 아직 열려 있는 의뢰인데 신규도 검토중도 보류도
+  // 거절도 아니어서, 칩이 없으면 "전체"에만 잡히고 어느 칩에도 안 들어간다.
+  const SUBMITTED: string[] = [
+    "quoted", "client_reviewing", "accepted", "client_hold", "client_rejected", "not_selected",
+  ];
+  const isSubmitted = (r: MatchRequest) => SUBMITTED.includes(getMyQuoteStatus(r));
 
   // 1차 선정: 의뢰사가 후보로 추렸다는 뜻. 연락처는 아직 공개되지 않고,
   // 이때는 견적을 다시 고쳐 조건을 보완할 수 있다.
@@ -293,10 +300,17 @@ export default function PartnerDashboard() {
   const mktTypeOf = (r: MatchRequest) => String((r.formData as Record<string, unknown> | undefined)?.mktType ?? "");
   const hasMarketing = requests.some((r) => r.category === "마케팅 대행");
 
+  // "전체"는 말 그대로 전부여야 한다. 마감된 의뢰를 빼고 세면 신규·검토중
+  // 숫자를 다 더해도 전체와 맞지 않아, 보는 사람은 화면이 틀렸다고 읽는다.
+  // 마감된 건은 카드에 "마감(매칭 성사)"·"회수됨"이 붙어 구분된다.
   const filteredRequests = (
     filterStatus === "closed"
       ? closedRequests
-      : openRequests.filter((r) => filterStatus === "all" || getMyQuoteStatus(r) === filterStatus)
+      : filterStatus === "all"
+        ? [...openRequests, ...closedRequests]
+        : filterStatus === "submitted"
+          ? openRequests.filter(isSubmitted)
+          : openRequests.filter((r) => getMyQuoteStatus(r) === filterStatus)
   )
     .filter((r) => mktFilter === "all" || (r.category === "마케팅 대행" && mktTypeOf(r) === mktFilter))
     .filter((r) => {
@@ -337,16 +351,19 @@ export default function PartnerDashboard() {
     return [r.title, r.requestCode, r.category].some((v) => String(v ?? "").toLowerCase().includes(q));
   };
   const openVisible = openRequests.filter(matchesSide);
+  const closedVisible = closedRequests.filter(matchesSide);
 
   const stats = {
-    total: openVisible.length,
+    // 열린 의뢰 + 마감된 의뢰. 상태 칩들의 합과 어긋나지 않는다.
+    total: openVisible.length + closedVisible.length,
     newCount: openVisible.filter((r) => getMyQuoteStatus(r) === "new").length,
     reviewing: openVisible.filter((r) => getMyQuoteStatus(r) === "reviewing").length,
     quoted: sentQuotes.filter(matchesSide).length,
     rejected: openVisible.filter((r) => getMyQuoteStatus(r) === "rejected").length,
+    submitted: openVisible.filter(isSubmitted).length,
     hold: openVisible.filter((r) => getMyQuoteStatus(r) === "hold").length,
     won: wonRequests.length,
-    closed: closedRequests.filter(matchesSide).length,
+    closed: closedVisible.length,
   };
 
   // 전체 활동 피드 생성
@@ -615,6 +632,7 @@ export default function PartnerDashboard() {
                 { key: "reviewing" as const, label: "검토중", count: stats.reviewing },
                 { key: "hold" as const, label: "보류", count: stats.hold },
                 { key: "rejected" as const, label: "거절", count: stats.rejected },
+                { key: "submitted" as const, label: "견적완료", count: stats.submitted },
                 { key: "closed" as const, label: "마감", count: stats.closed },
               ]).map((tab) => (
                 <button key={tab.key} onClick={() => setFilterStatus(tab.key)}
