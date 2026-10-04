@@ -5,8 +5,14 @@ import EmailCollectionNotice from "./EmailCollectionNotice";
 // 전자상거래법 제10조가 표시를 요구하는 값들. 실제 값을 받으면 여기
 // 한 곳만 바꾸면 화면 전체에 반영된다.
 //
-// 형식 예: 2026-경기남양주-0000
-const MAIL_ORDER_REG_NO = "신고번호 입력 예정";
+// 통신판매업 신고번호는 지금 표시하지 않는다. 아직 수수료를 받지 않아
+// 신고를 하지 않았고, 번호가 없는데 "입력 예정"을 띄워 두면 신고를 한
+// 것처럼 보일 여지가 있다. 신고 의무는 수수료 유무가 아니라 중개 행위와
+// 거래 횟수로 갈리므로(시행령상 직전연도 50회 미만이면 면제), 거래가
+// 쌓이면 다시 확인해야 한다. 번호를 받으면 아래 상수를 되살리고 푸터
+// 사업자정보에 한 줄 넣으면 된다.
+//
+//   const MAIL_ORDER_REG_NO = "2026-경기남양주-0000";
 
 // 전화번호는 같은 조항의 필수 표시사항이다. 이메일로 대신할 수 없다.
 const CONTACT_PHONE = "번호 입력 예정";
@@ -76,8 +82,12 @@ export default function Footer() {
                 {PATENT_APP_NO ? `특허출원 ${PATENT_APP_NO}` : "특허 출원 중"}
               </span>
             </div>
+            {/* "연결하는"에서 끊는다. 폭에 맡기면 창 크기에 따라 "전문"만
+                아래로 떨어지는 등 끊기는 자리가 그때그때 달라진다. */}
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-foreground/60">
-              제약·바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼
+              제약·바이오 업무의 의뢰사와 파트너사를 연결하는
+              <br />
+              전문 매칭 플랫폼
             </p>
             <div className="mt-6">
               <p className="text-xs font-semibold uppercase tracking-wider text-foreground/40">
@@ -130,10 +140,6 @@ export default function Footer() {
             <div className="flex gap-1.5">
               <dt>전화</dt>
               <dd className="text-foreground/70">{CONTACT_PHONE}</dd>
-            </div>
-            <div className="flex gap-1.5">
-              <dt>통신판매업신고</dt>
-              <dd className="text-foreground/70">{MAIL_ORDER_REG_NO}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt>개인정보보호책임자</dt>
