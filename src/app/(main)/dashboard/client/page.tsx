@@ -603,18 +603,6 @@ export default function ClientDashboard() {
                                 <QuoteAttachment path={(quote as { attachmentData?: string }).attachmentData} name={quote.attachmentName} />
                               </div>
 
-                              {/* 신고. 운영정책 제6조가 신고 접수를 전제로 제재를 정하고
-                                  있는데, 정작 특정 건을 신고할 경로가 없었다. 문의하기로
-                                  보내되 어느 견적에 대한 신고인지를 링크가 실어 나른다. */}
-                              <div className="mt-3">
-                                <Link
-                                  href={`/inquiry?type=report&ref=${quote.quoteCode ?? req.requestCode ?? ""}&company=${quote.companyId}&request=${req.id}`}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50"
-                                >
-                                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
-                                  파트너사 신고
-                                </Link>
-                              </div>
 
                               </div>
                               <aside className="lg:col-span-2">
@@ -655,6 +643,19 @@ export default function ClientDashboard() {
                                       </button>
                                     )}
                                   </div>
+                                  {/* 신고. 운영정책 제6조가 신고 접수를 전제로 제재를 정하고
+                                      있는데, 정작 특정 건을 신고할 경로가 없었다. 문의하기로
+                                      보내되 어느 견적에 대한 신고인지를 링크가 실어 나른다. */}
+                                  <div className="mt-3">
+                                    <Link
+                                      href={`/inquiry?type=report&ref=${quote.quoteCode ?? req.requestCode ?? ""}&company=${quote.companyId}&request=${req.id}`}
+                                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-medium text-foreground/50 transition-colors hover:border-foreground/30 hover:text-foreground/80"
+                                    >
+                                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
+                                      파트너사 신고
+                                    </Link>
+                                  </div>
+
                                 </div>
                               )}
                               </div>)}

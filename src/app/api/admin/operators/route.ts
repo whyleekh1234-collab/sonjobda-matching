@@ -27,6 +27,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "서버 설정이 올바르지 않습니다." }, { status: 500 });
   }
 
+  // 인증을 입력값 검증보다 먼저 한다. 순서가 거꾸로면 로그인하지 않은
+  // 사람에게도 "어떤 값을 어떤 형식으로 보내야 하는지"를 알려주게 된다.
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
+
+  const admin = createAdminClient();
+  const { data: me, error: meErr } = await admin
+    .from("profiles")
+    .select("is_platform_admin, company_id")
+    .eq("id", user.id)
+    .single();
+
+  if (meErr) {
+    return NextResponse.json({ message: `계정 정보를 읽지 못했습니다. (${meErr.message})` }, { status: 500 });
+  }
+  if (!me?.is_platform_admin) {
+    return NextResponse.json({ message: "운영자 권한이 필요합니다." }, { status: 403 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as {
     name?: string; email?: string; password?: string; mfaEmail?: string;
   };
@@ -52,24 +72,6 @@ export async function POST(request: Request) {
       { message: "인증번호 주소는 로그인 이메일과 달라야 합니다." },
       { status: 400 }
     );
-  }
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
-
-  const admin = createAdminClient();
-  const { data: me, error: meErr } = await admin
-    .from("profiles")
-    .select("is_platform_admin, company_id")
-    .eq("id", user.id)
-    .single();
-
-  if (meErr) {
-    return NextResponse.json({ message: `계정 정보를 읽지 못했습니다. (${meErr.message})` }, { status: 500 });
-  }
-  if (!me?.is_platform_admin) {
-    return NextResponse.json({ message: "운영자 권한이 필요합니다." }, { status: 403 });
   }
 
   // 1) auth 계정. 메일 인증 절차는 건너뛴다 — 운영자가 직접 만든 계정이다.

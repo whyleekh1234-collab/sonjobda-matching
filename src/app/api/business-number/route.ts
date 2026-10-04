@@ -53,14 +53,19 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ b_no: [digits] }),
     });
-    if (!res.ok) throw new Error(String(res.status));
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const json = (await res.json()) as { data?: NtsRow[] };
     row = json.data?.[0];
-  } catch {
+  } catch (e) {
     // 국세청 쪽 장애로 가입이 막히지 않게 한다.
+    //
+    // 실패 사유를 함께 돌려준다. 묻어두면 "키가 없는 것"과 "호출이
+    // 실패한 것"을 구분할 수 없어, 운영에서 왜 검증이 안 도는지 알 길이
+    // 없다. 키 자체는 서버에만 있고 사유 문구에는 들어가지 않는다.
     return NextResponse.json({
       skipped: true,
       message: "국세청 조회에 실패했습니다. 검증 없이 진행합니다.",
+      reason: e instanceof Error ? e.message : String(e),
     });
   }
 

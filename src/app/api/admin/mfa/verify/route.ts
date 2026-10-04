@@ -28,16 +28,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "서버 설정이 올바르지 않습니다." }, { status: 500 });
   }
 
-  const { code } = (await request.json().catch(() => ({}))) as { code?: string };
-  const digits = (code ?? "").replace(/\D/g, "");
-  if (digits.length !== 6) {
-    return NextResponse.json({ message: "6자리 숫자를 입력해주세요." }, { status: 400 });
-  }
-
+  // 인증을 입력값 검증보다 먼저 한다. 순서가 거꾸로면 로그인하지 않은
+  // 사람에게도 "어떤 값을 어떤 형식으로 보내야 하는지"를 알려주게 된다.
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
+  }
+
+  const { code } = (await request.json().catch(() => ({}))) as { code?: string };
+  const digits = (code ?? "").replace(/\D/g, "");
+  if (digits.length !== 6) {
+    return NextResponse.json({ message: "6자리 숫자를 입력해주세요." }, { status: 400 });
   }
 
   const admin = createAdminClient();

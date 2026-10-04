@@ -872,9 +872,9 @@ export default function PartnerDashboard() {
                 {activeSection === "received" && (
                   <Link
                     href={`/inquiry?type=report&ref=${selectedRequest.requestCode ?? ""}&company=${selectedRequest.clientCompanyId ?? ""}&request=${selectedRequest.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11px] font-medium text-foreground/50 transition-colors hover:border-foreground/30 hover:text-foreground/80"
                   >
-                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18M3 4h13l-2 4 2 4H3" /></svg>
                     의뢰사 신고
                   </Link>
                 )}
