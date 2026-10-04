@@ -102,9 +102,20 @@ export const EXTRA_FIELDS: Record<string, ExtraField[]> = {
       options: ["심포지엄/세미나", "웨비나", "학회 부스", "CSO(영업대행)", "환자유치 프로그램", "데이터 구독", "디지털 마케팅"] },
     { key: "annual_events", label: "연간 행사 수행 건수", type: "number" },
   ],
-  "임상시험 보험": [
+  "기업보험": [
     { key: "insurers", label: "제휴 보험사", type: "text", placeholder: "예: ○○화재, △△손보" },
-    { key: "coverage", label: "가입 가능 범위", type: "multi", options: ["국내 임상", "다국가 임상", "의료기기 임상", "IIT"] },
+    { key: "coverage", label: "취급 보험", type: "multi",
+      options: ["임상시험 보험", "영업배상책임", "생산물배상책임", "임원배상책임(D&O)", "단체상해", "화재/재산종합", "근로자재해(근재)", "수출보험"] },
+  ],
+  "원료·첨가제 공급": [
+    { key: "material_types", label: "공급 품목", type: "multi",
+      options: ["원료의약품(API)", "부형제/첨가제", "식품첨가물", "화장품 원료", "건강기능식품 원료", "배지/시약", "포장재"] },
+    { key: "grades", label: "취급 등급", type: "multi",
+      options: ["GMP", "USP/EP/KP 등 공정서", "식품등급", "화장품등급", "연구용(RUO)"] },
+    { key: "origin", label: "주요 원산지·제조원", type: "text", placeholder: "예: 국내 자사 생산, 인도·중국 수입" },
+    { key: "lead_time", label: "평균 납기", type: "text", placeholder: "예: 재고품 3영업일, 수입품 6주" },
+    { key: "docs", label: "제공 서류", type: "multi",
+      options: ["COA(시험성적서)", "MSDS", "DMF", "GMP 증명서", "원산지 증명", "샘플 제공"] },
   ],
 };
 

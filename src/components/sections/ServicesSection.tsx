@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { breakAfterSlash } from "@/lib/text";
-import { FlaskConical, Factory, ClipboardList, FileCheck2, ShieldCheck, Package, Megaphone, Lock, LockOpen } from "lucide-react";
+import { FlaskConical, Factory, ClipboardList, FileCheck2, ShieldCheck, Package, Megaphone, FlaskRound, Lock, LockOpen } from "lucide-react";
 
 const services = [
   {
@@ -25,7 +25,7 @@ const services = [
     ),
     title: "전문 파트너 연결",
     description:
-      "CRO, CMO, SMO, RA 등 7개 카테고리에서 프로젝트에 맞는 파트너사에게 견적을 요청하고 직접 비교하여 선택할 수 있습니다.",
+      "CRO, CMO, SMO, RA 등 8개 카테고리에서 프로젝트에 맞는 파트너사에게 견적을 요청하고 직접 비교하여 선택할 수 있습니다.",
   },
   {
     id: "saving",
@@ -282,15 +282,16 @@ export default function ServicesSection() {
               {/* 좌측: 카테고리 예시 */}
               <div className="p-6 sm:p-8">
                 <p className="text-xs font-semibold uppercase tracking-wider text-primary/60">Categories</p>
-                <h3 className="mt-2 text-lg font-bold text-foreground">7개 전문 분야 파트너</h3>
+                <h3 className="mt-2 text-lg font-bold text-foreground">8개 전문 분야 파트너</h3>
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   {[
                     { icon: FlaskConical, label: "CRO", desc: "임상시험 수탁기관" },
                     { icon: Factory, label: "CMO/CDMO", desc: "위탁생산" },
                     { icon: ClipboardList, label: "SMO", desc: "임상시험 운영" },
                     { icon: FileCheck2, label: "RA/인허가", desc: "인허가 컨설팅" },
-                    { icon: ShieldCheck, label: "임상시험 보험", desc: "보험가입" },
+                    { icon: ShieldCheck, label: "기업보험", desc: "책임/생산물/단체보험 등" },
                     { icon: Package, label: "소모품 공급", desc: "인쇄물/키트" },
+                    { icon: FlaskRound, label: "원료·첨가제 공급", desc: "원료의약품/부형제 등" },
                     { icon: Megaphone, label: "마케팅 대행", desc: "심포지엄/웨비나/CSO 등" },
                   ].map((cat) => {
                     const Icon = cat.icon;

@@ -112,7 +112,7 @@ export default function PartnerDashboard() {
 
   const getTimelineFromRequest = (request: MatchRequest): TimelineItem[] => {
     // 보험 의뢰는 업무범위/소요개월 개념이 없으므로 빈 목록
-    if (request.category === "임상시험 보험") return [];
+    if (request.category === "기업보험") return [];
     const lines = (request.description || "").split("\n");
     const tasksLine = lines.find((l) => l.startsWith("위탁업무:"));
     // 위탁업무가 없으면 CRO·SMO만 기본 임상 업무 목록을 쓴다. 다른 분야에
@@ -1101,7 +1101,7 @@ export default function PartnerDashboard() {
                   </div>
                   <div className="mt-4 space-y-5">
                     {/* 업무범위별 소요기간 (보험 의뢰는 표시하지 않음) */}
-                    {selectedRequest?.category !== "임상시험 보험" && (
+                    {selectedRequest?.category !== "기업보험" && (
                     <div className="rounded-xl border border-border p-4">
                       <h5 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                         <svg className="h-4 w-4 text-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

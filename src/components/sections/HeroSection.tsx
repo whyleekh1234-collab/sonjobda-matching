@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Package,
   Megaphone,
+  FlaskRound,
   ArrowRight,
   type LucideIcon,
 } from "lucide-react";
@@ -31,8 +32,9 @@ const categories: Category[] = [
   { icon: Factory, label: "CMO/CDMO", desc: "위탁생산", tint: "bg-indigo-50 text-indigo-600", hoverFill: "group-hover:bg-indigo-600", hoverBorder: "hover:border-indigo-300/70", arrow: "group-hover:text-indigo-600" },
   { icon: ClipboardList, label: "SMO", desc: "임상시험 운영서비스", tint: "bg-cyan-50 text-cyan-600", hoverFill: "group-hover:bg-cyan-600", hoverBorder: "hover:border-cyan-300/70", arrow: "group-hover:text-cyan-600" },
   { icon: FileCheck2, label: "RA/인허가", desc: "인허가 컨설팅", tint: "bg-violet-50 text-violet-600", hoverFill: "group-hover:bg-violet-600", hoverBorder: "hover:border-violet-300/70", arrow: "group-hover:text-violet-600" },
-  { icon: ShieldCheck, label: "임상시험 보험", desc: "임상시험 보험가입", tint: "bg-teal-50 text-teal-600", hoverFill: "group-hover:bg-teal-600", hoverBorder: "hover:border-teal-300/70", arrow: "group-hover:text-teal-600" },
+  { icon: ShieldCheck, label: "기업보험", desc: "책임보험/생산물보험/단체보험 등", tint: "bg-teal-50 text-teal-600", hoverFill: "group-hover:bg-teal-600", hoverBorder: "hover:border-teal-300/70", arrow: "group-hover:text-teal-600" },
   { icon: Package, label: "소모품 공급", desc: "인쇄물/연구용 키트 등", tint: "bg-sky-50 text-sky-600", hoverFill: "group-hover:bg-sky-600", hoverBorder: "hover:border-sky-300/70", arrow: "group-hover:text-sky-600" },
+  { icon: FlaskRound, label: "원료·첨가제 공급", desc: "원료의약품/부형제/식품·화장품 원료 등", tint: "bg-emerald-50 text-emerald-600", hoverFill: "group-hover:bg-emerald-600", hoverBorder: "hover:border-emerald-300/70", arrow: "group-hover:text-emerald-600" },
   { icon: Megaphone, label: "마케팅 대행", desc: "심포지엄/웨비나/CSO\n환자유치 프로그램 등", tint: "bg-purple-50 text-purple-600", hoverFill: "group-hover:bg-purple-600", hoverBorder: "hover:border-purple-300/70", arrow: "group-hover:text-purple-600" },
 ];
 

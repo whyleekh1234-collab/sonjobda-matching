@@ -11,8 +11,9 @@ const serviceTypes = [
   { id: "cmo-cdmo", label: "CMO/CDMO", desc: "위탁생산/위탁개발생산 매칭", icon: "M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" },
   { id: "smo", label: "SMO", desc: "임상시험 실시기관 관리 매칭", icon: "M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" },
   { id: "ra", label: "RA/인허가", desc: "규제기관 승인 수탁업체 매칭", icon: "M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" },
-  { id: "insurance", label: "임상시험 보험", desc: "임상시험 보험 가입 및 견적", icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+  { id: "insurance", label: "기업보험", desc: "책임보험/생산물보험/단체보험 등", icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
   { id: "supply", label: "소모품 공급", desc: "인쇄물/연구용 키트 등 소모품 공급업체 매칭", icon: "M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" },
+  { id: "material", label: "원료·첨가제 공급", desc: "원료의약품/부형제/식품·화장품 원료 등", icon: "M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c.251.023.501.05.75.082M9.75 3.104a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" },
   { id: "marketing", label: "마케팅 대행", desc: "심포지엄/웨비나/CSO/환자유치 프로그램 등", icon: "M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46" },
 ];
 
@@ -172,28 +173,84 @@ const smoTaskDetailOptions: Record<string, string[]> = {
   "정도관리(QC)": ["자체 QC", "Audit 대응"],
 };
 
+// 기업보험 종류.
+//
+// 분야를 "임상시험 보험"에서 "기업보험"으로 넓혔다. 임상시험 보험은 그중
+// 하나가 되고, 그 경우에만 임상시험 특화 항목(적응증·단계·대상자 수 등)을
+// 묻는다. 책임보험을 드는 회사에 피험자 수를 물을 수는 없다.
+const insuranceKindOptions = [
+  { value: "clinical", label: "임상시험 보험" },
+  { value: "liability", label: "영업배상책임보험" },
+  { value: "product", label: "생산물배상책임보험" },
+  { value: "do", label: "임원배상책임보험 (D&O)" },
+  { value: "group", label: "단체상해·단체보험" },
+  { value: "property", label: "화재·재산종합보험" },
+  { value: "worker", label: "근로자재해보장보험" },
+  { value: "other", label: "기타" },
+];
+
 // 임상시험 보험 대상자 유형
 const subjectTypeOptions = [
   { value: "healthy", label: "건강인" },
   { value: "patient", label: "환자" },
 ];
 
-// 임상시험 보험 선호 보험사 (최대 2개)
-const insurerOptions = ["KB손해보험", "라이나", "메리츠화재", "삼성화재", "현대해상"];
+// 선호 보험사 (최대 2개).
+//
+// "기타"는 목록에 없는 보험사를 직접 적게 하는 칸이다. 목록만 두면 다른
+// 보험사를 원하는 의뢰사가 아무것도 고르지 못하고 넘어간다.
+const INSURER_OTHER = "기타";
+const insurerOptions = ["KB손해보험", "DB손해보험", "라이나", "메리츠화재", "삼성화재", "현대해상", INSURER_OTHER];
 
-// 임상시험 보험 위탁업무
+// 기업보험 위탁업무. 임상시험 보험만의 항목(피험자 보상)은 남기되,
+// 기업보험 전반에 공통인 것들을 함께 둔다.
 const insuranceTaskOptions = [
   "보험 가입",
   "보험 설계·컨설팅",
+  "기존 보험 증권 검토·비교",
   "보험금 청구 대행",
   "보험 갱신",
-  "피험자 보상 관리",
+  "사고 처리 지원",
+  "피험자 보상 관리 (임상시험 보험)",
+  "기타",
+];
+
+// 원료·첨가제 공급 위탁업무
+const materialTaskOptions = [
+  "원료 공급",
+  "샘플 제공",
+  "규격·품질 자료 제공 (COA/MSDS 등)",
+  "수입 대행·통관",
+  "보관·물류",
+  "소분·재포장",
+  "대체 원료 제안",
+  "기타",
+];
+
+// 원료 구분
+const materialKindOptions = [
+  { value: "api", label: "원료의약품 (API)" },
+  { value: "excipient", label: "부형제·첨가제" },
+  { value: "food", label: "식품첨가물·건기식 원료" },
+  { value: "cosmetic", label: "화장품 원료" },
+  { value: "reagent", label: "배지·시약" },
+  { value: "other", label: "기타" },
+];
+
+// 원료 등급
+const materialGradeOptions = [
+  { value: "gmp", label: "GMP" },
+  { value: "pharmacopoeia", label: "공정서 (USP/EP/KP 등)" },
+  { value: "food", label: "식품등급" },
+  { value: "cosmetic", label: "화장품등급" },
+  { value: "ruo", label: "연구용 (RUO)" },
 ];
 
 // 파트너 분야명 → 서비스 유형 id
 const CATEGORY_TO_TYPE: Record<string, string> = {
   "CRO": "cro", "CMO/CDMO": "cmo-cdmo", "SMO": "smo", "RA/인허가": "ra",
-  "임상시험 보험": "insurance", "소모품 공급": "supply", "마케팅 대행": "marketing",
+  "기업보험": "insurance", "소모품 공급": "supply",
+  "원료·첨가제 공급": "material", "마케팅 대행": "marketing",
 };
 
 // 마케팅 대행 유형
@@ -464,7 +521,9 @@ function NewRequestForm() {
   const [smoSubjectCount, setSmoSubjectCount] = useState("");
   const [smoEnrollmentPeriod, setSmoEnrollmentPeriod] = useState("");
   const [crcCount, setCrcCount] = useState("");
-  // 임상시험 보험 추가 정보
+  // 기업보험 추가 정보
+  const [insKind, setInsKind] = useState("");
+  const [insTargetScale, setInsTargetScale] = useState("");   // 임상시험 보험이 아닐 때의 보험 내용
   const [insIndication, setInsIndication] = useState("");
   const [insTrialPhase, setInsTrialPhase] = useState("");
   const [insSubjectCount, setInsSubjectCount] = useState("");
@@ -474,6 +533,22 @@ function NewRequestForm() {
   const [compensationPerPerson, setCompensationPerPerson] = useState("");
   const [compensationTotal, setCompensationTotal] = useState("");
   const [preferredInsurers, setPreferredInsurers] = useState<string[]>([]);
+  const [insurerOther, setInsurerOther] = useState("");   // "기타"를 고른 경우 직접 적는 보험사
+
+  // 저장·요약에 쓰는 선호 보험사 문구. "기타"는 적어 넣은 이름으로 바꾼다.
+  // 그대로 두면 파트너사가 "기타"만 보고 무엇을 원하는지 알 수 없다.
+  const insurerLabel = () =>
+    preferredInsurers
+      .map((i) => (i === INSURER_OTHER ? insurerOther.trim() : i))
+      .filter(Boolean)
+      .join(", ");
+  // 원료·첨가제 공급 추가 정보
+  const [matKind, setMatKind] = useState("");
+  const [matName, setMatName] = useState("");
+  const [matGrade, setMatGrade] = useState("");
+  const [matQty, setMatQty] = useState("");
+  const [matDeliveryDate, setMatDeliveryDate] = useState("");
+  const [matDocs, setMatDocs] = useState<string[]>([]);
   const [insContractorType, setInsContractorType] = useState("");
   const [insContractorId, setInsContractorId] = useState("");
   // RA 추가 정보
@@ -549,7 +624,9 @@ function NewRequestForm() {
     indication, trialPhase, subjectCount, siteCount, enrollmentPeriod, treatmentPeriod, crfType, crfPages,
     cmoCategory, cmoPhase, formulation, batchCount, productionVolume, gmpRequirements,
     smoIndication, smoTrialPhase, smoSiteCount, siteTypes, smoSubjectCount, smoEnrollmentPeriod, crcCount,
+    insKind, insTargetScale, insurerOther,
     insIndication, insTrialPhase, insSubjectCount, insSiteNames, insurancePeriod, subjectType, compensationPerPerson, compensationTotal, preferredInsurers, insContractorType, insContractorId,
+    matKind, matName, matGrade, matQty, matDeliveryDate, matDocs,
     raProductInfo, raDeviceGrade, raDrugType,
     supplyType, supplyQty, supplyDeliveryDate, supplyDeliveryMethod, printClinicalCode, printSites, printItems, printDeliveryAddress,
     mktType, mktIngredientName, mktEventName, mktEventDate, mktAttendees, mktVenue, mktNeedStay, mktNeedFnb,
@@ -558,7 +635,9 @@ function NewRequestForm() {
     indication, trialPhase, subjectCount, siteCount, enrollmentPeriod, treatmentPeriod, crfType, crfPages,
     cmoCategory, cmoPhase, formulation, batchCount, productionVolume, gmpRequirements,
     smoIndication, smoTrialPhase, smoSiteCount, siteTypes, smoSubjectCount, smoEnrollmentPeriod, crcCount,
+    insKind, insTargetScale, insurerOther,
     insIndication, insTrialPhase, insSubjectCount, insSiteNames, insurancePeriod, subjectType, compensationPerPerson, compensationTotal, preferredInsurers, insContractorType, insContractorId,
+    matKind, matName, matGrade, matQty, matDeliveryDate, matDocs,
     supplyType, supplyQty, supplyDeliveryDate, supplyDeliveryMethod, printClinicalCode, printSites, printItems, printDeliveryAddress,
     mktType, mktIngredientName, mktEventName, mktEventDate, mktAttendees, mktVenue, mktNeedStay, mktNeedFnb,
     budget, priority, startDate, additionalNotes, taskDetails]);
@@ -619,6 +698,15 @@ function NewRequestForm() {
     setCompensationPerPerson((data.compensationPerPerson as string) || "");
     setCompensationTotal((data.compensationTotal as string) || "");
     setPreferredInsurers((data.preferredInsurers as string[]) || []);
+    setInsurerOther((data.insurerOther as string) || "");
+    setInsKind((data.insKind as string) || "");
+    setInsTargetScale((data.insTargetScale as string) || "");
+    setMatKind((data.matKind as string) || "");
+    setMatName((data.matName as string) || "");
+    setMatGrade((data.matGrade as string) || "");
+    setMatQty((data.matQty as string) || "");
+    setMatDeliveryDate((data.matDeliveryDate as string) || "");
+    setMatDocs((data.matDocs as string[]) || []);
     setInsContractorType((data.insContractorType as string) || "");
     setInsContractorId((data.insContractorId as string) || "");
     // Step 3
@@ -675,7 +763,7 @@ function NewRequestForm() {
       } else {
         // 폼 데이터가 없는 경우 description에서 파싱 (하위 호환)
         const categoryMap: Record<string, string> = {
-          "CRO": "cro", "CMO/CDMO": "cmo-cdmo", "SMO": "smo", "RA/인허가": "ra", "임상시험 보험": "insurance", "소모품 공급": "supply", "마케팅 대행": "marketing",
+          "CRO": "cro", "CMO/CDMO": "cmo-cdmo", "SMO": "smo", "RA/인허가": "ra", "기업보험": "insurance", "소모품 공급": "supply", "원료·첨가제 공급": "material", "마케팅 대행": "marketing",
         };
         setServiceType(categoryMap[req.category] || "");
         setProjectName(req.title || "");
@@ -742,15 +830,26 @@ function NewRequestForm() {
         if (!smoSubjectCount.trim()) return "목표 대상자 수를 입력해주세요.";
         if (!smoEnrollmentPeriod.trim()) return "예상 등록 기간을 입력해주세요.";
       } else if (serviceType === "insurance") {
-        if (!productCategory) return "구분을 선택해주세요.";
-        if (!insTrialPhase) return "임상시험 단계를 선택해주세요.";
-        if (!insIndication.trim()) return "적응증을 입력해주세요.";
-        if (!insSubjectCount.trim()) return "시험 대상자 수를 입력해주세요.";
-        if (!insSiteNames.trim()) return "실시기관명을 입력해주세요.";
+        if (!insKind) return "보험 종류를 선택해주세요.";
+        // 임상시험 보험만의 항목은 그 종류를 골랐을 때만 묻는다.
+        // 책임보험을 드는 회사에 피험자 수를 물을 수는 없다.
+        if (insKind === "clinical") {
+          if (!productCategory) return "구분을 선택해주세요.";
+          if (!insTrialPhase) return "임상시험 단계를 선택해주세요.";
+          if (!insIndication.trim()) return "적응증을 입력해주세요.";
+          if (!insSubjectCount.trim()) return "시험 대상자 수를 입력해주세요.";
+          if (!insSiteNames.trim()) return "실시기관명을 입력해주세요.";
+          if (!subjectType) return "대상자 유형을 선택해주세요.";
+        } else {
+          if (!insTargetScale.trim()) return "보험 내용을 입력해주세요.";
+        }
         if (!insurancePeriod.trim()) return "예상 보험 기간을 입력해주세요.";
-        if (!subjectType) return "대상자 유형을 선택해주세요.";
         if (!insContractorType) return "계약자 유형을 선택해주세요.";
         if (!insContractorId.trim()) return insContractorType === "individual" ? "주민등록번호를 입력해주세요." : "사업자등록번호를 입력해주세요.";
+      } else if (serviceType === "material") {
+        if (!matKind) return "원료 구분을 선택해주세요.";
+        if (!matName.trim()) return "원료명(성분명)을 입력해주세요.";
+        if (!matQty.trim()) return "필요 수량을 입력해주세요.";
       } else if (serviceType === "ra") {
         if (!productCategory) return "구분을 선택해주세요.";
         if (productCategory === "medical-device" && !raDeviceGrade) return "등급을 선택해주세요.";
@@ -775,7 +874,7 @@ function NewRequestForm() {
       if (serviceType !== "insurance" && !budget) return "예산 범위를 선택해주세요.";
       if (!priority) return "우선순위를 선택해주세요.";
       if (!startDate) return "희망 업무 시작일을 선택해주세요.";
-      if (serviceType === "insurance" && !attachment) return "임상시험 보험은 임상시험계획서 및 동의서 첨부가 필수입니다.";
+      if (serviceType === "insurance" && insKind === "clinical" && !attachment) return "임상시험 보험은 임상시험계획서 및 동의서 첨부가 필수입니다.";
     }
     return null;
   };
@@ -792,7 +891,7 @@ function NewRequestForm() {
   const handleSubmit = async () => {
     if (!user || isSubmitting) return;
     const categoryMap: Record<string, string> = {
-      cro: "CRO", "cmo-cdmo": "CMO/CDMO", smo: "SMO", ra: "RA/인허가", insurance: "임상시험 보험", supply: "소모품 공급", marketing: "마케팅 대행",
+      cro: "CRO", "cmo-cdmo": "CMO/CDMO", smo: "SMO", ra: "RA/인허가", insurance: "기업보험", supply: "소모품 공급", material: "원료·첨가제 공급", marketing: "마케팅 대행",
     };
     // 의뢰 고유번호(RQ-)는 DB 시퀀스가 붙인다. 예전처럼 기존 최대값+1로
     // 만들면 두 회사가 동시에 제출할 때 같은 번호가 나온다.
@@ -826,6 +925,8 @@ function NewRequestForm() {
           productionVolume ? `생산 규모: ${productionVolume}` : "",
           gmpRequirements.length > 0 ? `GMP: ${gmpRequirements.join(", ")}` : "",
         ] : serviceType === "insurance" ? [
+          insKind ? `보험 종류: ${insuranceKindOptions.find((o) => o.value === insKind)?.label}` : "",
+          insTargetScale ? `내용: ${insTargetScale}` : "",
           insTrialPhase ? `임상단계: ${insTrialPhase}` : "",
           insIndication ? `적응증: ${insIndication}` : "",
           insSubjectCount ? `대상자 수: ${insSubjectCount}명` : "",
@@ -836,7 +937,14 @@ function NewRequestForm() {
           compensationTotal ? `보상한도(총): ${compensationTotal}` : "",
           insContractorType ? `계약자: ${insContractorType === "individual" ? "개인" : "법인"}` : "",
           insContractorId ? `${insContractorType === "individual" ? "주민등록번호" : "사업자등록번호"}: ${insContractorId}` : "",
-          preferredInsurers.length > 0 ? `선호 보험사: ${preferredInsurers.join(", ")}` : "",
+          preferredInsurers.length > 0 ? `선호 보험사: ${insurerLabel()}` : "",
+        ] : serviceType === "material" ? [
+          matKind ? `원료 구분: ${materialKindOptions.find((o) => o.value === matKind)?.label}` : "",
+          matName ? `원료명: ${matName}` : "",
+          matGrade ? `등급: ${materialGradeOptions.find((o) => o.value === matGrade)?.label}` : "",
+          matQty ? `필요 수량: ${matQty}` : "",
+          matDeliveryDate ? `납품 희망일: ${matDeliveryDate}` : "",
+          matDocs.length > 0 ? `필요 서류: ${matDocs.join(", ")}` : "",
         ] : serviceType === "smo" ? [
           smoIndication ? `적응증: ${smoIndication}` : "",
           smoTrialPhase ? `임상단계: ${smoTrialPhase}` : "",
@@ -1016,14 +1124,14 @@ function NewRequestForm() {
               <p className="mt-1 text-xs text-red-400">* 표시는 필수 입력 항목입니다</p>
               {serviceType === "insurance" && (
                 <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-                  <p className="text-sm text-primary">임상시험 보험가입 업무는 국내최초 GA보험사 <a href="https://www.kfg.co.kr" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-primary-dark">KFG</a>가 전담합니다. (보험대리점 등록번호 : 2001088108호)</p>
+                  <p className="text-sm text-primary">기업보험 가입 업무는 국내최초 GA보험사 <a href="https://www.kfg.co.kr" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-primary-dark">KFG</a>가 전담합니다. (보험대리점 등록번호 : 2001088108호)</p>
                 </div>
               )}
               <div className="mt-6 space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-foreground">프로젝트명(가칭도 무관) *</label>
                   <input type="text" value={projectName} onChange={(e) => setProjectName(e.target.value)}
-                    placeholder={serviceType === "cro" ? "예: Phase II 고혈압 치료제 임상시험" : serviceType === "cmo-cdmo" ? "예: 바이오시밀러 위탁생산" : serviceType === "smo" ? "예: 의료기기 확증 임상시험 SMO" : serviceType === "ra" ? "예: 의료기기 3등급 인허가" : serviceType === "insurance" ? "예: Phase I 건강인 대상 임상시험 보험" : serviceType === "supply" ? "예: 임상시험용 소모품 공급" : serviceType === "marketing" ? "예: 심포지엄 대행" : "프로젝트명을 입력하세요"} maxLength={100}
+                    placeholder={serviceType === "cro" ? "예: Phase II 고혈압 치료제 임상시험" : serviceType === "cmo-cdmo" ? "예: 바이오시밀러 위탁생산" : serviceType === "smo" ? "예: 의료기기 확증 임상시험 SMO" : serviceType === "ra" ? "예: 의료기기 3등급 인허가" : serviceType === "insurance" ? "예: 생산물배상책임보험 가입" : serviceType === "supply" ? "예: 임상시험용 소모품 공급" : serviceType === "material" ? "예: 원료의약품 공급처 발굴" : serviceType === "marketing" ? "예: 심포지엄 대행" : "프로젝트명을 입력하세요"} maxLength={100}
                     className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                   <p className="mt-1 text-xs text-primary/60">숫자/문자(한영)/기호 제한 없음 / 최소 5자 이상</p>
                 </div>
@@ -1161,6 +1269,56 @@ function NewRequestForm() {
                   </>
                 ) : serviceType === "insurance" ? (
                   <>
+                    {/* 보험 종류. 분야를 "임상시험 보험"에서 "기업보험"으로
+                        넓혔으므로, 무엇을 들려는지부터 고르게 한다. 임상시험
+                        보험을 고른 경우에만 임상 특화 항목을 묻는다. */}
+                    <div>
+                      <label className="block text-sm font-medium text-foreground">보험 종류 *</label>
+                      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {insuranceKindOptions.map((opt) => (
+                          <button key={opt.value} type="button" onClick={() => setInsKind(opt.value)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                              insKind === opt.value ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground/60 hover:border-foreground/30"
+                            }`}>
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {insKind && insKind !== "clinical" && (
+                      <div>
+                        <label className="block text-sm font-medium text-foreground">내용 *</label>
+                        <textarea value={insTargetScale} onChange={(e) => setInsTargetScale(e.target.value)}
+                          rows={4} placeholder="가입하려는 보험의 내용을 적어주세요. 사업 내용, 가입 대상, 보장받고 싶은 범위 등"
+                          className="mt-1 w-full resize-none rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      </div>
+                    )}
+
+                    {insKind && (
+                      <div>
+                        <label className="block text-sm font-medium text-foreground">선호 보험사 <span className="text-xs font-normal text-foreground/40">(최대 2개)</span></label>
+                        <div className="mt-2 flex flex-wrap gap-3">
+                          {insurerOptions.map((ins) => (
+                            <label key={ins} className="flex cursor-pointer items-center gap-2">
+                              <input type="checkbox" checked={preferredInsurers.includes(ins)}
+                                disabled={!preferredInsurers.includes(ins) && preferredInsurers.length >= 2}
+                                onChange={() => setPreferredInsurers((prev) => prev.includes(ins) ? prev.filter((i) => i !== ins) : [...prev, ins])}
+                                className="h-4 w-4 rounded border-border accent-primary disabled:opacity-30" />
+                              <span className={`text-sm ${!preferredInsurers.includes(ins) && preferredInsurers.length >= 2 ? "text-foreground/30" : "text-foreground/70"}`}>{ins}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {preferredInsurers.includes(INSURER_OTHER) && (
+                          <input type="text" value={insurerOther} onChange={(e) => setInsurerOther(e.target.value)}
+                            placeholder="원하시는 보험사를 적어주세요"
+                            className="mt-2 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                        )}
+                      </div>
+                    )}
+
+                    {insKind === "clinical" && (
+                    <>
                     <div>
                       <label className="block text-sm font-medium text-foreground">구분 *</label>
                       <select value={productCategory} onChange={(e) => { setProductCategory(e.target.value); setInsTrialPhase(""); }}
@@ -1262,20 +1420,8 @@ function NewRequestForm() {
                           placeholder="예: 1,000,000,000" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground">선호 보험사 <span className="text-xs font-normal text-foreground/40">(최대 2개)</span></label>
-                      <div className="mt-2 flex flex-wrap gap-3">
-                        {insurerOptions.map((ins) => (
-                          <label key={ins} className="flex cursor-pointer items-center gap-2">
-                            <input type="checkbox" checked={preferredInsurers.includes(ins)}
-                              disabled={!preferredInsurers.includes(ins) && preferredInsurers.length >= 2}
-                              onChange={() => setPreferredInsurers((prev) => prev.includes(ins) ? prev.filter((i) => i !== ins) : [...prev, ins])}
-                              className="h-4 w-4 rounded border-border accent-primary disabled:opacity-30" />
-                            <span className={`text-sm ${!preferredInsurers.includes(ins) && preferredInsurers.length >= 2 ? "text-foreground/30" : "text-foreground/70"}`}>{ins}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
+                    </>
+                    )}
                   </>
                 ) : serviceType === "ra" ? (
                   <>
@@ -1423,6 +1569,66 @@ function NewRequestForm() {
                         <p className="mt-1 text-xs text-foreground/40">주소 검색 후 건물명·층·호수 등 상세주소를 이어서 입력할 수 있습니다.</p>
                       </div>
                     )}
+                  </>
+                ) : serviceType === "material" ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground">원료 구분 *</label>
+                      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {materialKindOptions.map((opt) => (
+                          <button key={opt.value} type="button" onClick={() => setMatKind(opt.value)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                              matKind === opt.value ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground/60 hover:border-foreground/30"
+                            }`}>
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground">원료명 (성분명) *</label>
+                      <input type="text" value={matName} onChange={(e) => setMatName(e.target.value)}
+                        placeholder="예: Metformin HCl, 미결정셀룰로오스"
+                        className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      <p className="mt-1 text-xs text-foreground/40">
+                        CAS 번호나 규격이 있으면 함께 적어주세요. 정확할수록 맞는 공급처를 찾기 쉽습니다.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground">필요 등급</label>
+                        <select value={matGrade} onChange={(e) => setMatGrade(e.target.value)}
+                          className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary">
+                          <option value="">등급 선택</option>
+                          {materialGradeOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground">필요 수량 *</label>
+                        <input type="text" value={matQty} onChange={(e) => setMatQty(e.target.value)}
+                          placeholder="예: 100kg, 연간 2톤"
+                          className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground">납품 희망일</label>
+                      <input type="date" value={matDeliveryDate} onChange={(e) => setMatDeliveryDate(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground">필요 서류</label>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {["COA(시험성적서)", "MSDS", "DMF", "GMP 증명서", "원산지 증명", "샘플"].map((d) => (
+                          <button key={d} type="button"
+                            onClick={() => setMatDocs(matDocs.includes(d) ? matDocs.filter((x) => x !== d) : [...matDocs, d])}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                              matDocs.includes(d) ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground/60 hover:border-foreground/30"
+                            }`}>
+                            {d}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </>
                 ) : serviceType === "marketing" ? (
                   <>
@@ -1592,14 +1798,14 @@ function NewRequestForm() {
                     <label className="block text-sm font-medium text-foreground">위탁업무 *</label>
                     <label className="flex cursor-pointer items-center gap-1.5">
                       <input type="checkbox"
-                        checked={(() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions; return opts.length > 0 && opts.every((t) => tasks.includes(t)); })()}
-                        onChange={() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions; const allSelected = opts.every((t) => tasks.includes(t)); setTasks(allSelected ? tasks.filter((t) => !opts.includes(t)) : [...new Set([...tasks, ...opts])]); }}
+                        checked={(() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "material" ? materialTaskOptions : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions; return opts.length > 0 && opts.every((t) => tasks.includes(t)); })()}
+                        onChange={() => { const opts = serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "material" ? materialTaskOptions : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions; const allSelected = opts.every((t) => tasks.includes(t)); setTasks(allSelected ? tasks.filter((t) => !opts.includes(t)) : [...new Set([...tasks, ...opts])]); }}
                         className="h-4 w-4 rounded border-border accent-primary" />
                       <span className="text-xs font-medium text-primary">전체 선택</span>
                     </label>
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2">
-                    {(serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions).map((task) => (
+                    {(serviceType === "cro" ? croTaskOptions : serviceType === "cmo-cdmo" ? cmoTaskOptions : serviceType === "smo" ? smoTaskOptions : serviceType === "insurance" ? insuranceTaskOptions : serviceType === "ra" ? (productCategory === "pharmaceutical" ? raPharmTaskOptions : raDeviceTaskOptions) : serviceType === "supply" ? supplyTasks : serviceType === "material" ? materialTaskOptions : serviceType === "marketing" ? marketingTasksFor(mktType) : generalTaskOptions).map((task) => (
                       <label key={task} className="flex cursor-pointer items-center gap-2">
                         <input type="checkbox" checked={tasks.includes(task)} onChange={() => toggleTask(task)}
                           className="h-4 w-4 rounded border-border accent-primary" />
@@ -1723,7 +1929,7 @@ function NewRequestForm() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground">관련 파일 첨부{serviceType === "insurance" ? " *" : ""}</label>
+                  <label className="block text-sm font-medium text-foreground">관련 파일 첨부{serviceType === "insurance" && insKind === "clinical" ? " *" : ""}</label>
                   {serviceType === "insurance" && (
                     <p className="mt-0.5 text-xs text-red-500">임상시험계획서 및 동의서 반드시 첨부 필요</p>
                   )}
@@ -1833,18 +2039,20 @@ function NewRequestForm() {
                   )}
                   {serviceType === "insurance" && (
                     <div className="mt-4 rounded-lg bg-primary/5 p-4">
-                      <h4 className="text-sm font-semibold text-foreground">임상시험 보험 세부 정보</h4>
+                      <h4 className="text-sm font-semibold text-foreground">기업보험 세부 정보</h4>
                       <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
-                        <div><span className="text-foreground/40">임상시험 단계</span><p className="font-medium text-foreground">{insTrialPhase || "-"}</p></div>
-                        <div><span className="text-foreground/40">적응증</span><p className="font-medium text-foreground">{insIndication || "-"}</p></div>
-                        <div><span className="text-foreground/40">대상자 수</span><p className="font-medium text-foreground">{insSubjectCount || "-"}명</p></div>
-                        <div><span className="text-foreground/40">대상자 유형</span><p className="font-medium text-foreground">{subjectTypeOptions.find((o) => o.value === subjectType)?.label || "-"}</p></div>
-                        <div className="col-span-2"><span className="text-foreground/40">실시기관명</span><p className="font-medium text-foreground">{insSiteNames || "-"}</p></div>
+                        <div><span className="text-foreground/40">보험 종류</span><p className="font-medium text-foreground">{insuranceKindOptions.find((o) => o.value === insKind)?.label || "-"}</p></div>
+                        {insKind !== "clinical" && <div className="col-span-2"><span className="text-foreground/40">내용</span><p className="whitespace-pre-line font-medium text-foreground">{insTargetScale || "-"}</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/40">임상시험 단계</span><p className="font-medium text-foreground">{insTrialPhase || "-"}</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/40">적응증</span><p className="font-medium text-foreground">{insIndication || "-"}</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/40">대상자 수</span><p className="font-medium text-foreground">{insSubjectCount || "-"}명</p></div>}
+                        {insKind === "clinical" && <div><span className="text-foreground/40">대상자 유형</span><p className="font-medium text-foreground">{subjectTypeOptions.find((o) => o.value === subjectType)?.label || "-"}</p></div>}
+                        {insKind === "clinical" && <div className="col-span-2"><span className="text-foreground/40">실시기관명</span><p className="font-medium text-foreground">{insSiteNames || "-"}</p></div>}
                         <div><span className="text-foreground/40">예상 보험 기간</span><p className="font-medium text-foreground">{insurancePeriod || "-"}개월</p></div>
                         {(compensationPerPerson || compensationTotal) && <div><span className="text-foreground/40">보상 한도</span><p className="font-medium text-foreground">1인당 {compensationPerPerson || "-"} / 총 {compensationTotal || "-"}</p></div>}
                         {insContractorType && <div><span className="text-foreground/40">계약자</span><p className="font-medium text-foreground">{insContractorType === "individual" ? "개인" : "법인"}</p></div>}
                         {insContractorId && <div><span className="text-foreground/40">{insContractorType === "individual" ? "주민등록번호" : "사업자등록번호"}</span><p className="font-medium text-foreground">{insContractorId}</p></div>}
-                        {preferredInsurers.length > 0 && <div><span className="text-foreground/40">선호 보험사</span><p className="font-medium text-foreground">{preferredInsurers.join(", ")}</p></div>}
+                        {preferredInsurers.length > 0 && <div><span className="text-foreground/40">선호 보험사</span><p className="font-medium text-foreground">{insurerLabel() || "-"}</p></div>}
                       </div>
                     </div>
                   )}
@@ -1856,6 +2064,19 @@ function NewRequestForm() {
                         {raDrugType && <div><span className="text-foreground/40">의약품 유형</span><p className="font-medium text-foreground">{raDrugTypeOptions.find((o) => o.value === raDrugType)?.label || "-"}</p></div>}
                         {phase && <div><span className="text-foreground/40">단계</span><p className="font-medium text-foreground">{phaseOptions.find((p) => p.value === phase)?.label || "-"}</p></div>}
                         <div className="col-span-2"><span className="text-foreground/40">제품 정보</span><p className="font-medium text-foreground">{raProductInfo || "-"}</p></div>
+                      </div>
+                    </div>
+                  )}
+                  {serviceType === "material" && (
+                    <div className="mt-4 rounded-lg bg-primary/5 p-4">
+                      <h4 className="text-sm font-semibold text-foreground">원료·첨가제 공급 세부 정보</h4>
+                      <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
+                        <div><span className="text-foreground/40">원료 구분</span><p className="font-medium text-foreground">{materialKindOptions.find((o) => o.value === matKind)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/40">원료명</span><p className="font-medium text-foreground">{matName || "-"}</p></div>
+                        <div><span className="text-foreground/40">등급</span><p className="font-medium text-foreground">{materialGradeOptions.find((o) => o.value === matGrade)?.label || "-"}</p></div>
+                        <div><span className="text-foreground/40">필요 수량</span><p className="font-medium text-foreground">{matQty || "-"}</p></div>
+                        {matDeliveryDate && <div><span className="text-foreground/40">납품 희망일</span><p className="font-medium text-foreground">{matDeliveryDate}</p></div>}
+                        {matDocs.length > 0 && <div className="col-span-2"><span className="text-foreground/40">필요 서류</span><p className="font-medium text-foreground">{matDocs.join(", ")}</p></div>}
                       </div>
                     </div>
                   )}

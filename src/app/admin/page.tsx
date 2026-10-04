@@ -1824,7 +1824,7 @@ export default function AdminDashboard() {
                     <p className="text-sm text-foreground/40">회사유형 (파트너 카테고리)</p>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {["CRO", "CMO/CDMO", "SMO", "RA/인허가", "임상시험 보험", "소모품 공급", "마케팅 대행"].map((cat) => (
+                    {["CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행"].map((cat) => (
                       <label key={cat} className="flex cursor-pointer items-center gap-2">
                         <input type="checkbox" checked={(selectedUser.partnerCategories || []).includes(cat)}
                           onChange={() => {

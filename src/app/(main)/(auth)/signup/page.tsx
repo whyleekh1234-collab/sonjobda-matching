@@ -16,8 +16,9 @@ const partnerCategories: PartnerCategory[] = [
   "CMO/CDMO",
   "SMO",
   "RA/인허가",
-  "임상시험 보험",
+  "기업보험",
   "소모품 공급",
+  "원료·첨가제 공급",
   "마케팅 대행",
 ];
 
@@ -318,7 +319,7 @@ ${licenseError}
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {partnerCategories.map((cat) => {
-                    const isBlocked = cat === "임상시험 보험";
+                    const isBlocked = cat === "기업보험";
                     return (
                     <button
                       key={cat}

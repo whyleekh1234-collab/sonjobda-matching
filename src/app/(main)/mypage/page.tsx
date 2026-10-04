@@ -28,7 +28,7 @@ import {
 import type { PartnerCategory } from "@/types/auth";
 
 const allPartnerCategories: PartnerCategory[] = [
-  "CRO", "CMO/CDMO", "SMO", "RA/인허가", "임상시험 보험", "소모품 공급", "마케팅 대행",
+  "CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행",
 ];
 
 export default function MyPage() {
@@ -371,7 +371,7 @@ export default function MyPage() {
                     {editingCategories ? (
                       <div className="mt-2">
                         <div className="flex flex-wrap gap-2">
-                          {allPartnerCategories.filter((cat) => cat !== "임상시험 보험").map((cat) => (
+                          {allPartnerCategories.filter((cat) => cat !== "기업보험").map((cat) => (
                             <button key={cat} type="button"
                               onClick={() => setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat])}
                               className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
