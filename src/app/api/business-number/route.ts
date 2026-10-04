@@ -38,7 +38,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const serviceKey = process.env.NTS_SERVICE_KEY;
+  // trim이 필요하다. 환경변수를 대시보드에 붙여넣을 때 줄바꿈이나 공백이
+  // 섞이기 쉬운데, 그대로 URL 인코딩하면 %0A가 붙어 다른 키가 된다.
+  // 국세청은 그걸 "등록되지 않은 인증키"로 돌려줘, 키가 틀린 것처럼 보인다.
+  const serviceKey = process.env.NTS_SERVICE_KEY?.trim();
   if (!serviceKey) {
     return NextResponse.json({
       skipped: true,
@@ -66,6 +69,7 @@ export async function POST(request: NextRequest) {
       skipped: true,
       message: "국세청 조회에 실패했습니다. 검증 없이 진행합니다.",
       reason: e instanceof Error ? e.message : String(e),
+      keyLength: serviceKey.length,   // 값은 드러내지 않고 길이만. 잘렸는지 알 수 있다.
     });
   }
 
