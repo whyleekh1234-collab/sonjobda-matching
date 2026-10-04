@@ -59,6 +59,10 @@ function SignupContent() {
   // 확인해 둔 상태로 주소만 바꿔 제출하는 구멍을 막는다.
   const [emailOk, setEmailOk] = useState<boolean | null>(null);
   const [emailChecking, setEmailChecking] = useState(false);
+  // 사업자등록번호 조회. 번호를 고치면 다시 조회하게 되돌린다.
+  const [bizOk, setBizOk] = useState<boolean | null>(null);
+  const [bizNote, setBizNote] = useState("");
+  const [bizChecking, setBizChecking] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // 쿼리 파라미터로 전달된 카테고리 미리 선택 / 초대 링크 처리
@@ -188,6 +192,7 @@ function SignupContent() {
     const phoneDigits = form.phone.replace(/\D/g, "").length;
     if (phoneDigits < 10 || phoneDigits > 11) return "연락처를 정확히 입력해주세요.";
     if (!inviteInfo && emailOk !== true) return "이메일 중복확인을 해주세요.";
+    if (!inviteInfo && bizOk === false) return "사업자등록번호를 다시 확인해주세요.";
     if (!inviteInfo && !license) return "사업자등록증을 첨부해주세요.";
     if (!form.agreeTerms) return "이용약관에 동의해주세요.";
     if (!form.agreePrivacy) return "개인정보처리방침에 동의해주세요.";
@@ -499,18 +504,72 @@ ${licenseError}
               <label htmlFor="businessNumber" className="block text-sm font-medium text-foreground">
                 사업자등록번호 *
               </label>
-              <input
-                type="text"
-                id="businessNumber"
-                name="businessNumber"
-                required
-                value={form.businessNumber}
-                onChange={handleBusinessNumberChange}
-                readOnly={!!inviteInfo}
-                placeholder="000-00-00000"
-                maxLength={12}
-                className={`mt-1 w-full rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
-              />
+              <div className="mt-1 flex gap-2">
+                <input
+                  type="text"
+                  id="businessNumber"
+                  name="businessNumber"
+                  required
+                  value={form.businessNumber}
+                  onChange={(e) => { handleBusinessNumberChange(e); setBizOk(null); setBizNote(""); }}
+                  readOnly={!!inviteInfo}
+                  placeholder="000-00-00000"
+                  maxLength={12}
+                  className={`w-full rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
+                />
+                {/* 초대로 들어온 경우 회사가 이미 검증돼 있어 다시 묻지 않는다. */}
+                {!inviteInfo && (
+                  <button
+                    type="button"
+                    disabled={bizChecking || form.businessNumber.replace(/[^0-9]/g, "").length !== 10}
+                    onClick={async () => {
+                      setBizChecking(true);
+                      setError("");
+                      setBizNote("");
+                      try {
+                        const res = await fetch("/api/business-number", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ businessNumber: form.businessNumber }),
+                        });
+                        const d = await res.json();
+                        if (d.valid === false) {
+                          setBizOk(false);
+                          setError(d.message ?? "국세청에 등록되지 않은 번호입니다.");
+                          return;
+                        }
+                        if (d.skipped) {
+                          // 키가 없으면 검증이 꺼진다. 통과한 것처럼 보이면 안 된다.
+                          setBizOk(null);
+                          setBizNote("국세청 조회가 설정되지 않아 확인할 수 없습니다. 관리자 승인 시 수동 확인됩니다.");
+                          return;
+                        }
+                        if (d.registered) {
+                          setBizOk(false);
+                          setError(`이미 "${d.registered}"로 등록된 사업자등록번호입니다. 그 회사 담당 관리자의 초대 링크로 가입해주세요.`);
+                          return;
+                        }
+                        setBizOk(true);
+                        setBizNote(`${d.status}${d.taxType ? ` · ${d.taxType}` : ""}`);
+                      } catch {
+                        setBizOk(null);
+                        setError("조회하지 못했습니다. 잠시 후 다시 시도해주세요.");
+                      } finally {
+                        setBizChecking(false);
+                      }
+                    }}
+                    className="shrink-0 whitespace-nowrap rounded-lg border border-border px-4 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {bizChecking ? "조회 중..." : "사업자 확인"}
+                  </button>
+                )}
+              </div>
+              {bizOk === true && bizNote && (
+                <p className="mt-1 text-xs text-emerald-600">국세청 확인: {bizNote}</p>
+              )}
+              {bizOk === null && bizNote && (
+                <p className="mt-1 text-xs text-amber-600">{bizNote}</p>
+              )}
             </div>
 
             {/* 연락처 */}

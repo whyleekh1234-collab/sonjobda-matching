@@ -111,5 +111,29 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ valid: true, status: row.b_stt, taxType: row.tax_type });
+  // 이미 등록된 회사인지도 함께 알려준다.
+  //
+  // 가입 트리거가 "초대 없이 남의 사업자번호로 가입"을 막기는 하지만,
+  // 그건 제출 버튼을 누른 뒤의 일이다. 폼을 다 채우고 나서야 "초대를
+  // 받아오라"는 말을 들으면 늦다.
+  let registered: string | null = null;
+  if (hasAdminKey()) {
+    try {
+      const { data } = await createAdminClient()
+        .from("companies")
+        .select("name")
+        .eq("business_number", `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`)
+        .maybeSingle();
+      registered = data?.name ?? null;
+    } catch {
+      // 못 알아내도 조회 결과는 돌려준다.
+    }
+  }
+
+  return NextResponse.json({
+    valid: true,
+    status: row.b_stt,
+    taxType: row.tax_type,
+    registered,
+  });
 }
