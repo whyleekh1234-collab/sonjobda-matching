@@ -106,6 +106,7 @@ function toRequest(row: RequestRow): MatchRequest {
     ...(row.request_code && { requestCode: row.request_code }),
     ...(row.match_code && { matchCode: row.match_code }),
     clientId: row.created_by ?? "",
+    clientCompanyId: row.company_id,
     clientCompany: row.companies?.name ?? "",
     clientLogo: row.companies?.logo_path ?? null,
     title: row.title,

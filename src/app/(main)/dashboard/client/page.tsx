@@ -608,7 +608,7 @@ export default function ClientDashboard() {
                                   보내되 어느 견적에 대한 신고인지를 링크가 실어 나른다. */}
                               <div className="mt-3">
                                 <Link
-                                  href={`/inquiry?type=report&ref=${quote.quoteCode ?? req.requestCode ?? ""}`}
+                                  href={`/inquiry?type=report&ref=${quote.quoteCode ?? req.requestCode ?? ""}&company=${quote.companyId}&request=${req.id}`}
                                   className="text-xs text-foreground/35 underline transition-colors hover:text-red-500"
                                 >
                                   이 견적 신고하기

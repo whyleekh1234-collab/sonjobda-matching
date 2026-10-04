@@ -158,6 +158,8 @@ export interface InquiryInput {
   title?: string;
   message: string;
   profileId?: string;
+  targetCompanyId?: string;   // 신고 대상 회사
+  targetRequestId?: string;   // 신고가 비롯된 의뢰
 }
 
 export async function createInquiry(input: InquiryInput): Promise<void> {
@@ -170,6 +172,10 @@ export async function createInquiry(input: InquiryInput): Promise<void> {
     title: input.title ?? null,
     message: input.message,
     profile_id: input.profileId ?? null,
+    // 신고는 대상이 특정되지 않으면 조사할 수가 없다. 제목에 번호만
+    // 적어서는 운영자가 사람 손으로 찾아야 한다.
+    target_company_id: input.targetCompanyId ?? null,
+    target_request_id: input.targetRequestId ?? null,
   });
   if (error) throw new Error(error.message);
 }

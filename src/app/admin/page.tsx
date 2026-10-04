@@ -33,7 +33,8 @@ import {
 } from "@/lib/data/changeRequests";
 import { listPartnerRequests } from "@/lib/data/requests";
 import { changeMyPassword } from "@/lib/data/notices";
-import { setPlatformAdmin, setMfaEmail } from "@/lib/data/admin";
+import { setPlatformAdmin, setMfaEmail, sanctionMember, listSanctions, resolveInquiry,
+  SANCTION_LABELS, type SanctionKind, type SanctionRow } from "@/lib/data/admin";
 import PasswordInput from "@/components/PasswordInput";
 import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
@@ -82,6 +83,7 @@ interface UserData {
   mfaEmail?: string | null;
   licensePath?: string | null;
   licenseName?: string | null;
+  sanctionCount?: number;
 }
 
 // 회원 상세 모달의 동작 버튼. 색을 기능마다 다르게 줬더니 산만해서
@@ -194,6 +196,12 @@ export default function AdminDashboard() {
   const [adminReplyingTo, setAdminReplyingTo] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState("");
   const [admins, setAdmins] = useState<UserData[]>([]);
+  // 신고만 따로 보기. 일반 문의와 섞여 있으면 눈에 띄지 않는다.
+  const [inquiryOnlyReports, setInquiryOnlyReports] = useState(false);
+  // 제재 창. 어느 신고에서 비롯됐는지 함께 들고 있어야 이력에 남길 수 있다.
+  const [sanctionFor, setSanctionFor] = useState<{ user: UserData; inquiryId?: string } | null>(null);
+  const [sanctionForm, setSanctionForm] = useState<{ kind: SanctionKind; reason: string }>({ kind: "warning", reason: "" });
+  const [sanctionHistory, setSanctionHistory] = useState<SanctionRow[]>([]);
   const [showAddAdmin, setShowAddAdmin] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ name: "", email: "", password: "", mfaEmail: "" });
   const [showPwModal, setShowPwModal] = useState(false);
@@ -1196,6 +1204,25 @@ export default function AdminDashboard() {
         {/* ════════════ 문의관리 ════════════ */}
         {activeTab === "inquiries" && (
           <div className="mt-8">
+            {/* 신고만 따로 보기.
+                신고는 일반 문의·제휴 문의와 한 목록에 섞여 있어 눈에 띄지
+                않았다. 운영정책 제6조가 신고 접수를 전제로 제재를 정하고
+                있으므로, 놓치면 정책이 돌아가지 않는다. */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <button onClick={() => setInquiryOnlyReports(false)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!inquiryOnlyReports ? "bg-foreground text-white" : "border border-border text-foreground/60 hover:bg-muted"}`}>
+                전체 {inquiries.length}
+              </button>
+              <button onClick={() => setInquiryOnlyReports(true)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${inquiryOnlyReports ? "bg-foreground text-white" : "border border-border text-foreground/60 hover:bg-muted"}`}>
+                신고 {inquiries.filter((i) => i.type === "report").length}
+                {inquiries.filter((i) => i.type === "report" && i.status !== "closed").length > 0 && (
+                  <span className="ml-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                    미처리 {inquiries.filter((i) => i.type === "report" && i.status !== "closed").length}
+                  </span>
+                )}
+              </button>
+            </div>
             {inquiries.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
                 <svg className="mx-auto h-12 w-12 text-foreground/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
@@ -1217,7 +1244,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[...inquiries].reverse().map((inq) => {
+                      {[...inquiries].filter((i) => !inquiryOnlyReports || i.type === "report").reverse().map((inq) => {
                         const inqTitle = (inq as { title?: string }).title || (inq.message ? inq.message.slice(0, 30) + (inq.message.length > 30 ? "..." : "") : "(내용 없음)");
                         return (
                           <React.Fragment key={inq.id}>
@@ -1246,6 +1273,83 @@ export default function AdminDashboard() {
                                       <div className="text-xs"><span className="text-foreground/40">이메일</span><p className="mt-0.5 font-medium text-foreground">{inq.email}</p></div>
                                       <div className="text-xs"><span className="text-foreground/40">연락처</span><p className="mt-0.5 font-medium text-foreground">{inq.phone || "-"}</p></div>
                                     </div>
+
+                                    {/* 신고 처리.
+                                        신고를 보고 → 대상을 찾아가서 → 제재하는 것을
+                                        전부 손으로 해야 했고, 그 제재가 어느 신고
+                                        때문인지도 남지 않았다. 여기서 바로 끝낸다. */}
+                                    {inq.type === "report" && (
+                                      <div className="mt-4 rounded-xl border border-red-200 bg-red-50/40 p-4">
+                                        <p className="text-sm font-semibold text-foreground">신고 처리</p>
+                                        {(() => {
+                                          const target = users.find((u) => u.companyId === inq.targetCompanyId);
+                                          if (inq.resolvedAt) {
+                                            return (
+                                              <p className="mt-2 text-sm text-foreground/60">
+                                                <span className="font-medium text-emerald-600">처리 완료</span>
+                                                {" · "}{new Date(inq.resolvedAt).toLocaleDateString("ko-KR")}
+                                                {inq.resolution ? ` · ${inq.resolution}` : ""}
+                                              </p>
+                                            );
+                                          }
+                                          if (!inq.targetCompanyId) {
+                                            return (
+                                              <p className="mt-2 text-sm text-foreground/50">
+                                                대상이 지정되지 않은 신고입니다. 내용을 보고 사용자 관리에서 직접 처리해주세요.
+                                              </p>
+                                            );
+                                          }
+                                          if (!target) {
+                                            return (
+                                              <p className="mt-2 text-sm text-foreground/50">
+                                                신고 대상 회사의 회원을 찾을 수 없습니다. 이미 탈퇴했을 수 있습니다.
+                                              </p>
+                                            );
+                                          }
+                                          return (
+                                            <>
+                                              <p className="mt-2 text-sm text-foreground/70">
+                                                대상: <span className="font-semibold text-foreground">{target.company}</span>
+                                                {" · "}{target.name}
+                                                {(target.sanctionCount ?? 0) > 0 && (
+                                                  <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                                                    누적 제재 {target.sanctionCount}회
+                                                  </span>
+                                                )}
+                                              </p>
+                                              <div className="mt-3 flex flex-wrap gap-2">
+                                                <button
+                                                  onClick={async () => {
+                                                    setSanctionFor({ user: target, inquiryId: inq.id });
+                                                    setSanctionForm({ kind: "warning", reason: "" });
+                                                    setSanctionHistory(await listSanctions(target.id).catch(() => []));
+                                                  }}
+                                                  className={ACTION_BTN}
+                                                >
+                                                  제재하기
+                                                </button>
+                                                <button
+                                                  onClick={async () => {
+                                                    const why = prompt("기각 사유를 적어주세요. (신고 기록에는 남습니다)");
+                                                    if (!why?.trim()) return;
+                                                    try {
+                                                      await sanctionMember(target.id, "dismiss", why.trim(), inq.id);
+                                                      await resolveInquiry(inq.id, `기각 — ${why.trim()}`);
+                                                      await loadData();
+                                                    } catch (err) {
+                                                      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+                                                    }
+                                                  }}
+                                                  className={ACTION_BTN}
+                                                >
+                                                  기각
+                                                </button>
+                                              </div>
+                                            </>
+                                          );
+                                        })()}
+                                      </div>
+                                    )}
                                     {/* 문의 내용 */}
                                     <div className="mt-3 rounded-lg bg-muted/30 p-3">
                                       <p className="whitespace-pre-wrap text-sm text-foreground/70">{inq.message || "(내용 없음)"}</p>
@@ -1510,6 +1614,101 @@ export default function AdminDashboard() {
       </div>
 
       {/* ════════════ 알림 발송 모달 ════════════ */}
+      {/* 제재.
+          이력·상태·통지를 한 번에 처리한다. 셋이 따로 놀면 "상태는 정지인데
+          이력이 없는" 회원이 생기고, 그러면 누적 횟수를 믿을 수 없게 된다. */}
+      {sanctionFor && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" onClick={() => setSanctionFor(null)}>
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-background p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-foreground">제재</h3>
+            <p className="mt-1 text-sm text-foreground/60">
+              {sanctionFor.user.company} · {sanctionFor.user.name}
+              {(sanctionFor.user.sanctionCount ?? 0) > 0 && (
+                <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                  누적 {sanctionFor.user.sanctionCount}회
+                </span>
+              )}
+            </p>
+
+            {(sanctionFor.user.sanctionCount ?? 0) >= 2 && (
+              <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+                이번 제재로 누적 {(sanctionFor.user.sanctionCount ?? 0) + 1}회가 됩니다.
+                서비스운영정책 제6조 ③에 따라 누적 3회 이상이면 영구 탈퇴를 검토할 수 있습니다.
+              </p>
+            )}
+
+            <label className="mt-4 block text-sm font-medium text-foreground">조치</label>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {(["warning", "restrict", "suspend"] as SanctionKind[]).map((k) => (
+                <button key={k} type="button" onClick={() => setSanctionForm({ ...sanctionForm, kind: k })}
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                    sanctionForm.kind === k ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground/60 hover:border-foreground/30"
+                  }`}>
+                  {SANCTION_LABELS[k]}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-foreground/40">
+              경고는 상태를 바꾸지 않고 이력만 남깁니다. 제한은 일부 기능이 막히고, 정지는 로그인이 막힙니다.
+            </p>
+
+            <label className="mt-4 block text-sm font-medium text-foreground">사유 *</label>
+            <textarea value={sanctionForm.reason} onChange={(e) => setSanctionForm({ ...sanctionForm, reason: e.target.value })}
+              rows={3} placeholder="어떤 행위가 어느 조항을 위반했는지 적어주세요. 이 내용이 당사자에게 그대로 통지됩니다."
+              className="mt-1 w-full resize-none rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+
+            {sanctionHistory.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-foreground">지난 이력</p>
+                <div className="mt-2 space-y-2">
+                  {sanctionHistory.map((h) => (
+                    <div key={h.id} className="rounded-lg border border-border px-3 py-2 text-xs">
+                      <p className="font-medium text-foreground">
+                        {SANCTION_LABELS[h.kind]}
+                        <span className="ml-2 font-normal text-foreground/40">
+                          {new Date(h.createdAt).toLocaleDateString("ko-KR")}
+                          {h.decidedByName ? ` · ${h.decidedByName}` : ""}
+                        </span>
+                      </p>
+                      <p className="mt-0.5 text-foreground/60">{h.reason}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={async () => {
+                  if (!sanctionForm.reason.trim()) { alert("사유를 입력해주세요."); return; }
+                  try {
+                    const { count } = await sanctionMember(
+                      sanctionFor.user.id, sanctionForm.kind, sanctionForm.reason.trim(), sanctionFor.inquiryId
+                    );
+                    if (sanctionFor.inquiryId) {
+                      await resolveInquiry(sanctionFor.inquiryId, `${SANCTION_LABELS[sanctionForm.kind]} — ${sanctionForm.reason.trim()}`);
+                    }
+                    setSanctionFor(null);
+                    await loadData();
+                    alert(count >= 3
+                      ? `제재했습니다. 누적 ${count}회입니다 — 정책 제6조 ③에 따라 영구 탈퇴를 검토할 수 있습니다.`
+                      : `제재했습니다. 누적 ${count}회입니다.`);
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+                  }
+                }}
+                className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+              >
+                제재하고 통지
+              </button>
+              <button onClick={() => setSanctionFor(null)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/60 transition-colors hover:bg-muted">
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 운영자 추가 */}
       {showAddAdmin && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" onClick={() => setShowAddAdmin(false)}>

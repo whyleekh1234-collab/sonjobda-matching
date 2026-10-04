@@ -9,6 +9,9 @@ export interface MatchRequest {
   requestCode?: string; // 의뢰 고유번호 (RQ-00000001)
   matchCode?: string; // 매칭 관리번호 (MT-00000001)
   clientId: string;
+  // 의뢰를 올린 회사. 신고할 때 대상을 특정하는 데 쓴다 — 회사명만으로는
+  // 동명이인 회사를 가릴 수 없고, 매칭 전에는 회사명 자체가 가려진다.
+  clientCompanyId: string;
   clientCompany: string;
   clientLogo?: string | null;
   title: string;

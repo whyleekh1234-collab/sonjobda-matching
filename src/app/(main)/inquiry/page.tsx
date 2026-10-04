@@ -70,6 +70,9 @@ function InquiryPageInner() {
         title: form.title,
         message: form.message,
         profileId: user.id,
+        // 신고 링크가 대상을 실어 보낸다. 일반 문의면 비어 있다.
+        ...(params.get("company") && { targetCompanyId: params.get("company")! }),
+        ...(params.get("request") && { targetRequestId: params.get("request")! }),
       });
       setForm({ type: "", title: "", message: "" });
       await reload();

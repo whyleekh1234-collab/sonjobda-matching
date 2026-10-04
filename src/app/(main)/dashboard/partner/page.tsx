@@ -867,7 +867,7 @@ export default function PartnerDashboard() {
                     정작 특정 의뢰를 신고할 경로가 없었다. 어느 건인지를 링크가
                     실어 나른다 — 대상이 특정되지 않으면 조사할 수가 없다. */}
                 <Link
-                  href={`/inquiry?type=report&ref=${selectedRequest.requestCode ?? ""}`}
+                  href={`/inquiry?type=report&ref=${selectedRequest.requestCode ?? ""}&company=${selectedRequest.clientCompanyId ?? ""}&request=${selectedRequest.id}`}
                   className="text-xs text-foreground/35 underline transition-colors hover:text-red-500"
                 >
                   신고

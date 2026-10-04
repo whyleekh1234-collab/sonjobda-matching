@@ -33,6 +33,8 @@ export interface AdminUser {
   // 사업자등록증. 경로는 비공개라 운영자가 서버를 거쳐 서명 링크로 연다.
   licensePath?: string | null;
   licenseName?: string | null;
+  // 기각을 뺀 실제 제재 횟수. 정책 제6조 ③의 "누적 3회"가 이 값이다.
+  sanctionCount?: number;
 }
 
 export async function listAllUsers(): Promise<AdminUser[]> {
@@ -47,6 +49,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     marketing_consent: boolean | null; marketing_consent_at: string | null;
     mfa_email: string | null;
     license_path: string | null; license_name: string | null;
+    sanction_count: number | null;
   }[]).map((r) => ({
     id: r.id,
     memberCode: r.member_code,
@@ -71,6 +74,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     mfaEmail: r.mfa_email ?? null,
     licensePath: r.license_path ?? null,
     licenseName: r.license_name ?? null,
+    sanctionCount: r.sanction_count ?? 0,
   }));
 }
 
@@ -135,12 +139,18 @@ export interface AdminInquiry {
   status: "new" | "read" | "replied" | "closed";
   replies?: { from: string; message: string; createdAt: string }[];
   createdAt: string;
+  // 신고(type=report)일 때 채워진다. 대상이 특정되지 않으면 조사할 수가 없다.
+  profileId?: string | null;
+  targetCompanyId?: string | null;
+  targetRequestId?: string | null;
+  resolution?: string | null;
+  resolvedAt?: string | null;
 }
 
 export async function listAllInquiries(): Promise<AdminInquiry[]> {
   const { data, error } = await createClient()
     .from("inquiries")
-    .select("id, company, name, email, phone, type, title, message, status, replies, created_at")
+    .select("id, company, name, email, phone, type, title, message, status, replies, created_at, profile_id, target_company_id, target_request_id, resolution, resolved_at")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -148,6 +158,8 @@ export async function listAllInquiries(): Promise<AdminInquiry[]> {
     id: string; company: string | null; name: string; email: string; phone: string | null;
     type: string | null; title: string | null; message: string;
     status: AdminInquiry["status"]; replies: AdminInquiry["replies"]; created_at: string;
+    profile_id: string | null; target_company_id: string | null;
+    target_request_id: string | null; resolution: string | null; resolved_at: string | null;
   }[]).map((r) => ({
     id: r.id,
     company: r.company ?? "",
@@ -159,6 +171,11 @@ export async function listAllInquiries(): Promise<AdminInquiry[]> {
     message: r.message,
     status: r.status,
     replies: r.replies ?? [],
+    profileId: r.profile_id,
+    targetCompanyId: r.target_company_id,
+    targetRequestId: r.target_request_id,
+    resolution: r.resolution,
+    resolvedAt: r.resolved_at,
     createdAt: r.created_at,
   }));
 }
@@ -321,6 +338,84 @@ export async function setMfaEmail(profileId: string, mfaEmail: string): Promise<
   const { error } = await createClient().rpc("admin_set_mfa_email", {
     p_profile_id: profileId,
     p_mfa_email: mfaEmail,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// ── 제재 ────────────────────────────────────────────────────
+//
+// 운영정책 제6조 ③이 "누적 3회면 영구 탈퇴"를 약속하는데 셀 방법이
+// 없었다. 상태값 하나만 있고 이력이 없었기 때문이다. 이제 제재할 때마다
+// 사유와 함께 한 줄씩 남는다.
+
+export type SanctionKind = "warning" | "restrict" | "suspend" | "dismiss";
+
+export const SANCTION_LABELS: Record<SanctionKind, string> = {
+  warning: "경고",
+  restrict: "이용 제한",
+  suspend: "이용 정지",
+  dismiss: "기각 (제재 없음)",
+};
+
+export interface SanctionRow {
+  id: string;
+  kind: SanctionKind;
+  reason: string;
+  createdAt: string;
+  decidedByName: string | null;
+  inquiryId: string | null;
+}
+
+/**
+ * 제재한다. 이력을 남기고, 상태를 바꾸고, 당사자에게 알리는 것을 한
+ * 트랜잭션으로 처리한다 — 따로 놀면 "상태는 정지인데 이력이 없는"
+ * 회원이 생긴다.
+ *
+ * 반환값은 그 회원의 누적 제재 횟수다. 3회가 넘으면 화면이 영구 탈퇴를
+ * 검토하라고 알려준다.
+ */
+export async function sanctionMember(
+  profileId: string,
+  kind: SanctionKind,
+  reason: string,
+  inquiryId?: string
+): Promise<{ count: number; status: string }> {
+  const { data, error } = await createClient().rpc("admin_sanction", {
+    p_profile_id: profileId,
+    p_kind: kind,
+    p_reason: reason,
+    p_inquiry_id: inquiryId ?? null,
+  });
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { sanction_count: number; member_status: string }
+    | undefined;
+  return { count: row?.sanction_count ?? 0, status: row?.member_status ?? "" };
+}
+
+export async function listSanctions(profileId: string): Promise<SanctionRow[]> {
+  const { data, error } = await createClient().rpc("admin_list_sanctions", {
+    p_profile_id: profileId,
+  });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as {
+    id: string; kind: SanctionKind; reason: string; created_at: string;
+    decided_by_name: string | null; inquiry_id: string | null;
+  }[]).map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    reason: r.reason,
+    createdAt: r.created_at,
+    decidedByName: r.decided_by_name,
+    inquiryId: r.inquiry_id,
+  }));
+}
+
+/** 신고를 종결한다. 제재했든 기각했든 처리 결과를 남긴다. */
+export async function resolveInquiry(inquiryId: string, resolution: string): Promise<void> {
+  const { error } = await createClient().rpc("admin_resolve_inquiry", {
+    p_inquiry_id: inquiryId,
+    p_resolution: resolution,
   });
   if (error) throw new Error(error.message);
 }
