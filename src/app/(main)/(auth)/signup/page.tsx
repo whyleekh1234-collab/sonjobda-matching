@@ -277,7 +277,11 @@ ${licenseError}
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted px-4 py-24">
-      <div className="w-full max-w-md">
+      {/* 가입 양식은 입력칸이 많고 두 칸씩 나란히 놓는 줄도 있어 다른 인증
+          화면보다 넓어야 읽힌다. 넓히는 것은 768px 이상에서만 적용한다 —
+          그보다 좁은 화면에서는 화면 폭이 먼저 걸리므로 상한을 올려도
+          달라지는 것이 없지만, 의도를 분명히 적어 둔다. */}
+      <div className="w-full max-w-md md:max-w-xl">
         {/* 헤더 */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground">회원가입</h1>
