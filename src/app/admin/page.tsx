@@ -73,6 +73,8 @@ interface UserData {
   isCompanyAdmin?: boolean;
   allowCategoryEdit?: boolean;
   createdAt?: string;
+  marketingConsent?: boolean;
+  marketingConsentAt?: string | null;
 }
 
 // 회원 상세 모달의 동작 버튼. 색을 기능마다 다르게 줬더니 산만해서
@@ -332,9 +334,9 @@ export default function AdminDashboard() {
   const downloadCSV = (type: "users" | "matchings") => {
     let csv = "";
     if (type === "users") {
-      csv = "고유번호,이름,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,기업주소,상태,검증\n";
+      csv = "고유번호,이름,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,기업주소,상태,검증,마케팅수신동의,동의일시\n";
       users.forEach((u) => {
-        csv += `"${u.memberCode || ""}","${u.name}","${u.company}","${u.email}","${u.roles?.join("/")}","${u.partnerCategories?.join("/") || ""}","${u.phone || ""}","${u.businessNumber || ""}","${u.address || ""}","${u.status}","${u.verified ? "Y" : "N"}"\n`;
+        csv += `"${u.memberCode || ""}","${u.name}","${u.company}","${u.email}","${u.roles?.join("/")}","${u.partnerCategories?.join("/") || ""}","${u.phone || ""}","${u.businessNumber || ""}","${u.address || ""}","${u.status}","${u.verified ? "Y" : "N"}","${u.marketingConsent ? "Y" : "N"}","${u.marketingConsentAt ?? ""}"\n`;
       });
     } else {
       csv = "프로젝트명,의뢰사,예산,상태,생성일\n";
@@ -1550,6 +1552,16 @@ export default function AdminDashboard() {
                 <InfoRow label="검증" value={selectedUser.verified ? "검증완료" : "미검증"} />
                 <InfoRow label="회사관리자" value={selectedUser.isCompanyAdmin ? "지정됨" : "일반"} />
                 <InfoRow label="가입일" value={selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("ko-KR") : "-"} />
+                {/* 광고성 메일을 보내려면 누가 동의했는지 알아야 하고, 분쟁이
+                    생기면 언제 받았는지에 답할 수 있어야 한다. */}
+                <InfoRow
+                  label="마케팅 수신"
+                  value={
+                    selectedUser.marketingConsent
+                      ? `동의${selectedUser.marketingConsentAt ? ` (${new Date(selectedUser.marketingConsentAt).toLocaleDateString("ko-KR")})` : ""}`
+                      : "미동의"
+                  }
+                />
               </div>
               {selectedUser.roles?.includes("partner") && (
                 <div>

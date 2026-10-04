@@ -24,6 +24,10 @@ export interface AdminUser {
   isPlatformAdmin?: boolean;
   allowCategoryEdit?: boolean;
   createdAt?: string;
+  // 광고성 정보 수신 동의. 동의 시각까지 들고 있어야 "언제 받았는지"에
+  // 답할 수 있다.
+  marketingConsent?: boolean;
+  marketingConsentAt?: string | null;
 }
 
 export async function listAllUsers(): Promise<AdminUser[]> {
@@ -35,6 +39,7 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     roles: string[]; active_role: string; partner_categories: string[] | null;
     status: string; is_company_admin: boolean; is_platform_admin: boolean;
     verified: boolean; allow_category_edit: boolean; created_at: string;
+    marketing_consent: boolean | null; marketing_consent_at: string | null;
   }[]).map((r) => ({
     id: r.id,
     memberCode: r.member_code,
@@ -54,6 +59,8 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     verified: r.verified,
     allowCategoryEdit: r.allow_category_edit,
     createdAt: r.created_at,
+    marketingConsent: r.marketing_consent ?? false,
+    marketingConsentAt: r.marketing_consent_at ?? null,
   }));
 }
 
