@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   // 상대 경로(OG 이미지 등)가 어느 주소를 기준으로 풀리는지 알려 준다.
   // 없으면 Next가 배포 호스트를 추측하는데, 미리보기 배포 주소가 섞여
   // 들어가 카카오톡·슬랙 링크 미리보기가 엉뚱한 주소를 가리킨다.
-  metadataBase: new URL("https://sonjobdamd.com"),
+  metadataBase: new URL("https://www.sonjobdamd.com"),
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "손잡다매칭" },
   title: "손잡다매칭 | 임상시험 & 바이오 매칭 플랫폼",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     title: "손잡다매칭 | 임상시험 & 바이오 매칭 플랫폼",
     description:
       "제약·바이오 업무의 의뢰사와 파트너사를 연결하는 전문 매칭 플랫폼입니다.",
-    url: "https://sonjobdamd.com",
+    url: "https://www.sonjobdamd.com",
     siteName: "손잡다매칭",
     locale: "ko_KR",
     type: "website",
