@@ -193,7 +193,7 @@ export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("");
   const [admins, setAdmins] = useState<UserData[]>([]);
   const [showAddAdmin, setShowAddAdmin] = useState(false);
-  const [newAdmin, setNewAdmin] = useState({ profileId: "", mfaEmail: "" });
+  const [newAdmin, setNewAdmin] = useState({ name: "", email: "", password: "", mfaEmail: "" });
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwForm, setPwForm] = useState({ next: "", confirm: "" });
   const [pwBusy, setPwBusy] = useState(false);
@@ -524,7 +524,7 @@ export default function AdminDashboard() {
             <div className="mb-6 rounded-2xl border border-border bg-background p-6">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-base font-bold text-foreground">운영자</h3>
-                <button onClick={() => { setNewAdmin({ profileId: "", mfaEmail: "" }); setShowAddAdmin(true); }} className={ACTION_BTN}>
+                <button onClick={() => { setNewAdmin({ name: "", email: "", password: "", mfaEmail: "" }); setShowAddAdmin(true); }} className={ACTION_BTN}>
                   운영자 추가
                 </button>
               </div>
@@ -577,8 +577,8 @@ export default function AdminDashboard() {
                 ))}
               </div>
               <p className="mt-4 text-xs text-foreground/40">
-                운영자로 지정하려면 그 사람이 먼저 회원으로 가입하고 승인되어 있어야 합니다.
-                회원 상세 화면에서도 지정할 수 있습니다.
+                운영자는 의뢰사·파트너사 회원과 다릅니다. 회원가입을 거치지 않고 여기서
+                계정을 바로 만듭니다.
               </p>
             </div>
 
@@ -1514,52 +1514,79 @@ export default function AdminDashboard() {
           <div className="w-full max-w-md rounded-2xl bg-background p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-semibold text-foreground">운영자 추가</h3>
             <p className="mt-1 text-sm leading-relaxed text-foreground/50">
-              승인된 회원 중에서 고릅니다. 지정하면 그 회원은 회원 목록에서 빠지고
-              운영자로 옮겨집니다.
+              손잡다메디칼 직원 계정을 바로 만듭니다. 회원가입 절차를 거치지 않으므로
+              사업자등록번호 조회나 승인 대기가 없습니다.
             </p>
 
-            <label className="mt-4 block text-sm font-medium text-foreground">회원</label>
-            <select
-              value={newAdmin.profileId}
-              onChange={(e) => setNewAdmin({ ...newAdmin, profileId: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            >
-              <option value="">선택하세요</option>
-              {users.filter((u) => u.status === "approved").map((u) => (
-                <option key={u.id} value={u.id}>{u.name} · {u.company} · {u.email}</option>
-              ))}
-            </select>
-
-            <label className="mt-4 block text-sm font-medium text-foreground">인증번호 받을 주소</label>
-            <input
-              type="email"
-              value={newAdmin.mfaEmail}
-              onChange={(e) => setNewAdmin({ ...newAdmin, mfaEmail: e.target.value })}
-              placeholder="example@naver.com"
-              className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-            <p className="mt-1 text-xs text-foreground/40">
-              로그인 이메일과 <b>다른</b> 주소여야 합니다. 같으면 메일함 하나만 뚫려도
-              비밀번호 재설정과 인증번호 수신이 함께 되어 2단계 인증이 되지 않습니다.
-            </p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-foreground">이름</label>
+                <input
+                  value={newAdmin.name}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, name: e.target.value })}
+                  placeholder="홍길동"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">로그인 이메일</label>
+                <input
+                  type="email"
+                  value={newAdmin.email}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                  placeholder="staff@sonjobdamd.com"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">초기 비밀번호</label>
+                <PasswordInput
+                  value={newAdmin.password}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                  placeholder="8자 이상"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <p className="mt-1 text-xs text-foreground/40">
+                  본인에게 전달하고, 첫 로그인 뒤 바꾸게 하세요.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground">인증번호 받을 주소</label>
+                <input
+                  type="email"
+                  value={newAdmin.mfaEmail}
+                  onChange={(e) => setNewAdmin({ ...newAdmin, mfaEmail: e.target.value })}
+                  placeholder="개인 메일 주소"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <p className="mt-1 text-xs text-foreground/40">
+                  로그인 이메일과 <b>다른</b> 주소여야 합니다. 같으면 메일함 하나만 뚫려도
+                  비밀번호 재설정과 인증번호 수신이 함께 되어 2단계 인증이 되지 않습니다.
+                </p>
+              </div>
+            </div>
 
             <div className="mt-5 flex gap-2">
               <button
                 onClick={async () => {
-                  if (!newAdmin.profileId) { alert("회원을 선택해주세요."); return; }
-                  if (!newAdmin.mfaEmail.trim()) { alert("인증번호 받을 주소를 입력해주세요."); return; }
                   try {
-                    await setPlatformAdmin(newAdmin.profileId, true, newAdmin.mfaEmail.trim());
+                    const res = await fetch("/api/admin/operators", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(newAdmin),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message ?? "만들지 못했습니다.");
                     setShowAddAdmin(false);
                     await loadData();
-                    alert("운영자로 지정했습니다.");
+                    alert("운영자 계정을 만들었습니다.");
                   } catch (err) {
-                    alert(err instanceof Error ? err.message : "지정하지 못했습니다.");
+                    alert(err instanceof Error ? err.message : "만들지 못했습니다.");
                   }
                 }}
                 className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
               >
-                지정
+                계정 만들기
               </button>
               <button onClick={() => setShowAddAdmin(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/60 transition-colors hover:bg-muted">
                 취소
@@ -1828,35 +1855,6 @@ export default function AdminDashboard() {
                   className={ACTION_BTN}>
                   {selectedUser.verified ? "검증 해제" : "검증 승인"}
                 </button>
-                {/* 운영자 지정. 승인된 회원에게만 보인다 — 로그인이 막힌
-                    회원에게 권한만 주면 이상한 상태가 된다. 인증번호 주소는
-                    로그인 이메일과 달라야 하고, 서버가 그걸 확인한다. */}
-                {selectedUser.status === "approved" && (
-                  <button
-                    onClick={async () => {
-                      const mail = prompt(
-                        `"${selectedUser.name}" 님을 운영자로 지정합니다.
-
-` +
-                        `2단계 인증번호를 받을 주소를 입력하세요.
-` +
-                        `로그인 이메일(${selectedUser.email})과 달라야 합니다.`
-                      );
-                      if (!mail) return;
-                      try {
-                        await setPlatformAdmin(selectedUser.id, true, mail);
-                        setSelectedUser(null);
-                        await loadData();
-                        alert("운영자로 지정했습니다.");
-                      } catch (err) {
-                        alert(err instanceof Error ? err.message : "지정하지 못했습니다.");
-                      }
-                    }}
-                    className={ACTION_BTN}
-                  >
-                    운영자로 지정
-                  </button>
-                )}
                 {selectedUser.roles?.includes("partner") && (
                   <button onClick={() => {
                     updateUserField(selectedUser.id, "allowCategoryEdit", !selectedUser.allowCategoryEdit);
