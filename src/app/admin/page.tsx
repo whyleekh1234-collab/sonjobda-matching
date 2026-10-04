@@ -192,6 +192,8 @@ export default function AdminDashboard() {
   const [adminReplyingTo, setAdminReplyingTo] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState("");
   const [admins, setAdmins] = useState<UserData[]>([]);
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [newAdmin, setNewAdmin] = useState({ profileId: "", mfaEmail: "" });
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwForm, setPwForm] = useState({ next: "", confirm: "" });
   const [pwBusy, setPwBusy] = useState(false);
@@ -520,7 +522,12 @@ export default function AdminDashboard() {
                 요약하면 2단계 인증 증명이 계정당 하나라 서로를 로그아웃시키고,
                 누가 무엇을 했는지 남지 않는다. 사람마다 계정을 따로 둔다. */}
             <div className="mb-6 rounded-2xl border border-border bg-background p-6">
-              <h3 className="text-base font-bold text-foreground">운영자</h3>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-base font-bold text-foreground">운영자</h3>
+                <button onClick={() => { setNewAdmin({ profileId: "", mfaEmail: "" }); setShowAddAdmin(true); }} className={ACTION_BTN}>
+                  운영자 추가
+                </button>
+              </div>
               <p className="mt-1 text-sm leading-relaxed text-foreground/50">
                 운영자 계정은 한 사람이 하나씩 씁니다. 나눠 쓰면 2단계 인증 때문에
                 서로 로그아웃되고, 회원을 제재한 사람이 누구인지 남지 않습니다.
@@ -570,8 +577,8 @@ export default function AdminDashboard() {
                 ))}
               </div>
               <p className="mt-4 text-xs text-foreground/40">
-                운영자를 추가하려면 아래 회원 목록에서 해당 회원을 열고 &ldquo;운영자로 지정&rdquo;을 누르세요.
-                그 회원이 먼저 가입하고 승인되어 있어야 합니다.
+                운영자로 지정하려면 그 사람이 먼저 회원으로 가입하고 승인되어 있어야 합니다.
+                회원 상세 화면에서도 지정할 수 있습니다.
               </p>
             </div>
 
@@ -1501,6 +1508,67 @@ export default function AdminDashboard() {
       </div>
 
       {/* ════════════ 알림 발송 모달 ════════════ */}
+      {/* 운영자 추가 */}
+      {showAddAdmin && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" onClick={() => setShowAddAdmin(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-background p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-foreground">운영자 추가</h3>
+            <p className="mt-1 text-sm leading-relaxed text-foreground/50">
+              승인된 회원 중에서 고릅니다. 지정하면 그 회원은 회원 목록에서 빠지고
+              운영자로 옮겨집니다.
+            </p>
+
+            <label className="mt-4 block text-sm font-medium text-foreground">회원</label>
+            <select
+              value={newAdmin.profileId}
+              onChange={(e) => setNewAdmin({ ...newAdmin, profileId: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="">선택하세요</option>
+              {users.filter((u) => u.status === "approved").map((u) => (
+                <option key={u.id} value={u.id}>{u.name} · {u.company} · {u.email}</option>
+              ))}
+            </select>
+
+            <label className="mt-4 block text-sm font-medium text-foreground">인증번호 받을 주소</label>
+            <input
+              type="email"
+              value={newAdmin.mfaEmail}
+              onChange={(e) => setNewAdmin({ ...newAdmin, mfaEmail: e.target.value })}
+              placeholder="example@naver.com"
+              className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+            <p className="mt-1 text-xs text-foreground/40">
+              로그인 이메일과 <b>다른</b> 주소여야 합니다. 같으면 메일함 하나만 뚫려도
+              비밀번호 재설정과 인증번호 수신이 함께 되어 2단계 인증이 되지 않습니다.
+            </p>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={async () => {
+                  if (!newAdmin.profileId) { alert("회원을 선택해주세요."); return; }
+                  if (!newAdmin.mfaEmail.trim()) { alert("인증번호 받을 주소를 입력해주세요."); return; }
+                  try {
+                    await setPlatformAdmin(newAdmin.profileId, true, newAdmin.mfaEmail.trim());
+                    setShowAddAdmin(false);
+                    await loadData();
+                    alert("운영자로 지정했습니다.");
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : "지정하지 못했습니다.");
+                  }
+                }}
+                className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+              >
+                지정
+              </button>
+              <button onClick={() => setShowAddAdmin(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/60 transition-colors hover:bg-muted">
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 비밀번호 변경 */}
       {showPwModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4" onClick={() => setShowPwModal(false)}>
