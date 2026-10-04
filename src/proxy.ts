@@ -20,7 +20,11 @@ export async function proxy(request: NextRequest) {
   // 비공개 운영 중이면 접속 코드부터 확인한다. 코드 입력 화면과 그 제출
   // 경로만 열어 둔다. 검색엔진도 색인하지 못하게 막는다.
   if (siteLockCode()) {
-    const isGate = pathname === "/gate" || pathname === "/api/gate";
+    // robots.txt는 열어 둔다. 색인을 막으라는 지시를 읽으려면 크롤러가
+    // 그 파일에는 닿아야 한다 — 접속 코드 화면으로 돌려보내면 지시를
+    // 전달할 길이 없다.
+    const isGate =
+      pathname === "/gate" || pathname === "/api/gate" || pathname === "/robots.txt";
     if (!isGate && !(await hasSiteAccess(request.cookies.get(SITE_LOCK_COOKIE)?.value))) {
       const gate = new URL("/gate", request.url);
       if (pathname !== "/") gate.searchParams.set("next", pathname);
