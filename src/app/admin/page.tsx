@@ -112,6 +112,45 @@ function ymd(v?: string | null) {
   return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
 }
 
+// 제재 사유.
+//
+// 사유를 빈칸으로 두면 사람마다 다른 말로 적는다. 같은 일에 어떤 날은
+// "정보 부정확", 어떤 날은 "이름이 이상함"이라고 남으면, 나중에 왜
+// 막았는지 설명할 수 없고 당사자에게도 들쭉날쭉한 통지가 간다.
+//
+// 그래서 조치마다 쓰는 사유를 정해 둔다. 고르면 그 문구가 들어가고
+// 뒤에 구체적인 내용을 덧붙일 수 있다.
+//
+// 정지에는 하나만 둔다. 정지는 로그인을 막는 가장 센 조치라 운영자
+// 재량으로 내릴 일이 아니다. 서비스운영정책 제6조 ③이 정한 "이용 제한
+// 누적 3회"에 이르렀을 때만 쓴다. 그 전 단계는 경고와 제한이다.
+const SANCTION_REASONS: Record<SanctionKind, string[]> = {
+  warning: [
+    "가입 정보가 정확하지 않음",
+    "사업자등록증 미제출",
+    "신고 접수 — 사실 확인 요청",
+    "서비스운영정책 위반",
+  ],
+  restrict: [
+    "가입 정보 부정확 — 담당자명이 실명과 다름",
+    "가입 정보 부정확 — 회사명·사업자등록번호 불일치",
+    "사업자등록증 미제출 또는 식별 불가",
+    "신고 접수 — 사실 확인 중",
+    "서비스운영정책 위반",
+    "거래 의사 없는 반복 등록",
+  ],
+  suspend: [
+    "이용 제한 누적 3회 — 서비스운영정책 제6조 ③",
+  ],
+  // 기각은 당사자를 제재하지 않는다. 신고를 접수하고 조사한 뒤 "조치할
+  // 일이 아니다"로 닫는 경우라, 신고한 쪽에 돌려줄 말이 필요하다.
+  dismiss: [
+    "신고 내용이 사실과 다름",
+    "제재할 사유에 해당하지 않음",
+    "증빙이 부족해 사실 확인 불가",
+  ],
+};
+
 // 알림에 쓰는 정형 문구.
 //
 // 운영자가 매번 처음부터 쓰면 같은 상황에도 말이 달라진다. 받는 쪽은
@@ -497,9 +536,14 @@ export default function AdminDashboard() {
   // 무엇 때문에 막혔는지 모른 채 기능이 안 되는 것만 겪고, 운영자 쪽에도
   // 왜 그랬는지가 남지 않는다. 제재 창은 사유를 받아 이력에 남기고
   // 당사자에게 통지까지 한 번에 한다(phase24).
-  const openSanction = (user: UserData, kind: SanctionKind) => {
+  const openSanction = (user: UserData, kind: SanctionKind = "restrict") => {
     setSanctionFor({ user });
-    setSanctionForm({ kind, reason: "" });
+    // 정지는 사유가 하나뿐이라 미리 넣어 둔다. 고를 것이 하나인데
+    // 고르게 하는 것은 일만 늘린다.
+    setSanctionForm({
+      kind,
+      reason: kind === "suspend" ? SANCTION_REASONS.suspend[0] : "",
+    });
   };
 
   const deleteUser = (userId: string) => {
@@ -1017,13 +1061,13 @@ export default function AdminDashboard() {
                             {(user.status === "suspended" || user.status === "restricted") && (
                               <button onClick={() => updateUserField(user.id, "status", "approved")} className={ROW_BTN}>해제</button>
                             )}
-                            {(user.status === "approved" || user.status === "pending" || !user.status) && (
-                              <button onClick={() => openSanction(user, "restrict")}
-                                className={ROW_BTN}>제한</button>
-                            )}
-                            {(user.status === "approved" || user.status === "restricted" || user.status === "pending" || !user.status) && (
-                              <button onClick={() => openSanction(user, "suspend")}
-                                className={ROW_BTN}>정지</button>
+                            {/* 제한·정지를 하나로 합쳤다. 어느 쪽인지는 창 안에서
+                                고른다 — 버튼을 둘로 나누면 고르기 전에 결정한
+                                셈이 되고, 누적 이력을 보기도 전에 센 쪽을
+                                누르게 된다. */}
+                            {user.status !== "suspended" && (
+                              <button onClick={() => openSanction(user)}
+                                className={ROW_BTN}>제재</button>
                             )}
                             <button onClick={() => { setNotificationForm({ userId: user.id, message: "" }); setShowNotificationModal(true); }}
                               className={ROW_BTN}>알림</button>
@@ -1942,7 +1986,12 @@ export default function AdminDashboard() {
             <label className="mt-4 block text-sm font-medium text-foreground">조치</label>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {(["warning", "restrict", "suspend"] as SanctionKind[]).map((k) => (
-                <button key={k} type="button" onClick={() => setSanctionForm({ ...sanctionForm, kind: k })}
+                <button key={k} type="button" onClick={() => setSanctionForm({
+                  kind: k,
+                  // 조치를 바꾸면 사유도 비운다. 제한 사유를 적어 두고
+                  // 정지로 옮기면 엉뚱한 문구가 통지된다.
+                  reason: k === "suspend" ? SANCTION_REASONS.suspend[0] : "",
+                })}
                   className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
                     sanctionForm.kind === k ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground/60 hover:border-foreground/30"
                   }`}>
@@ -1954,7 +2003,31 @@ export default function AdminDashboard() {
               경고는 상태를 바꾸지 않고 이력만 남깁니다. 제한은 일부 기능이 막히고, 정지는 로그인이 막힙니다.
             </p>
 
-            <label className="mt-4 block text-sm font-medium text-foreground">사유 *</label>
+            <label className="mt-4 block text-sm font-medium text-foreground">
+              사유 * <span className="text-xs font-normal text-foreground/60">(고르면 들어갑니다. 덧붙여 쓸 수 있습니다)</span>
+            </label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {SANCTION_REASONS[sanctionForm.kind].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setSanctionForm({ ...sanctionForm, reason: r })}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    sanctionForm.reason.startsWith(r)
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-foreground/60 hover:border-foreground/30"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            {sanctionForm.kind === "suspend" && (
+              <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed text-foreground/60">
+                정지는 로그인을 막는 가장 센 조치입니다. 서비스운영정책 제6조 ③이 정한
+                누적 3회에 이르렀을 때 씁니다. 그 전 단계는 경고와 제한입니다.
+              </p>
+            )}
             <textarea value={sanctionForm.reason} onChange={(e) => setSanctionForm({ ...sanctionForm, reason: e.target.value })}
               rows={3} placeholder="어떤 행위가 어느 조항을 위반했는지 적어주세요. 이 내용이 당사자에게 그대로 통지됩니다."
               className="mt-1 w-full resize-none rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
@@ -2554,13 +2627,9 @@ export default function AdminDashboard() {
                   <button onClick={() => { updateUserField(selectedUser.id, "status", "approved"); setSelectedUser({ ...selectedUser, status: "approved" }); }}
                     className={ACTION_BTN}>해제</button>
                 )}
-                {selectedUser.status === "approved" && (
-                  <button onClick={() => { openSanction(selectedUser, "restrict"); setSelectedUser(null); }}
-                    className={ACTION_BTN}>제한</button>
-                )}
-                {(selectedUser.status === "approved" || selectedUser.status === "restricted") && (
-                  <button onClick={() => { openSanction(selectedUser, "suspend"); setSelectedUser(null); }}
-                    className={ACTION_BTN}>정지</button>
+                {selectedUser.status !== "suspended" && (
+                  <button onClick={() => { openSanction(selectedUser); setSelectedUser(null); }}
+                    className={ACTION_BTN}>제재</button>
                 )}
                 {selectedUser.roles?.includes("partner") && (
                   <button onClick={() => {
