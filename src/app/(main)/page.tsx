@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import HeroSection from "@/components/sections/HeroSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import ProcessSection from "@/components/sections/ProcessSection";
+import AdsSection from "@/components/sections/AdsSection";
 import CTASection from "@/components/sections/CTASection";
 
 export const metadata: Metadata = {
@@ -50,6 +51,10 @@ export default function Home() {
       <HeroSection />
       <ServicesSection />
       <ProcessSection />
+      {/* 광고 자리. 넉 칸 중 빈 칸은 "이 자리를 팝니다"라는 알림이라
+          비어 있어도 구역이 사라지지 않는다. 네 칸이 다 차면 매칭
+          프로세스 위로 올려도 된다 — 그때가 가장 비싼 자리가 된다. */}
+      <AdsSection />
       <CTASection />
     </>
   );

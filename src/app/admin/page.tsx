@@ -39,13 +39,14 @@ import PasswordInput from "@/components/PasswordInput";
 import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile , listProfileDocs } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import CompanyLogo from "@/components/CompanyLogo";
+import AdsPanel from "@/components/admin/AdsPanel";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import type { MatchingRequest, Notice } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
 import { confirmDialog } from "@/components/ui/Confirm";
 
-type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports" | "operators";
-const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "notifications", "reports"];
+type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "ads" | "notifications" | "reports" | "operators";
+const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "ads", "notifications", "reports"];
 
 // 펼친 상세의 맨 아래에 붙는 "목록으로" 줄. 긴 상세를 다 읽고 나서 위로
 // 스크롤해 다시 제목을 누르지 않아도 되게.
@@ -692,6 +693,7 @@ export default function AdminDashboard() {
     { key: "matched", label: "매칭관리" },
     { key: "inquiries", label: "문의관리", badge: newInquiries },
     { key: "notices", label: "공지사항" },
+    { key: "ads", label: "광고관리" },
     // 배지는 운영자가 손댈 수 있는 것만 센다. 알림 관리 탭은 전 회원의
     // 알림을 보여주는 자리라, 안 읽은 것을 모두 세면 남의 알림까지 들어간다.
     // 운영자는 그것을 읽을 수 없으니 숫자가 영영 안 지워진다.
@@ -1743,6 +1745,12 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* ════════════ 광고관리 ════════════ */}
+        {/* 광고는 다른 탭과 데이터가 전혀 겹치지 않는다. loadData에 끼우면
+            광고 조회 하나가 실패할 때 회원·문의까지 같이 못 불러오는 일이
+            또 생기므로, 제 데이터를 제가 불러오는 별도 컴포넌트로 뺐다. */}
+        {activeTab === "ads" && <AdsPanel />}
 
         {/* ════════════ 알림 관리 ════════════ */}
         {activeTab === "notifications" && (
