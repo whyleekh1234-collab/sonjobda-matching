@@ -34,7 +34,7 @@ const allPartnerCategories: PartnerCategory[] = [
 ];
 
 export default function MyPage() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, changeEmail } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "password" | "company">("profile");
   // 마케팅 수신 동의. user가 늦게 도착하므로 아래 effect로 맞춘다.
@@ -42,6 +42,9 @@ export default function MyPage() {
   const [marketingAt, setMarketingAt] = useState<string | null>(null);
   const [marketingSaving, setMarketingSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  // 로그인 이메일 변경. 확인 링크를 눌러야 실제로 바뀐다.
+  const [emailEditing, setEmailEditing] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
   const [editForm, setEditForm] = useState({ name: "", phone: "" });
   const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
   const [companyMembers, setCompanyMembers] = useState<{ id: string; name: string; email: string; isCompanyAdmin?: boolean; status?: string }[]>([]);
@@ -327,8 +330,55 @@ export default function MyPage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-foreground/60">이메일 <span className="text-foreground/50">(수정 불가)</span></p>
+                  <p className="text-xs text-foreground/60">이메일 <span className="text-foreground/50">(로그인 아이디)</span></p>
                   <p className="mt-1 text-sm font-medium text-foreground">{user.email}</p>
+                  {/* 주소를 잘못 적었으면 비밀번호 재설정도 안내 메일도
+                      받을 수 없다. 본인이 로그인한 상태에서 고칠 수 있게
+                      한다 — 확인 링크는 새 주소로 간다. */}
+                  {emailEditing ? (
+                    <div className="mt-2">
+                      <input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="새 이메일 주소"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                      />
+                      <p className="mt-1 text-xs text-foreground/60">
+                        새 주소로 확인 메일이 갑니다. 그 링크를 눌러야 바뀝니다.
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await changeEmail(newEmail);
+                              setEmailEditing(false);
+                              setNewEmail("");
+                              toast(`${newEmail.trim()}로 확인 메일을 보냈습니다. 그 메일의 링크를 눌러주세요.`);
+                            } catch (err) {
+                              toast(err instanceof Error ? err.message : "바꾸지 못했습니다.", "error");
+                            }
+                          }}
+                          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark"
+                        >
+                          확인 메일 보내기
+                        </button>
+                        <button
+                          onClick={() => { setEmailEditing(false); setNewEmail(""); }}
+                          className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground/60 hover:bg-muted"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setEmailEditing(true); setNewEmail(""); }}
+                      className="mt-1 text-xs font-medium text-primary underline underline-offset-2 hover:text-primary-dark"
+                    >
+                      이메일 변경
+                    </button>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-foreground/60">연락처</p>

@@ -104,6 +104,37 @@ export function approvedTemplate(companyName: string, link: string) {
   );
 }
 
+/**
+ * 로그인 이메일이 바뀌었다는 통지.
+ *
+ * 원래 주소와 새 주소 양쪽에 보낸다. 원래 주소로도 보내야 본인이 하지
+ * 않은 변경을 알아챌 수 있다 — 운영자가 대신 바꾸는 경로가 있는 한,
+ * 몰래 바꿀 수 없게 만드는 것은 통지뿐이다.
+ */
+export function emailChangedTemplate(companyName: string, prev: string, next: string, link: string) {
+  return layout(
+    "계정 이메일이 변경되었습니다",
+    `<p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#4c5766">
+       ${companyName ? `<strong>${companyName}</strong>의 ` : ""}손잡다매칭 로그인 이메일이 바뀌었습니다.
+     </p>
+     <p style="margin:0 0 20px;padding:12px 16px;background:#f4f6fa;border-radius:8px;
+        font-size:14px;line-height:1.7;color:#4c5766">
+       ${prev}<br>↓<br><strong>${next}</strong>
+     </p>
+     <p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#4c5766">
+       앞으로는 새 주소로 로그인해주세요.
+     </p>
+     <p style="margin:0 0 20px">
+       <a href="${link}" style="display:inline-block;padding:12px 24px;background:#2563eb;
+          color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">
+          로그인하기</a>
+     </p>
+     <p style="margin:0;font-size:13px;color:#7b8695">
+       본인이 요청하지 않았다면 즉시 contact@sonjobdamd.com으로 알려주세요.
+     </p>`
+  );
+}
+
 // ── 매칭 알림 ───────────────────────────────────────────────
 //
 // 지금까지는 앱 안에 알림만 띄웠다. 그러면 파트너사가 대시보드에 들어와야

@@ -35,6 +35,8 @@ interface AuthContextType {
   // 이름 + 전화번호로 본인을 확인한 뒤, 그 계정 이메일로 Supabase가 실제
   // 재설정 링크를 발송한다. 링크를 눌러 도착하는 곳은 /reset-password/confirm.
   requestPasswordReset: (name: string, phone: string) => Promise<void>;
+  /** 로그인 이메일을 바꾼다. 새 주소로 확인 링크가 가고, 누르면 반영된다. */
+  changeEmail: (newEmail: string) => Promise<void>;
   logout: () => Promise<void>;
   switchRole: () => Promise<void>;
 }
@@ -316,6 +318,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 로그인 이메일 변경.
+  //
+  // 가입할 때 주소를 잘못 적으면 비밀번호 재설정도, 승인·제재 안내도
+  // 받을 수 없다. 그런데 로그인은 된다 — 자기가 적은 주소와 비밀번호를
+  // 아니까. 그래서 본인이 로그인한 상태에서 고치는 길을 연다.
+  //
+  // 확인 링크는 새 주소로 간다. 본인이 로그인한 채로 시작한 일이라
+  // 그것으로 충분하다. 운영자가 남의 주소를 제 것으로 바꾸는 길은
+  // 애초에 열지 않는다.
+  //
+  // Supabase의 "Secure email change"가 켜져 있으면 원래 주소도 확인해야
+  // 하는데, 그 주소를 못 받아서 고치는 중이라면 영영 못 바꾼다. 그
+  // 설정은 꺼 두어야 이 길이 뚫린다.
+  const changeEmail = async (newEmail: string) => {
+    const next = newEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) {
+      throw new Error("이메일 형식이 올바르지 않습니다.");
+    }
+    if (next === user?.email?.toLowerCase()) {
+      throw new Error("지금 쓰는 주소와 같습니다.");
+    }
+    const { error } = await supabase.auth.updateUser(
+      { email: next },
+      { emailRedirectTo: `${window.location.origin}/mypage` }
+    );
+    if (error) {
+      if (/already|registered|exists/i.test(error.message)) {
+        throw new Error("이미 다른 회원이 쓰는 이메일입니다.");
+      }
+      throw new Error("확인 메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -344,6 +379,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         findEmailByPhone,
         findEmailByEmail,
         requestPasswordReset,
+        changeEmail,
         logout,
         switchRole,
       }}
