@@ -279,10 +279,21 @@ ${licenseError}
         router.push("/login");
         return;
       }
+      // 운영자가 역할·분야를 정해 보낸 초대는 신원을 이미 확인한 것이라
+      // 승인 대기가 없다(phase28). 그런데도 "승인 후"라고 알리면 쓸 수 있는
+      // 계정을 두고 기다리게 된다.
+      //
+      // 자동 승인인지는 초대에 역할이 적혀 있는지로 가린다 — 역할을 적어
+      // 보내는 것은 admin_invite_partner뿐이고 그 함수는 늘 자동 승인으로
+      // 만든다. 역할만 적고 승인은 받게 하는 초대를 새로 만들 거라면 이
+      // 문구도 함께 고쳐야 한다.
+      const waitsForApproval = !fixedByInvite;
       alert(
         needsEmailConfirmation
-          ? "회원가입이 접수되었습니다.\n\n1. 방금 보낸 메일의 링크를 눌러 이메일을 인증해주세요.\n2. 관리자 승인 후 로그인할 수 있습니다."
-          : "회원가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다."
+          ? `회원가입이 접수되었습니다.\n\n1. 방금 보낸 메일의 링크를 눌러 이메일을 인증해주세요.\n2. ${waitsForApproval ? "관리자 승인 후 로그인할 수 있습니다." : "인증을 마치면 바로 로그인할 수 있습니다."}`
+          : waitsForApproval
+            ? "회원가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다."
+            : "회원가입이 완료되었습니다. 바로 로그인하실 수 있습니다."
       );
       router.push("/login");
     } catch (err) {
@@ -660,9 +671,13 @@ ${licenseError}
             {/* 사업자등록증 (필수).
                 사업자등록번호는 세금계산서·홈페이지에 적혀 있어 사실상 공개
                 정보다. 번호만으로는 "그 회사 사람인지"를 가릴 수 없어 서류를
-                함께 받는다. 초대로 합류하는 멤버는 회사가 이미 검증됐으므로
-                묻지 않는다 — 같은 서류를 사람 수만큼 쌓을 이유가 없다. */}
-            {!inviteInfo && (
+                함께 받는다. 동료 초대로 합류하는 멤버는 회사가 이미 냈으므로
+                묻지 않는다 — 같은 서류를 사람 수만큼 쌓을 이유가 없다.
+
+                다만 운영자가 만든 회사에는 아직 등록증이 없다. 그 초대로
+                들어온 첫 사람에게는 받아야 한다. 묻기만 하고 올릴 칸을
+                감추면 가입을 끝낼 길이 사라진다. */}
+            {(!inviteInfo || inviteInfo.needsLicense) && (
               <div>
                 <label className="block text-sm font-medium text-foreground">
                   사업자등록증 <span className="text-xs font-normal text-primary">*</span>
@@ -784,15 +799,22 @@ ${licenseError}
 
           {/* 버튼 바로 위에서 남은 할 일을 알린다. 맨 위 오류 박스까지
               올라가지 않아도 왜 안 되는지 알 수 있어야 한다. */}
-          {!inviteInfo && (emailOk !== true || !license) && (
-            <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              가입하려면 먼저{" "}
-              {[emailOk !== true && "이메일 중복확인", !license && "사업자등록증 첨부"]
-                .filter(Boolean)
-                .join(", ")}
-              이(가) 필요합니다.
-            </p>
-          )}
+          {(() => {
+            // 초대로 들어오면 이메일은 이미 정해져 있어 중복확인이 없다.
+            // 등록증은 회사에 아직 없을 때만 받는다.
+            const needEmail = !inviteInfo && emailOk !== true;
+            const needLicense = (!inviteInfo || inviteInfo.needsLicense) && !license;
+            if (!needEmail && !needLicense) return null;
+            return (
+              <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                가입하려면 먼저{" "}
+                {[needEmail && "이메일 중복확인", needLicense && "사업자등록증 첨부"]
+                  .filter(Boolean)
+                  .join(", ")}
+                이(가) 필요합니다.
+              </p>
+            );
+          })()}
 
           <button
             type="submit"
