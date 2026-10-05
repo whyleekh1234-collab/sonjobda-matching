@@ -90,22 +90,22 @@ export default function Footer() {
             </div>
             {/* "연결하는"에서 끊는다. 폭에 맡기면 창 크기에 따라 "전문"만
                 아래로 떨어지는 등 끊기는 자리가 그때그때 달라진다. */}
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-foreground/60">
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-foreground/70">
               제약·바이오 업무의 의뢰사와 파트너사를 연결하는
               <br />
               전문 매칭 플랫폼
             </p>
             <div className="mt-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-foreground/60">
+              <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70">
                 Contact
               </p>
               <a
                 href="mailto:contact@sonjobdamd.com"
-                className="mt-1.5 inline-block text-sm text-foreground/70 transition-colors hover:text-primary"
+                className="mt-1.5 inline-block text-sm font-medium text-foreground/85 transition-colors hover:text-primary"
               >
                 contact@sonjobdamd.com
               </a>
-              <p className="mt-1 text-xs text-foreground/60">
+              <p className="mt-1 text-xs text-foreground/75">
                 평일 09:00 – 18:00 (주말 · 공휴일 휴무)
               </p>
             </div>

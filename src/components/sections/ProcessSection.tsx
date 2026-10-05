@@ -53,7 +53,7 @@ export default function ProcessSection() {
   const steps = activeTab === "client" ? clientSteps : partnerSteps;
 
   return (
-    <section id="process" className="bg-surface-subtle py-24 sm:py-28">
+    <section id="process" className="bg-surface-subtle py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* 섹션 헤더 */}
         <div className="text-center">
