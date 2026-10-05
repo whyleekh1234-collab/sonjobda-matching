@@ -12,7 +12,7 @@ import {
   uploadProfileDoc, removeProfileDoc, validateProfileDoc, PROFILE_DOC_ACCEPT,
 } from "@/lib/data/companyProfileDoc";
 
-// 마이페이지의 "회사 역량". 카드 한 장(회사 소개) + 회사유형마다 카드 한 장.
+// 마이페이지의 "회사 역량". 카드 한 장(회사 소개) + 파트너사 유형마다 카드 한 장.
 // 파트너 역할이 있는 회원이면 누구나 자기 회사 프로필을 고칠 수 있다.
 
 type Draft = Omit<PartnerProfile, "companyId">;
@@ -211,7 +211,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
         )}
       </Card>
 
-      {/* 카드 2~: 회사유형마다 하나 */}
+      {/* 카드 2~: 파트너사 유형마다 하나 */}
       {categories.map((cat) => {
         const fields = EXTRA_FIELDS[cat] ?? [];
         const cpct = categoryCompleteness(current, cat);

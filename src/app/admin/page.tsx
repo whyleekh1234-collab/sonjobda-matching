@@ -345,7 +345,7 @@ export default function AdminDashboard() {
 
   // ─── 회원 관리 ───
   const updateUserField = (userId: string, field: string, value: unknown) => {
-    // 회사유형은 프로필 수정 함수(10단계)로 간다. 이해상충 트리거에 걸리면
+    // 파트너사 유형은 프로필 수정 함수(10단계)로 간다. 이해상충 트리거에 걸리면
     // 서버 메시지가 그대로 알림으로 뜬다.
     if (field === "partnerCategories") {
       run(() => updateProfileAsAdmin(userId, { partnerCategories: value as string[] }));
@@ -2365,7 +2365,7 @@ export default function AdminDashboard() {
               {selectedUser.roles?.includes("partner") && (
                 <div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-foreground/60">회사유형 (파트너 카테고리)</p>
+                    <p className="text-sm text-foreground/60">파트너사 유형 (파트너 카테고리)</p>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {["CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행"].map((cat) => (
@@ -2431,7 +2431,7 @@ export default function AdminDashboard() {
                     setSelectedUser({ ...selectedUser, allowCategoryEdit: !selectedUser.allowCategoryEdit });
                   }}
                     className={ACTION_BTN}>
-                    {selectedUser.allowCategoryEdit ? "회사유형 수정 잠금" : "회사유형 수정 허용"}
+                    {selectedUser.allowCategoryEdit ? "파트너사 유형 수정 잠금" : "파트너사 유형 수정 허용"}
                   </button>
                 )}
                 <button onClick={() => {

@@ -64,7 +64,7 @@ export interface Quote {
   partnerLogo?: string | null;
   // 의뢰사가 1차 선정한 시각. 연락처는 아직 비공개이고, 최종 매칭 때만 열린다.
   shortlistedAt?: string | null;
-  // 제출 시점 파트너사의 회사유형. 의뢰사는 상대 회사의 프로필을 읽을 수
+  // 제출 시점 파트너사의 파트너사 유형. 의뢰사는 상대 회사의 프로필을 읽을 수
   // 없어서(다른 회사라 막힌다) 견적에 같이 담아 둔다.
   partnerCategories?: string[];
   // 견적 정보

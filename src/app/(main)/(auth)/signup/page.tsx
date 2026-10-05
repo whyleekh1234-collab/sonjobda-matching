@@ -223,7 +223,7 @@ function SignupContent() {
 
   const validate = (): string | null => {
     if (form.roles.length === 0) return "회원 유형을 하나 이상 선택해주세요.";
-    if (form.roles.includes("partner") && form.partnerCategories.length === 0) return "회사유형을 하나 이상 선택해주세요.";
+    if (form.roles.includes("partner") && form.partnerCategories.length === 0) return "파트너사 유형을 하나 이상 선택해주세요.";
     // 이메일
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) return "올바른 이메일 형식을 입력해주세요.";
@@ -429,7 +429,7 @@ ${licenseError}
             {form.roles.includes("partner") && (
               <div className="mt-3">
                 <label className="block text-sm font-medium text-foreground">
-                  회사유형 * <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span>
+                  파트너사 유형 * <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span>
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {partnerCategories.map((cat) => {

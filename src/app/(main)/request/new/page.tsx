@@ -1077,7 +1077,7 @@ function NewRequestForm() {
                   <p className="text-sm font-semibold text-amber-800">등록할 수 있는 분야가 없습니다</p>
                   <p className="mt-1 text-xs leading-relaxed text-amber-700">
                     귀사가 모든 분야의 파트너사로 등록되어 있어, 이해상충 방지 규칙(서비스운영정책 제3조)에 따라
-                    등록 가능한 의뢰 분야가 없습니다. 마이페이지에서 실제로 수행하지 않는 회사유형을 해제하거나,
+                    등록 가능한 의뢰 분야가 없습니다. 마이페이지에서 실제로 수행하지 않는 파트너사 유형을 해제하거나,
                     고객센터로 문의해 주세요.
                   </p>
                 </div>

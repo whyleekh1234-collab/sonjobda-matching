@@ -363,7 +363,7 @@ export default function MyPage() {
                 {user.partnerCategories && user.partnerCategories.length > 0 && (
                   <div className="col-span-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-foreground/60">회사유형</p>
+                      <p className="text-xs text-foreground/60">파트너사 유형</p>
                       {user.allowCategoryEdit && !editingCategories && (
                         <button onClick={() => { setEditingCategories(true); setSelectedCategories([...(user.partnerCategories || [])]); }}
                           className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary hover:bg-primary/20">수정</button>
@@ -384,10 +384,10 @@ export default function MyPage() {
                         </div>
                         <div className="mt-3 flex gap-2">
                           <button onClick={async () => {
-                            if (selectedCategories.length === 0) { toast("회사유형을 하나 이상 선택해주세요."); return; }
+                            if (selectedCategories.length === 0) { toast("파트너사 유형을 하나 이상 선택해주세요."); return; }
                             const ok = await run(
                               () => updateMyPartnerCategories(selectedCategories),
-                              "회사유형이 수정되었습니다."
+                              "파트너사 유형이 수정되었습니다."
                             );
                             if (!ok) return;
                             setEditingCategories(false);

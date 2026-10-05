@@ -559,7 +559,7 @@ export default function ClientDashboard() {
                                 const partnerUser = { partnerCategories: quote.partnerCategories };
                                 return partnerUser.partnerCategories?.length ? (
                                   <div className="mt-3">
-                                    <p className="text-xs text-foreground/60">회사유형</p>
+                                    <p className="text-xs text-foreground/60">파트너사 유형</p>
                                     <div className="mt-1 flex flex-wrap gap-1">
                                       {partnerUser.partnerCategories.map((cat: string) => (
                                         <span key={cat} className="rounded-md bg-muted px-2 py-0.5 text-xs text-foreground/60">{cat}</span>

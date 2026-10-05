@@ -36,7 +36,7 @@ export interface User {
   marketingConsent?: boolean;
   marketingConsentAt?: string | null;
   verified?: boolean;
-  allowCategoryEdit?: boolean; // 관리자가 회사유형 수정을 허용했을 때
+  allowCategoryEdit?: boolean; // 관리자가 파트너사 유형 수정을 허용했을 때
   createdAt: string;
 }
 
