@@ -107,7 +107,11 @@ export default function PartnerDashboard() {
   // 의뢰서에서 위탁업무 파싱하여 타임라인 생성
   // 의뢰사명은 매칭 성사 전엔 서버가 아예 안 준다(14단계 RLS). 빈 값이면
   // 비공개로 표시한다. 개별 연락으로 플랫폼을 우회하는 걸 막기 위한 규칙.
-  const clientLabel = (r: MatchRequest) => r.clientCompany || "의뢰사 비공개";
+  // 회사 이름은 매칭 전까지 가려지지만 종류는 알려 준다. 병원이 직접
+  // 올린 건과 제약사가 올린 건은 일의 성격이 달라, 종류만 알아도 견적을
+  // 훨씬 정확하게 낼 수 있다(phase30).
+  const clientLabel = (r: MatchRequest) =>
+    r.clientCompany || (r.clientOrgType === "hospital" ? "병원 · 기관 (이름 비공개)" : "의뢰사 비공개");
   const clientHint = (r: MatchRequest) => (r.clientCompany ? "" : " (매칭 성사 후 공개)");
 
   const getTimelineFromRequest = (request: MatchRequest): TimelineItem[] => {

@@ -5,6 +5,8 @@ export type QuoteStatus = "new" | "reviewing" | "quoted" | "rejected" | "hold" |
 
 // 의뢰사가 작성하는 매칭 요청
 export interface MatchRequest {
+  /** 의뢰를 올린 회사의 종류. 이름은 가려져도 종류는 보인다(phase30). */
+  clientOrgType?: "company" | "hospital";
   id: string;
   requestCode?: string; // 의뢰 고유번호 (RQ-00000001)
   matchCode?: string; // 매칭 관리번호 (MT-00000001)

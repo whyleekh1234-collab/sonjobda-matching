@@ -7,7 +7,7 @@ import { validateLogo } from "@/lib/data/companyLogo";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { Building2, Handshake } from "lucide-react";
+import { Building2, Handshake, Hospital } from "lucide-react";
 import { getInviteByToken } from "@/lib/data/notices";
 import type { PartnerCategory } from "@/types/auth";
 
@@ -45,6 +45,8 @@ function SignupContent() {
     address: "",
     roles: [] as ("client" | "partner")[],
     partnerCategories: [] as PartnerCategory[],
+    // 기관 종류. 병원을 고르면 역할이 의뢰사 하나로 고정된다(phase30).
+    orgType: "company" as "company" | "hospital",
     agreeTerms: false,
     agreePrivacy: false,
     agreeMarketing: false,
@@ -131,13 +133,27 @@ function SignupContent() {
     setError("");
   };
 
+  // 기관 종류. 병원은 일을 맡기는 쪽으로만 들어오므로, 고르면 역할이
+  // 의뢰사 하나로 고정되고 파트너 분야 칸이 닫힌다.
+  const isHospital = form.orgType === "hospital";
+
   const toggleRole = (role: "client" | "partner") => {
+    if (isHospital) return;
     setForm((prev) => ({
       ...prev,
       roles: prev.roles.includes(role)
         ? prev.roles.filter((r) => r !== role)
         : [...prev.roles, role],
     }));
+    setError("");
+  };
+
+  const pickHospital = () => {
+    setForm((prev) =>
+      prev.orgType === "hospital"
+        ? { ...prev, orgType: "company", roles: [] }
+        : { ...prev, orgType: "hospital", roles: ["client"], partnerCategories: [] }
+    );
     setError("");
   };
 
@@ -262,6 +278,7 @@ function SignupContent() {
         phone: form.phone,
         address: form.address,
         roles: form.roles,
+        orgType: form.orgType,
         ...(inviteToken && { inviteToken }),
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
         marketingConsent: form.agreeMarketing,
@@ -334,10 +351,10 @@ ${licenseError}
                 운영자가 정한 유형과 분야로 초대되었습니다. 이 가입에서는 바꿀 수 없습니다.
               </p>
             )}
-            <div className="mt-2 grid grid-cols-2 gap-3">
+            <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <button
                 type="button"
-                disabled={fixedByInvite}
+                disabled={fixedByInvite || isHospital}
                 onClick={() => !fixedByInvite && toggleRole("client")}
                 className={`rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all ${
                   form.roles.includes("client")
@@ -363,7 +380,30 @@ ${licenseError}
                 <span className="mt-1.5 block">파트너사</span>
                 <span className="mt-1 block text-xs font-normal text-foreground/60">프로젝트를 수주하고 싶어요</span>
               </button>
+
+              {/* 병원은 의뢰사의 한 종류다. 화면에서는 나란히 보이지만
+                  고르면 역할은 의뢰사 하나로 정해진다 — 병원이 임상시험을
+                  수탁하는 쪽으로 들어올 일은 없다. */}
+              <button
+                type="button"
+                disabled={fixedByInvite}
+                onClick={() => !fixedByInvite && pickHospital()}
+                className={`rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all ${
+                  isHospital
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border text-foreground/60 hover:border-foreground/30"
+                }`}
+              >
+                <Hospital className="mx-auto h-6 w-6" strokeWidth={1.75} />
+                <span className="mt-1.5 block">병원 · 기관</span>
+                <span className="mt-1 block text-xs font-normal text-foreground/60">의뢰사로만 가입합니다</span>
+              </button>
             </div>
+            {isHospital && (
+              <p className="mt-2 rounded-lg bg-primary/5 px-3 py-2 text-xs text-primary">
+                병원·기관은 일을 맡기는 쪽으로만 가입합니다. 파트너사 분야는 고르지 않습니다.
+              </p>
+            )}
             {form.roles.includes("partner") && (
               <div className="mt-3">
                 <label className="block text-sm font-medium text-foreground">

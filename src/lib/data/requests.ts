@@ -12,6 +12,7 @@ import type { MatchRequest, Quote, QuoteStatus, RequestStatus, TimelineItem } fr
 const REQUEST_SELECT = `
   id, request_code, match_code, company_id, created_by,
   title, category, description, budget, deadline, status, form_data, created_at,
+  client_org_type,
   companies!requests_company_id_fkey(name, logo_path),
   quotes(
     id, quote_code, request_id, company_id, submitted_by,
@@ -53,6 +54,9 @@ type RequestRow = {
   deadline: string | null;
   status: RequestStatus;
   form_data: Record<string, unknown> | null;
+  // 의뢰사 회사 행은 매칭 전까지 RLS로 가려져 조인이 안 된다. 종류만
+  // 의뢰 행에 복사해 두고 그것만 건너보낸다(phase30).
+  client_org_type: string | null;
   created_at: string;
   companies: { name: string; logo_path: string | null } | null;
   quotes: QuoteRow[] | null;
@@ -109,6 +113,7 @@ function toRequest(row: RequestRow): MatchRequest {
     clientCompanyId: row.company_id,
     clientCompany: row.companies?.name ?? "",
     clientLogo: row.companies?.logo_path ?? null,
+    clientOrgType: row.client_org_type === "hospital" ? "hospital" : "company",
     title: row.title,
     category: row.category,
     description: row.description ?? "",
