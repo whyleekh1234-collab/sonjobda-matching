@@ -476,6 +476,51 @@ export default function AdminDashboard() {
   const completedMatchings = allRequests.filter((r) => r.status === "completed").length;
   const newInquiries = inquiries.filter((i) => i.status === "new").length;
 
+  // 전체 현황에 쓰는 셈.
+  //
+  // 운영자가 아침에 여는 화면이다. "숫자가 몇인가"보다 "내가 손대야 할
+  // 일이 있는가"가 먼저 보여야 한다. 그래서 처리할 일과 거래 흐름을
+  // 나누고, 처리할 일은 0이면 조용히 둔다.
+  const openRequests = allRequests.filter((r) => r.status === "pending");
+  const quotesOf = (r: (typeof allRequests)[number]) => r.quotes ?? [];
+  // 아무도 견적을 내지 않은 의뢰. 플랫폼이 제 역할을 못 하고 있다는
+  // 뜻이라 매칭 건수보다 먼저 봐야 한다.
+  const noQuoteRequests = openRequests.filter((r) => quotesOf(r).length === 0).length;
+  const totalQuotes = allRequests.reduce((n, r) => n + quotesOf(r).length, 0);
+  const matchedCount = allRequests.filter((r) => r.status === "matched" || r.status === "completed").length;
+
+  // 마감이 이레 안으로 다가온 열린 의뢰.
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const dueSoon = openRequests.filter((r) => {
+    if (!r.deadline || r.deadline === "미정") return false;
+    const d = new Date(r.deadline).getTime();
+    return !Number.isNaN(d) && d - Date.now() <= WEEK && d >= Date.now();
+  }).length;
+
+  // 답을 기다리는 문의 (읽었든 안 읽었든 아직 답이 안 나간 것).
+  const waitingInquiries = inquiries.filter((i) => i.status === "new" || i.status === "read").length;
+  const pendingChangeCount = changeRequests.filter((r) => r.status === "pending").length;
+  // 등록증은 회사 단위다. 같은 회사 멤버를 여러 번 세지 않는다.
+  const noLicenseCompanies = new Set(
+    users.filter((u) => !u.licensePath).map((u) => u.companyId ?? u.id)
+  ).size;
+
+  const isToday = (v?: string) => {
+    if (!v) return false;
+    const d = new Date(v);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+  const todayUsers = users.filter((u) => isToday(u.createdAt)).length;
+  const todayRequests = allRequests.filter((r) => isToday(r.createdAt)).length;
+
+  const todo = [
+    { label: "승인 대기", n: pendingUsers, unit: "명", tab: "users" as const },
+    { label: "답변 대기 문의", n: waitingInquiries, unit: "건", tab: "inquiries" as const },
+    { label: "회사정보 변경 요청", n: pendingChangeCount, unit: "건", tab: "users" as const },
+    { label: "등록증 미제출", n: noLicenseCompanies, unit: "곳", tab: "users" as const },
+  ].filter((t) => t.n > 0);
+
   const tabs: { key: Tab; label: string; badge?: number }[] = [
     { key: "overview", label: "전체 현황" },
     { key: "users", label: "사용자 관리", badge: pendingUsers },
@@ -550,11 +595,36 @@ export default function AdminDashboard() {
         {/* ════════════ 전체 현황 ════════════ */}
         {activeTab === "overview" && (
           <div className="mt-8">
+            {/* 처리할 일. 없으면 띄우지 않는다 — 늘 보이면 0인지 아닌지를
+                다시 읽어야 하고, 그러면 눈에 안 들어온다. */}
+            {todo.length > 0 ? (
+              <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
+                <p className="text-sm font-bold text-amber-800">처리할 일</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {todo.map((t) => (
+                    <button
+                      key={t.label}
+                      onClick={() => setActiveTab(t.tab)}
+                      className="rounded-full border border-amber-300 bg-white px-3.5 py-1.5 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100"
+                    >
+                      {t.label} <span className="font-bold tabular-nums">{t.n}</span>{t.unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-5 py-4">
+                <p className="text-sm font-medium text-emerald-800">지금 처리할 일이 없습니다.</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard label="총 사용자" value={totalUsers} sub={`승인 대기 ${pendingUsers}명`} color="text-primary" onClick={() => setActiveTab("users")} />
-              <StatCard label="활성 매칭" value={activeMatchings} sub={`완료 ${completedMatchings}건`} color="text-green-600" onClick={() => setActiveTab("matching")} />
-              <StatCard label="신규 문의" value={newInquiries} sub={`전체 ${inquiries.length}건`} color="text-amber-500" onClick={() => setActiveTab("inquiries")} />
-              <StatCard label="공지사항" value={notices.length} sub="등록된 공지" color="text-purple-600" onClick={() => setActiveTab("notices")} />
+              <StatCard label="회원" value={totalUsers} sub={`의뢰사 ${clientCount} · 파트너사 ${partnerCount}${todayUsers > 0 ? ` · 오늘 +${todayUsers}` : ""}`} color="text-primary" onClick={() => setActiveTab("users")} />
+              <StatCard label="열린 의뢰" value={openRequests.length} sub={`${todayRequests > 0 ? `오늘 +${todayRequests} · ` : ""}마감 임박 ${dueSoon}건`} color="text-blue-600" onClick={() => setActiveTab("matching")} />
+              {/* 견적이 하나도 안 붙은 의뢰. 매칭 건수보다 먼저 봐야 하는
+                  숫자다 — 여기가 쌓이면 파트너사가 모자라다는 뜻이다. */}
+              <StatCard label="견적 없는 의뢰" value={noQuoteRequests} sub={`전체 견적 ${totalQuotes}건`} color={noQuoteRequests > 0 ? "text-amber-600" : "text-foreground/40"} onClick={() => setActiveTab("matching")} />
+              <StatCard label="매칭 성사" value={matchedCount} sub={`완료 ${completedMatchings}건`} color="text-green-600" onClick={() => setActiveTab("matched")} />
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
