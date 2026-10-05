@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { listActiveAds, recordAdClick, AD_SLOTS, type ActiveAd } from "@/lib/data/ads";
 
 // 메인 화면 광고. 돈을 받고 파는 자리다(36단계).
@@ -76,6 +77,16 @@ function FilledCard({ ad }: { ad: ActiveAd }) {
 
   const shell =
     "flex min-h-[172px] flex-col rounded-2xl border border-border bg-surface p-5 text-left transition-shadow";
+
+  // 상세 화면을 받아 둔 광고는 우리 쪽 화면으로, 아니면 광고주 사이트로.
+  // 광고주가 무엇을 주느냐로 갈린다 — 운영자가 따로 고를 것이 없다.
+  if (ad.hasDetail) {
+    return (
+      <Link href={`/ads/${ad.id}`} onClick={() => recordAdClick(ad.id)} className={`${shell} hover:shadow-card`}>
+        {inner}
+      </Link>
+    );
+  }
 
   if (!ad.linkUrl) {
     return <div className={shell}>{inner}</div>;

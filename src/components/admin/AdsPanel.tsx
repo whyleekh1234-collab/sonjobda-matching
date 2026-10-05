@@ -28,11 +28,15 @@ type Draft = {
   isActive: boolean;
   memo: string;
   imagePath: string | null;
+  detailBody: string;
+  detailImages: string[];
+  ctaLabel: string;
 };
 
 const EMPTY: Draft = {
   companyName: "", headline: "", body: "", linkUrl: "",
   startsOn: "", endsOn: "", isActive: true, memo: "", imagePath: null,
+  detailBody: "", detailImages: [], ctaLabel: "",
 };
 
 function toDraft(ad: AdminAd): Draft {
@@ -46,6 +50,9 @@ function toDraft(ad: AdminAd): Draft {
     isActive: ad.isActive,
     memo: ad.memo ?? "",
     imagePath: ad.imagePath,
+    detailBody: ad.detailBody ?? "",
+    detailImages: ad.detailImages ?? [],
+    ctaLabel: ad.ctaLabel ?? "",
   };
 }
 
@@ -61,6 +68,7 @@ export default function AdsPanel() {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const detailRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -97,6 +105,9 @@ export default function AdsPanel() {
         isActive: draft.isActive,
         memo: draft.memo.trim() || null,
         imagePath: draft.imagePath,
+        detailBody: draft.detailBody.trim() || null,
+        detailImages: draft.detailImages,
+        ctaLabel: draft.ctaLabel.trim() || null,
       };
       await adminSaveAd(payload);
       toast(`${slot}번 자리를 저장했습니다.`);
@@ -131,6 +142,9 @@ export default function AdsPanel() {
         id: ad.id, slot: ad.slot, companyName: ad.companyName, headline: ad.headline,
         body: ad.body, linkUrl: ad.linkUrl, startsOn: ad.startsOn, endsOn: ad.endsOn,
         memo: ad.memo, imagePath: ad.imagePath, isActive: !ad.isActive,
+        // 같이 보내지 않으면 저장 함수가 빈 값으로 덮어써서 상세 화면이
+        // 통째로 날아간다.
+        detailBody: ad.detailBody, detailImages: ad.detailImages, ctaLabel: ad.ctaLabel,
       });
       await load();
     } catch (err) {
@@ -150,6 +164,23 @@ export default function AdsPanel() {
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  // 상세 화면용 그림. 여러 장을 한 번에 받는다.
+  const pickDetailImages = async (slot: number, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setBusy(true);
+    try {
+      const paths: string[] = [];
+      for (const f of Array.from(files)) paths.push(await uploadAdImage(slot, f));
+      setDraft((d) => ({ ...d, detailImages: [...d.detailImages, ...paths] }));
+      toast(`${paths.length}장을 올렸습니다. 아래 저장을 눌러주세요.`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "올리지 못했습니다.", "error");
+    } finally {
+      setBusy(false);
+      if (detailRef.current) detailRef.current.value = "";
     }
   };
 
@@ -232,7 +263,14 @@ export default function AdsPanel() {
                       <p className="mt-1.5 break-keep text-sm text-foreground/75">{ad.headline}</p>
                       <p className="mt-2 text-xs text-foreground/50">
                         {ad.startsOn ?? "—"} ~ {ad.endsOn ?? "기한 없음"} · 클릭 {ad.clickCount}회
-                        {ad.linkUrl ? "" : " · 링크 없음"}
+                        {" · "}
+                        {/* 눌렀을 때 어디로 가는지. 운영자가 가장 자주
+                            헷갈리는 지점이라 줄마다 적어 둔다. */}
+                        {ad.detailBody || ad.detailImages.length > 0
+                          ? "누르면 우리 사이트 상세 화면"
+                          : ad.linkUrl
+                            ? "누르면 광고주 사이트"
+                            : "누를 수 없음"}
                       </p>
                       {ad.memo && <p className="mt-1 text-xs text-foreground/50">메모: {ad.memo}</p>}
                     </div>
@@ -325,6 +363,63 @@ export default function AdsPanel() {
                         가로형 <b className="font-semibold">352×88px</b> 권장 (화면 표시 176×44px).
                         PNG·JPG·SVG, 2MB 이내. 없으면 회사명이 글자로 나갑니다.
                       </p>
+                    </div>
+                  </div>
+
+                  {/* ── 상세 화면 ── */}
+                  <div className="rounded-xl border border-border bg-surface-subtle p-4">
+                    <p className="text-xs font-semibold text-foreground/70">
+                      우리 사이트 상세 화면 (선택)
+                    </p>
+                    <p className="mt-1.5 break-keep text-[12px] leading-relaxed text-foreground/55">
+                      아래를 채우면 카드를 눌렀을 때 광고주 사이트가 아니라 우리 사이트의
+                      광고 화면(/ads/…)이 열리고, 그 화면 맨 아래 버튼이 광고주 사이트로
+                      보냅니다. 비워 두면 카드에서 바로 광고주 사이트로 나갑니다.
+                      <br />
+                      <b className="font-semibold text-foreground/70">HTML을 받으셨으면 글과 그림만 옮겨 담으세요.</b>{" "}
+                      받은 HTML을 그대로 넣어도 태그가 글자 그대로 보일 뿐입니다 — 광고주 쪽
+                      스크립트가 우리 사이트 권한으로 돌지 못하게 일부러 막아 둔 것입니다.
+                    </p>
+
+                    <div className="mt-3">
+                      <label className={label}>본문</label>
+                      <textarea className={`${input} mt-1`} rows={6} value={draft.detailBody} maxLength={4000}
+                        onChange={(e) => setDraft({ ...draft, detailBody: e.target.value })}
+                        placeholder={"광고주가 보낸 소개 글을 붙여넣으세요." + String.fromCharCode(10) + "줄바꿈은 그대로 살아납니다."} />
+                    </div>
+
+                    <div className="mt-3">
+                      <label className={label}>상세 화면 그림 (여러 장 가능, 가로 폭 전체로 나갑니다)</label>
+                      {draft.detailImages.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {draft.detailImages.map((path) => (
+                            <span key={path} className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={`${supabaseUrl()}/storage/v1/object/public/ad-images/${path}`}
+                                alt="상세 그림" className="h-16 w-24 rounded border border-border bg-white object-contain" />
+                              <button type="button"
+                                onClick={() => setDraft({ ...draft, detailImages: draft.detailImages.filter((x) => x !== path) })}
+                                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/70 text-[11px] font-bold text-white">
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <input ref={detailRef} type="file" multiple
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        onChange={(e) => pickDetailImages(slot, e.target.files)}
+                        className="mt-2 w-full text-xs text-foreground/60" />
+                      <p className="mt-1 text-[11px] text-foreground/50">
+                        가로 1200px 이상 권장. 한 장당 2MB 이내.
+                      </p>
+                    </div>
+
+                    <div className="mt-3">
+                      <label className={label}>상세 화면 버튼 글자</label>
+                      <input className={`${input} mt-1`} value={draft.ctaLabel} maxLength={20}
+                        onChange={(e) => setDraft({ ...draft, ctaLabel: e.target.value })}
+                        placeholder="비우면 「홈페이지 바로가기」" />
                     </div>
                   </div>
 
