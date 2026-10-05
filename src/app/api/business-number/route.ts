@@ -22,6 +22,14 @@ interface NtsRow {
   tax_type: string;
 }
 
+/** 앞 두 글자만 남긴다. 동료는 알아보고, 모르는 사람에게는 쓸모가 없다. */
+function maskEmail(email: string) {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}${"*".repeat(Math.max(local.length - visible.length, 1))}@${domain}`;
+}
+
 export async function POST(request: NextRequest) {
   let body: { businessNumber?: string };
   try {
@@ -126,14 +134,39 @@ export async function POST(request: NextRequest) {
   // 그건 제출 버튼을 누른 뒤의 일이다. 폼을 다 채우고 나서야 "초대를
   // 받아오라"는 말을 들으면 늦다.
   let registered: string | null = null;
+  // 이미 등록된 회사라면 누구에게 초대를 요청해야 하는지 함께 알려준다.
+  // 이름만으로는 같은 회사에 사람이 여럿일 때 누구인지 가릴 수 없다.
+  //
+  // 메일 주소는 가려서 준다. 사업자등록번호는 세금계산서·홈페이지에 적혀
+  // 있어 사실상 공개 정보다. 번호를 넣으면 그 회사 담당자의 메일이 그대로
+  // 나오면, 번호를 아는 누구나 주소를 긁어갈 수 있다. 동료라면 가려진
+  // 주소로도 누구인지 알아본다.
+  let registeredAdmin: { name: string; email: string } | null = null;
   if (hasAdminKey()) {
     try {
-      const { data } = await createAdminClient()
+      const admin = createAdminClient();
+      const { data: company } = await admin
         .from("companies")
-        .select("name")
+        .select("id, name")
         .eq("business_number", `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`)
         .maybeSingle();
-      registered = data?.name ?? null;
+      registered = company?.name ?? null;
+
+      if (company?.id) {
+        // 담당 관리자가 초대를 발급한다. 없으면(탈퇴 등) 아무나 알려줘도
+        // 소용없으므로 비워 둔다 — 그때는 고객센터로 안내한다.
+        const { data: owner } = await admin
+          .from("profiles")
+          .select("id, name")
+          .eq("company_id", company.id)
+          .eq("is_company_admin", true)
+          .maybeSingle();
+        if (owner?.id) {
+          const { data: authUser } = await admin.auth.admin.getUserById(owner.id);
+          const mail = authUser?.user?.email;
+          if (mail) registeredAdmin = { name: owner.name, email: maskEmail(mail) };
+        }
+      }
     } catch {
       // 못 알아내도 조회 결과는 돌려준다.
     }
@@ -144,5 +177,6 @@ export async function POST(request: NextRequest) {
     status: row.b_stt,
     taxType: row.tax_type,
     registered,
+    registeredAdmin,
   });
 }

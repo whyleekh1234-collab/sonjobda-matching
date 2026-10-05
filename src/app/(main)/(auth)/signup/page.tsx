@@ -690,7 +690,16 @@ ${licenseError}
                         }
                         if (d.registered) {
                           setBizOk(false);
-                          setError(`이미 "${d.registered}"로 등록된 사업자등록번호입니다. 그 회사 담당 관리자의 초대 링크로 가입해주세요.`);
+                          // 누구에게 초대를 요청해야 하는지까지 알려준다.
+                          // 메일 주소는 서버가 가려서 준다 — 번호만 넣으면
+                          // 남의 주소가 그대로 나오면 안 된다.
+                          const who = d.registeredAdmin
+                            ? ` 담당 관리자는 ${d.registeredAdmin.name}님(${d.registeredAdmin.email})입니다.`
+                            : " 담당자를 알 수 없으면 고객센터(contact@sonjobdamd.com)로 문의해주세요.";
+                          setError(
+                            `이미 "${d.registered}"로 등록된 사업자등록번호입니다.` +
+                            `${who} 초대 링크를 받아 가입해주세요.`
+                          );
                           return;
                         }
                         setBizOk(true);
