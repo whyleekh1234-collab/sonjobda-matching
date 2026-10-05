@@ -331,7 +331,11 @@ export default function AdminDashboard() {
   const [inquiryOnlyReports, setInquiryOnlyReports] = useState(false);
   // 제재 창. 어느 신고에서 비롯됐는지 함께 들고 있어야 이력에 남길 수 있다.
   const [sanctionFor, setSanctionFor] = useState<{ user: UserData; inquiryId?: string } | null>(null);
-  const [sanctionForm, setSanctionForm] = useState<{ kind: SanctionKind; reason: string }>({ kind: "warning", reason: "" });
+  // 사유 유형은 통지의 제목이 되고, 상세는 본문이 된다. 한 칸에 섞어
+  // 받으면 받는 쪽이 무엇이 문제인지 한눈에 알기 어렵다.
+  const [sanctionForm, setSanctionForm] = useState<{ kind: SanctionKind; reason: string; detail: string }>(
+    { kind: "warning", reason: "", detail: "" }
+  );
   const [sanctionHistory, setSanctionHistory] = useState<SanctionRow[]>([]);
   const [showAddAdmin, setShowAddAdmin] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ name: "", email: "", password: "", mfaEmail: "" });
@@ -543,6 +547,7 @@ export default function AdminDashboard() {
     setSanctionForm({
       kind,
       reason: kind === "suspend" ? SANCTION_REASONS.suspend[0] : "",
+      detail: "",
     });
   };
 
@@ -682,7 +687,14 @@ export default function AdminDashboard() {
     { key: "matched", label: "매칭관리" },
     { key: "inquiries", label: "문의관리", badge: newInquiries },
     { key: "notices", label: "공지사항" },
-    { key: "notifications", label: "알림 관리", badge: adminNotifications.filter((n) => !n.read).length || undefined },
+    // 배지는 운영자가 손댈 수 있는 것만 센다. 알림 관리 탭은 전 회원의
+    // 알림을 보여주는 자리라, 안 읽은 것을 모두 세면 남의 알림까지 들어간다.
+    // 운영자는 그것을 읽을 수 없으니 숫자가 영영 안 지워진다.
+    {
+      key: "notifications",
+      label: "알림 관리",
+      badge: adminNotifications.filter((n) => n.userId === adminId && !n.read).length || undefined,
+    },
     { key: "reports", label: "분석 리포트" },
     // 운영자는 회원이 아니다. 회원 목록과 한 화면에 두면 "사용자 관리"가
     // 두 가지를 뜻하게 된다.
@@ -1596,7 +1608,7 @@ export default function AdminDashboard() {
                                                 <button
                                                   onClick={async () => {
                                                     setSanctionFor({ user: target, inquiryId: inq.id });
-                                                    setSanctionForm({ kind: "warning", reason: "" });
+                                                    setSanctionForm({ kind: "warning", reason: "", detail: "" });
                                                     setSanctionHistory(await listSanctions(target.id).catch(() => []));
                                                   }}
                                                   className={ACTION_BTN}
@@ -1989,8 +2001,10 @@ export default function AdminDashboard() {
                 <button key={k} type="button" onClick={() => setSanctionForm({
                   kind: k,
                   // 조치를 바꾸면 사유도 비운다. 제한 사유를 적어 두고
-                  // 정지로 옮기면 엉뚱한 문구가 통지된다.
+                  // 정지로 옮기면 엉뚱한 문구가 통지된다. 상세는 남긴다 —
+                  // 같은 사실을 설명한 글이라 조치가 바뀌어도 쓸모 있다.
                   reason: k === "suspend" ? SANCTION_REASONS.suspend[0] : "",
+                  detail: sanctionForm.detail,
                 })}
                   className={`rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
                     sanctionForm.kind === k ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground/60 hover:border-foreground/30"
@@ -2004,7 +2018,7 @@ export default function AdminDashboard() {
             </p>
 
             <label className="mt-4 block text-sm font-medium text-foreground">
-              사유 * <span className="text-xs font-normal text-foreground/60">(고르면 들어갑니다. 덧붙여 쓸 수 있습니다)</span>
+              사유 * <span className="text-xs font-normal text-foreground/60">(통지의 제목이 됩니다)</span>
             </label>
             <div className="mt-2 flex flex-wrap gap-2">
               {SANCTION_REASONS[sanctionForm.kind].map((r) => (
@@ -2013,7 +2027,7 @@ export default function AdminDashboard() {
                   type="button"
                   onClick={() => setSanctionForm({ ...sanctionForm, reason: r })}
                   className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    sanctionForm.reason.startsWith(r)
+                    sanctionForm.reason === r
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border text-foreground/60 hover:border-foreground/30"
                   }`}
@@ -2028,9 +2042,25 @@ export default function AdminDashboard() {
                 누적 3회에 이르렀을 때 씁니다. 그 전 단계는 경고와 제한입니다.
               </p>
             )}
-            <textarea value={sanctionForm.reason} onChange={(e) => setSanctionForm({ ...sanctionForm, reason: e.target.value })}
-              rows={3} placeholder="어떤 행위가 어느 조항을 위반했는지 적어주세요. 이 내용이 당사자에게 그대로 통지됩니다."
+            <label className="mt-4 block text-sm font-medium text-foreground">
+              상세 내용 <span className="text-xs font-normal text-foreground/60">(선택 · 통지의 본문이 됩니다)</span>
+            </label>
+            <textarea value={sanctionForm.detail} onChange={(e) => setSanctionForm({ ...sanctionForm, detail: e.target.value })}
+              rows={4} placeholder={"무엇이 어떻게 문제인지, 어떻게 하면 되는지 적어주세요.\n예: 담당자명이 실명과 다릅니다. 마이페이지에서 수정해 주시면 해제해 드립니다."}
               className="mt-1 w-full resize-none rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+
+            {/* 보내기 전에 받는 사람이 볼 모양 그대로 보여준다. 통지는
+                한 번 나가면 거두지 못한다. */}
+            {sanctionForm.reason && sanctionForm.kind !== "dismiss" && (
+              <div className="mt-3 rounded-lg border border-border bg-muted/50 px-3 py-2.5">
+                <p className="text-xs font-semibold text-foreground/60">받는 사람에게 이렇게 갑니다</p>
+                <p className="mt-1.5 whitespace-pre-line text-xs leading-relaxed text-foreground/80">
+                  {`[${SANCTION_LABELS[sanctionForm.kind]}] ${sanctionForm.reason}`}
+                  {sanctionForm.detail.trim() ? `\n\n${sanctionForm.detail.trim()}` : ""}
+                  {"\n\n이의가 있으시면 통지일로부터 7일 이내에 고객센터(contact@sonjobdamd.com)로 알려주세요."}
+                </p>
+              </div>
+            )}
 
             {sanctionHistory.length > 0 && (
               <div className="mt-4">
@@ -2055,10 +2085,11 @@ export default function AdminDashboard() {
             <div className="mt-5 flex gap-2">
               <button
                 onClick={async () => {
-                  if (!sanctionForm.reason.trim()) { toast("사유를 입력해주세요."); return; }
+                  if (!sanctionForm.reason.trim()) { toast("사유를 선택해주세요."); return; }
                   try {
                     const { count } = await sanctionMember(
-                      sanctionFor.user.id, sanctionForm.kind, sanctionForm.reason.trim(), sanctionFor.inquiryId
+                      sanctionFor.user.id, sanctionForm.kind, sanctionForm.reason.trim(),
+                      sanctionFor.inquiryId, sanctionForm.detail
                     );
                     if (sanctionFor.inquiryId) {
                       await resolveInquiry(sanctionFor.inquiryId, `${SANCTION_LABELS[sanctionForm.kind]} — ${sanctionForm.reason.trim()}`);

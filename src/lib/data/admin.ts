@@ -377,14 +377,18 @@ export interface SanctionRow {
 export async function sanctionMember(
   profileId: string,
   kind: SanctionKind,
+  /** 사유 유형. 통지의 제목이 된다. */
   reason: string,
-  inquiryId?: string
+  inquiryId?: string,
+  /** 구체적인 설명. 통지의 본문이 된다. 없어도 된다. */
+  detail?: string
 ): Promise<{ count: number; status: string }> {
   const { data, error } = await createClient().rpc("admin_sanction", {
     p_profile_id: profileId,
     p_kind: kind,
     p_reason: reason,
     p_inquiry_id: inquiryId ?? null,
+    p_detail: detail?.trim() || null,
   });
   if (error) throw new Error(error.message);
   const row = (Array.isArray(data) ? data[0] : data) as
