@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "@/components/ui/Toast";
 import {
   EMPTY_PROFILE, CERTIFICATIONS, EXTRA_FIELDS,
   getPartnerProfile, savePartnerProfile, profileCompleteness, categoryCompleteness,
@@ -67,9 +68,9 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
       await savePartnerProfile(companyId, draft);
       const p = await getPartnerProfile(companyId);
       setSaved(p); setEditing(false);
-      alert("회사 역량이 저장되었습니다.");
+      toast("회사 역량이 저장되었습니다.");
     } catch (e) {
-      alert(e instanceof Error ? e.message : "저장하지 못했습니다.");
+      toast(e instanceof Error ? e.message : "저장하지 못했습니다.");
     } finally {
       setBusy(false);
     }
@@ -172,7 +173,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
                       if (!confirm("회사소개서를 삭제하시겠습니까?")) return;
                       setDocBusy(true);
                       try { await removeProfileDoc(companyId); setDocName(null); }
-                      catch (err) { alert(err instanceof Error ? err.message : "삭제하지 못했습니다."); }
+                      catch (err) { toast(err instanceof Error ? err.message : "삭제하지 못했습니다."); }
                       finally { setDocBusy(false); }
                     }}
                     className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground/60 transition-colors hover:bg-muted disabled:opacity-50">
@@ -184,10 +185,10 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
                 onChange={async (e) => {
                   const f = e.target.files?.[0]; if (!f) return;
                   const err = validateProfileDoc(f);
-                  if (err) { alert(err); e.target.value = ""; return; }
+                  if (err) { toast(err); e.target.value = ""; return; }
                   setDocBusy(true);
                   try { await uploadProfileDoc(companyId, f); setDocName(f.name); }
-                  catch (er) { alert(er instanceof Error ? er.message : "올리지 못했습니다."); }
+                  catch (er) { toast(er instanceof Error ? er.message : "올리지 못했습니다."); }
                   finally { setDocBusy(false); e.target.value = ""; }
                 }}
                 className="block w-full text-sm text-foreground/70 file:mr-3 file:rounded-lg file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground/70 hover:file:bg-muted" />

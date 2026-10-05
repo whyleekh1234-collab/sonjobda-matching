@@ -24,6 +24,7 @@ import type { MatchRequest, Quote, QuoteStatus, TimelineItem } from "@/types/mat
 import type { Notice, Notification } from "@/types/auth";
 import Greeting from "@/components/dashboard/Greeting";
 import CompanyLogo from "@/components/CompanyLogo";
+import { toast } from "@/components/ui/Toast";
 
 // request/new의 marketingTypeOptions와 같은 키를 쓴다.
 const MARKETING_TYPES = [
@@ -192,7 +193,7 @@ export default function PartnerDashboard() {
       await loadRequests();
       return true;
     } catch (err) {
-      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
       return false;
     }
   };
@@ -202,17 +203,17 @@ export default function PartnerDashboard() {
     if (!user || !selectedRequest) return;
     // 업무범위 소요개월 체크
     const emptyTimeline = quoteForm.timeline.filter((t) => !t.months.trim());
-    if (emptyTimeline.length > 0) { alert(`업무범위의 "${emptyTimeline[0].label}" 소요개월을 입력해주세요.`); return; }
+    if (emptyTimeline.length > 0) { toast(`업무범위의 "${emptyTimeline[0].label}" 소요개월을 입력해주세요.`); return; }
     // 모니터링 횟수 체크
-    if (quoteForm.timeline.some((t) => t.label === "모니터링") && !quoteForm.monitoringPerSite.trim()) { alert("기관별 모니터링 횟수를 입력해주세요."); return; }
+    if (quoteForm.timeline.some((t) => t.label === "모니터링") && !quoteForm.monitoringPerSite.trim()) { toast("기관별 모니터링 횟수를 입력해주세요."); return; }
     // 견적금액 체크
-    if (!quoteForm.amount.trim()) { alert("견적 금액을 입력해주세요."); return; }
+    if (!quoteForm.amount.trim()) { toast("견적 금액을 입력해주세요."); return; }
     // 첨부파일 체크 (이미 올려둔 게 있으면 다시 안 올려도 된다)
     const existing = getMyQuote(selectedRequest);
-    if (!attachment && !existing?.attachmentName) { alert("견적서 파일을 첨부해주세요."); return; }
+    if (!attachment && !existing?.attachmentName) { toast("견적서 파일을 첨부해주세요."); return; }
     // 한 회사당 하나 규칙은 DB가 지킨다. 동료가 이미 낸 견적이 있으면 막는다.
     if (hasCompanyQuote(selectedRequest)) {
-      alert("동일 회사에서 이미 이 의뢰에 견적을 제출했습니다.\n한 회사당 하나의 견적만 제출할 수 있습니다.");
+      toast("동일 회사에서 이미 이 의뢰에 견적을 제출했습니다.\n한 회사당 하나의 견적만 제출할 수 있습니다.");
       return;
     }
 
@@ -228,7 +229,7 @@ export default function PartnerDashboard() {
     setQuoteForm({ subjectCount: "", siteCountCapital: "", siteCountLocal: "", trialDuration: "", perSubjectDuration: "", timeline: [], amount: "", memo: "", expectedCra: "", monitoringPerSite: "", edcBrand: "" });
     setAttachment(null);
     setIsEditing(false);
-    alert("견적서가 제출되었습니다.");
+    toast("견적서가 제출되었습니다.");
   };
 
   // 의뢰 거절
@@ -247,7 +248,7 @@ export default function PartnerDashboard() {
     setIsSaving(false);
     if (!ok) return;
     setIsEditing(false);
-    alert("임시저장되었습니다.");
+    toast("임시저장되었습니다.");
   };
 
   // 첨부파일은 행에 base64로 담지 않고 Storage에 올린다. 5MB짜리 파일을
@@ -262,7 +263,7 @@ export default function PartnerDashboard() {
       const { path, name } = await uploadQuoteAttachment(user.companyId, requestId, attachment);
       return { attachmentPath: path, attachmentName: name };
     } catch (err) {
-      alert(err instanceof Error ? err.message : "첨부파일 업로드에 실패했습니다.");
+      toast(err instanceof Error ? err.message : "첨부파일 업로드에 실패했습니다.");
       return null;
     }
   };
@@ -273,7 +274,7 @@ export default function PartnerDashboard() {
     if (!path) return;
     const url = await getAttachmentUrl(path);
     if (url) window.open(url, "_blank");
-    else alert("첨부파일을 열지 못했습니다.");
+    else toast("첨부파일을 열지 못했습니다.");
   };
 
   // 파일 첨부 핸들러. 검사 규칙은 업로드 함수와 같은 곳에 둔다 —
@@ -283,7 +284,7 @@ export default function PartnerDashboard() {
     if (!file) return;
     const err = validateQuoteAttachment(file);
     if (err) {
-      alert(err);
+      toast(err);
       e.target.value = "";   // 거부한 파일이 고른 것처럼 남아 있지 않게
       return;
     }
@@ -838,7 +839,7 @@ export default function PartnerDashboard() {
                                             setSelectedRequest(null);
                                             await loadRequests();
                                           } catch (err) {
-                                            alert(err instanceof Error ? err.message : "회수하지 못했습니다.");
+                                            toast(err instanceof Error ? err.message : "회수하지 못했습니다.");
                                           }
                                         }} className="rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50">견적 회수</button>
                                       </div>

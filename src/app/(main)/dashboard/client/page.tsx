@@ -22,6 +22,7 @@ import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import { listPartnerProfiles, listProfileDocs, type PartnerProfile } from "@/lib/data/partnerProfiles";
+import { toast } from "@/components/ui/Toast";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
 
@@ -50,7 +51,7 @@ export default function ClientDashboard() {
       listProfileDocs(ids).then(setProfileDocs).catch(console.error);
     } catch (err) {
       console.error(err);
-      alert("의뢰 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+      toast("의뢰 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
     }
   }, [user]);
 
@@ -95,9 +96,9 @@ export default function ClientDashboard() {
     try {
       await fn();
       await reloadRequests();
-      if (successMessage) alert(successMessage);
+      if (successMessage) toast(successMessage);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
     }
   };
 

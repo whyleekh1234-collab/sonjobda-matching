@@ -41,6 +41,7 @@ import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
 import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import type { MatchingRequest, Notice } from "@/types/auth";
+import { toast } from "@/components/ui/Toast";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports" | "operators";
 const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "notifications", "reports"];
@@ -87,6 +88,19 @@ interface UserData {
   licensePath?: string | null;
   licenseName?: string | null;
   sanctionCount?: number;
+}
+
+// 표 안의 날짜.
+//
+// toLocaleDateString("ko-KR")은 "2026. 10. 5."처럼 공백이 섞인 글자를
+// 준다. 좁은 칸에서는 그 공백에서 줄이 갈라져 "2026. 10." / "5."로
+// 끊긴다. 자리를 적게 쓰고 끊기지 않는 모양으로 고정한다.
+function ymd(v?: string | null) {
+  if (!v) return "-";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "-";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
 }
 
 // 회원 상세 모달의 동작 버튼. 색을 기능마다 다르게 줬더니 산만해서
@@ -296,9 +310,9 @@ export default function AdminDashboard() {
     try {
       await fn();
       await loadData();
-      if (successMessage) alert(successMessage);
+      if (successMessage) toast(successMessage);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
     }
   };
 
@@ -331,7 +345,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error(data.message ?? "열 수 없습니다.");
       window.open(data.url, "_blank", "noopener");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "열 수 없습니다.");
+      toast(err instanceof Error ? err.message : "열 수 없습니다.");
     }
   };
 
@@ -665,7 +679,7 @@ export default function AdminDashboard() {
                             {Object.keys(r.after).map((k) => FIELD_LABELS[k] ?? k).join(", ")}
                           </span>
                           <span className="ml-auto text-foreground/60">
-                            {new Date(r.reviewedAt ?? r.createdAt).toLocaleDateString("ko-KR")}
+                            {ymd(r.reviewedAt ?? r.createdAt)}
                           </span>
                         </div>
                       ))}
@@ -786,7 +800,7 @@ export default function AdminDashboard() {
                             <span className="text-xs font-medium text-red-500">미제출</span>
                           )}
                         </td>
-                        <td data-label="가입일" className="px-4 py-3 text-xs text-foreground/50">{user.createdAt ? new Date(user.createdAt).toLocaleDateString("ko-KR") : "-"}</td>
+                        <td data-label="가입일" className="whitespace-nowrap px-4 py-3 text-xs text-foreground/50">{ymd(user.createdAt)}</td>
                         <td data-label="프로젝트" className="px-4 py-3 text-sm text-foreground/70">{projectCount}건</td>
                         <td data-label="관리" className="px-4 py-3">
                           <div className="flex gap-1">
@@ -897,7 +911,7 @@ export default function AdminDashboard() {
                                   <td className="px-4 py-3 text-center text-xs text-foreground/50">{partnerUser?.name || "-"}</td>
                                   <td className="px-4 py-3 text-right font-semibold text-primary">{q.amount}원</td>
                                   <td className="px-4 py-3 text-center"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor}`}>{statusLabel}</span></td>
-                                  <td className="px-4 py-3 text-center text-xs text-foreground/50">{new Date(q.createdAt).toLocaleDateString("ko-KR")}</td>
+                                  <td className="px-4 py-3 text-center text-xs text-foreground/50">{ymd(q.createdAt)}</td>
                                 </tr>
                                 {isOpen && (
                                   <tr><td colSpan={9} className="bg-muted/10 px-6 py-4">
@@ -966,7 +980,7 @@ export default function AdminDashboard() {
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-foreground/70">{allQuoteCount}건</td>
-                              <td className="px-4 py-3 text-xs text-foreground/50">{new Date(req.createdAt).toLocaleDateString("ko-KR")}</td>
+                              <td className="px-4 py-3 text-xs text-foreground/50">{ymd(req.createdAt)}</td>
                             </tr>
                             {isOpen && (
                               <tr>
@@ -1168,7 +1182,7 @@ export default function AdminDashboard() {
                                         <p className="mt-0.5 font-mono text-xs text-foreground/50">{users.find((u) => u.id === req.clientId)?.memberCode || ""}</p>
                                         <div className="mt-2 flex gap-3 text-xs text-foreground/50">
                                           <span>예산: <span className="font-medium text-foreground">{req.budget}</span></span>
-                                          <span>등록일: {new Date(req.createdAt).toLocaleDateString("ko-KR")}</span>
+                                          <span>등록일: {ymd(req.createdAt)}</span>
                                         </div>
                                       </div>
                                       {/* 파트너사 */}
@@ -1271,7 +1285,7 @@ export default function AdminDashboard() {
                                   {inq.status === "new" ? "신규" : inq.status === "read" ? "확인됨" : inq.status === "replied" ? "답변완료" : "종료"}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-xs text-foreground/50">{new Date(inq.createdAt).toLocaleDateString("ko-KR")}</td>
+                              <td className="px-4 py-3 text-xs text-foreground/50">{ymd(inq.createdAt)}</td>
                             </tr>
                             {selectedRequestDetail === `inq-${inq.id}` && (
                               <tr>
@@ -1297,7 +1311,7 @@ export default function AdminDashboard() {
                                             return (
                                               <p className="mt-2 text-sm text-foreground/60">
                                                 <span className="font-medium text-emerald-600">처리 완료</span>
-                                                {" · "}{new Date(inq.resolvedAt).toLocaleDateString("ko-KR")}
+                                                {" · "}{ymd(inq.resolvedAt)}
                                                 {inq.resolution ? ` · ${inq.resolution}` : ""}
                                               </p>
                                             );
@@ -1347,7 +1361,7 @@ export default function AdminDashboard() {
                                                       await resolveInquiry(inq.id, `기각 — ${why.trim()}`);
                                                       await loadData();
                                                     } catch (err) {
-                                                      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+                                                      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
                                                     }
                                                   }}
                                                   className={ACTION_BTN}
@@ -1613,8 +1627,8 @@ export default function AdminDashboard() {
                         onClick={async () => {
                           const next = prompt(`${a.name}님이 인증번호를 받을 주소`, a.mfaEmail ?? "");
                           if (!next) return;
-                          try { await setMfaEmail(a.id, next); await loadData(); alert("변경했습니다."); }
-                          catch (err) { alert(err instanceof Error ? err.message : "변경하지 못했습니다."); }
+                          try { await setMfaEmail(a.id, next); await loadData(); toast("변경했습니다."); }
+                          catch (err) { toast(err instanceof Error ? err.message : "변경하지 못했습니다."); }
                         }}
                         className={ACTION_BTN}
                       >
@@ -1627,7 +1641,7 @@ export default function AdminDashboard() {
 
 즉시 관리자 화면에서 로그아웃됩니다.`)) return;
                             try { await setPlatformAdmin(a.id, false); await loadData(); }
-                            catch (err) { alert(err instanceof Error ? err.message : "해제하지 못했습니다."); }
+                            catch (err) { toast(err instanceof Error ? err.message : "해제하지 못했습니다."); }
                           }}
                           className={ACTION_BTN}
                         >
@@ -1747,7 +1761,7 @@ export default function AdminDashboard() {
                       <p className="font-medium text-foreground">
                         {SANCTION_LABELS[h.kind]}
                         <span className="ml-2 font-normal text-foreground/60">
-                          {new Date(h.createdAt).toLocaleDateString("ko-KR")}
+                          {ymd(h.createdAt)}
                           {h.decidedByName ? ` · ${h.decidedByName}` : ""}
                         </span>
                       </p>
@@ -1761,7 +1775,7 @@ export default function AdminDashboard() {
             <div className="mt-5 flex gap-2">
               <button
                 onClick={async () => {
-                  if (!sanctionForm.reason.trim()) { alert("사유를 입력해주세요."); return; }
+                  if (!sanctionForm.reason.trim()) { toast("사유를 입력해주세요."); return; }
                   try {
                     const { count } = await sanctionMember(
                       sanctionFor.user.id, sanctionForm.kind, sanctionForm.reason.trim(), sanctionFor.inquiryId
@@ -1771,11 +1785,11 @@ export default function AdminDashboard() {
                     }
                     setSanctionFor(null);
                     await loadData();
-                    alert(count >= 3
+                    toast(count >= 3
                       ? `제재했습니다. 누적 ${count}회입니다 — 정책 제6조 ③에 따라 영구 탈퇴를 검토할 수 있습니다.`
                       : `제재했습니다. 누적 ${count}회입니다.`);
                   } catch (err) {
-                    alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+                    toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
                   }
                 }}
                 className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
@@ -1933,14 +1947,14 @@ export default function AdminDashboard() {
                         if (d.sent) {
                           setShowInvitePartner(false);
                           await loadData();
-                          alert(`${newPartner.email}로 초대 메일을 보냈습니다.`);
+                          toast(`${newPartner.email}로 초대 메일을 보냈습니다.`);
                         } else {
                           // 메일만 실패한 것이다. 초대는 이미 만들어졌으므로
                           // 다시 누르면 회사가 중복된다 — 링크를 보여 준다.
                           setInviteLink(d.link ?? null);
                         }
                       } catch (err) {
-                        alert(err instanceof Error ? err.message : "초대하지 못했습니다.");
+                        toast(err instanceof Error ? err.message : "초대하지 못했습니다.");
                       }
                     }}
                     className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
@@ -2028,9 +2042,9 @@ export default function AdminDashboard() {
                     if (!res.ok) throw new Error(data.message ?? "만들지 못했습니다.");
                     setShowAddAdmin(false);
                     await loadData();
-                    alert("운영자 계정을 만들었습니다.");
+                    toast("운영자 계정을 만들었습니다.");
                   } catch (err) {
-                    alert(err instanceof Error ? err.message : "만들지 못했습니다.");
+                    toast(err instanceof Error ? err.message : "만들지 못했습니다.");
                   }
                 }}
                 className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
@@ -2068,8 +2082,8 @@ export default function AdminDashboard() {
             <div className="mt-5 flex gap-2">
               <button
                 onClick={async () => {
-                  if (pwForm.next.length < 8) { alert("8자 이상 입력해주세요."); return; }
-                  if (pwForm.next !== pwForm.confirm) { alert("두 번 입력한 비밀번호가 다릅니다."); return; }
+                  if (pwForm.next.length < 8) { toast("8자 이상 입력해주세요."); return; }
+                  if (pwForm.next !== pwForm.confirm) { toast("두 번 입력한 비밀번호가 다릅니다."); return; }
                   setPwBusy(true);
                   try {
                     await changeMyPassword(pwForm.next);
@@ -2077,11 +2091,11 @@ export default function AdminDashboard() {
                     // 비밀번호를 바꿨으면 그 비밀번호로 다시 들어오는 것이
                     // 맞다. 바뀐 줄 모르고 쓰다가 다음 로그인에서 막히는
                     // 것보다, 지금 끊고 새로 들어오게 한다.
-                    alert("비밀번호를 변경했습니다. 새 비밀번호로 다시 로그인해주세요.");
+                    toast("비밀번호를 변경했습니다. 새 비밀번호로 다시 로그인해주세요.");
                     logout();
                     router.push("/admin/login");
                   } catch (err) {
-                    alert(err instanceof Error ? err.message : "변경하지 못했습니다.");
+                    toast(err instanceof Error ? err.message : "변경하지 못했습니다.");
                   } finally {
                     setPwBusy(false);
                   }
@@ -2239,14 +2253,14 @@ export default function AdminDashboard() {
                 <InfoRow label="유형" value={selectedUser.roles?.map((r) => r === "client" ? "의뢰사" : "파트너사").join(", ") || "-"} />
                 <InfoRow label="상태" value={!selectedUser.status || selectedUser.status === "pending" ? "대기" : selectedUser.status === "approved" ? "활성" : selectedUser.status === "restricted" ? "제한" : "정지"} />
                 <InfoRow label="회사관리자" value={selectedUser.isCompanyAdmin ? "지정됨" : "일반"} />
-                <InfoRow label="가입일" value={selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("ko-KR") : "-"} />
+                <InfoRow label="가입일" value={ymd(selectedUser.createdAt)} />
                 {/* 광고성 메일을 보내려면 누가 동의했는지 알아야 하고, 분쟁이
                     생기면 언제 받았는지에 답할 수 있어야 한다. */}
                 <InfoRow
                   label="마케팅 수신"
                   value={
                     selectedUser.marketingConsent
-                      ? `동의${selectedUser.marketingConsentAt ? ` (${new Date(selectedUser.marketingConsentAt).toLocaleDateString("ko-KR")})` : ""}`
+                      ? `동의${selectedUser.marketingConsentAt ? ` (${ymd(selectedUser.marketingConsentAt)})` : ""}`
                       : "미동의"
                   }
                 />

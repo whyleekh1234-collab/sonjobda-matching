@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createInquiry } from "@/lib/data/notices";
+import { toast } from "@/components/ui/Toast";
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
@@ -22,10 +23,10 @@ export default function ContactSection() {
     setIsSubmitting(true);
     try {
       await createInquiry(formData);
-      alert("상담 신청이 접수되었습니다. 빠른 시일 내에 연락드리겠습니다.");
+      toast("상담 신청이 접수되었습니다. 빠른 시일 내에 연락드리겠습니다.");
       setFormData({ company: "", name: "", email: "", phone: "", type: "", message: "" });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "접수하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "접수하지 못했습니다.");
     } finally {
       setIsSubmitting(false);
     }

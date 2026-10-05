@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createRequest } from "@/lib/data/requests";
+import { toast } from "@/components/ui/Toast";
 
 const categories = [
   "CRO",
@@ -54,10 +55,10 @@ export default function NewRequestModal({ onClose }: Props) {
         user.companyId,
         user.id
       );
-      alert("매칭 요청이 등록되었습니다. 손잡다매칭에서 최적의 파트너를 찾아드리겠습니다.");
+      toast("매칭 요청이 등록되었습니다. 손잡다매칭에서 최적의 파트너를 찾아드리겠습니다.");
       onClose();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "등록하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "등록하지 못했습니다.");
     } finally {
       setIsSubmitting(false);
     }

@@ -16,6 +16,7 @@ import {
   type NotificationReply,
 } from "@/lib/data/notices";
 import type { Notification, Notice } from "@/types/auth";
+import { toast } from "@/components/ui/Toast";
 
 export default function NotificationsPage() {
   const { user, isLoading } = useAuth();
@@ -60,9 +61,9 @@ export default function NotificationsPage() {
     try {
       await fn();
       await reload();
-      if (successMessage) alert(successMessage);
+      if (successMessage) toast(successMessage);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
     }
   };
 

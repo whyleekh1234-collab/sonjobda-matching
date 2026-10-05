@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyInquiries, createInquiry, type InquiryWithExtras } from "@/lib/data/notices";
+import { toast } from "@/components/ui/Toast";
 
 const inquiryTypes = [
   { value: "general", label: "일반 문의" },
@@ -55,9 +56,9 @@ function InquiryPageInner() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || isSubmitting) return;
-    if (!form.type) { alert("문의 유형을 선택해주세요."); return; }
-    if (!form.title.trim()) { alert("제목을 입력해주세요."); return; }
-    if (!form.message.trim()) { alert("문의 내용을 입력해주세요."); return; }
+    if (!form.type) { toast("문의 유형을 선택해주세요."); return; }
+    if (!form.title.trim()) { toast("제목을 입력해주세요."); return; }
+    if (!form.message.trim()) { toast("문의 내용을 입력해주세요."); return; }
 
     setIsSubmitting(true);
     try {
@@ -76,10 +77,10 @@ function InquiryPageInner() {
       });
       setForm({ type: "", title: "", message: "" });
       await reload();
-      alert("문의가 접수되었습니다.");
+      toast("문의가 접수되었습니다.");
       setActiveTab("history");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "접수하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "접수하지 못했습니다.");
     } finally {
       setIsSubmitting(false);
     }

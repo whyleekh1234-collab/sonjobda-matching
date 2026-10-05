@@ -26,6 +26,7 @@ import {
   type CompanyChangeRequest,
 } from "@/lib/data/changeRequests";
 import type { PartnerCategory } from "@/types/auth";
+import { toast } from "@/components/ui/Toast";
 
 const allPartnerCategories: PartnerCategory[] = [
   "CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행",
@@ -68,7 +69,7 @@ export default function MyPage() {
     } catch (err) {
       setMarketingOn(prev.on);
       setMarketingAt(prev.at);
-      alert(err instanceof Error ? err.message : "동의 설정을 변경하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "동의 설정을 변경하지 못했습니다.");
     } finally {
       setMarketingSaving(false);
     }
@@ -144,16 +145,16 @@ export default function MyPage() {
   const run = async (fn: () => Promise<void>, successMessage?: string) => {
     try {
       await fn();
-      if (successMessage) alert(successMessage);
+      if (successMessage) toast(successMessage);
       return true;
     } catch (err) {
-      alert(err instanceof Error ? err.message : '처리하지 못했습니다.');
+      toast(err instanceof Error ? err.message : '처리하지 못했습니다.');
       return false;
     }
   };
 
   const saveProfile = async () => {
-    if (editForm.name.trim().length < 2) { alert('이름은 2자 이상 입력해주세요.'); return; }
+    if (editForm.name.trim().length < 2) { toast('이름은 2자 이상 입력해주세요.'); return; }
     const ok = await run(() => updateMyProfile(editForm.name, editForm.phone), '프로필이 수정되었습니다. 새로고침 후 반영됩니다.');
     if (ok) setEditMode(false);
   };
@@ -161,8 +162,8 @@ export default function MyPage() {
   // 비밀번호 확인은 Supabase가 세션으로 대신한다. 예전에는 저장된 평문과
   // 비교했는데, 이제 비밀번호를 앱이 들고 있지 않다.
   const changePassword = async () => {
-    if (pwForm.newPw.length < 8) { alert('새 비밀번호는 8자 이상이어야 합니다.'); return; }
-    if (pwForm.newPw !== pwForm.confirm) { alert('새 비밀번호가 일치하지 않습니다.'); return; }
+    if (pwForm.newPw.length < 8) { toast('새 비밀번호는 8자 이상이어야 합니다.'); return; }
+    if (pwForm.newPw !== pwForm.confirm) { toast('새 비밀번호가 일치하지 않습니다.'); return; }
     const ok = await run(() => changeMyPassword(pwForm.newPw), '비밀번호가 변경되었습니다.');
     if (ok) setPwForm({ current: '', newPw: '', confirm: '' });
   };
@@ -173,7 +174,7 @@ export default function MyPage() {
     const ok = await run(() => deleteMyAccount());
     if (!ok) return;
     await logout();
-    alert('회원 탈퇴가 완료되었습니다.');
+    toast('회원 탈퇴가 완료되었습니다.');
     router.push('/');
   };
 
@@ -205,7 +206,7 @@ export default function MyPage() {
   // 누구나 그 회사로 가입할 수 있었다.
   const sendInvite = async () => {
     if (!inviteEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)) {
-      alert("올바른 이메일을 입력해주세요.");
+      toast("올바른 이메일을 입력해주세요.");
       return;
     }
     try {
@@ -220,12 +221,12 @@ export default function MyPage() {
       const data = await res.json();
 
       if (data.sent) {
-        alert(`${invite.email}로 초대 메일을 보냈습니다.\n링크는 14일 후 만료됩니다.`);
+        toast(`${invite.email}로 초대 메일을 보냈습니다.\n링크는 14일 후 만료됩니다.`);
       } else {
         const link = data.link ?? `${window.location.origin}/signup?invite=${invite.token}`;
         try {
           await navigator.clipboard.writeText(link);
-          alert(
+          toast(
             `메일 발송이 아직 연결되지 않아 링크를 클립보드에 복사했습니다.\n${invite.email}에게 직접 전달해주세요.\n\n링크는 14일 후 만료됩니다.`
           );
         } catch {
@@ -234,7 +235,7 @@ export default function MyPage() {
       }
       setInviteEmail("");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "초대하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "초대하지 못했습니다.");
     }
   };
 
@@ -383,7 +384,7 @@ export default function MyPage() {
                         </div>
                         <div className="mt-3 flex gap-2">
                           <button onClick={async () => {
-                            if (selectedCategories.length === 0) { alert("회사유형을 하나 이상 선택해주세요."); return; }
+                            if (selectedCategories.length === 0) { toast("회사유형을 하나 이상 선택해주세요."); return; }
                             const ok = await run(
                               () => updateMyPartnerCategories(selectedCategories),
                               "회사유형이 수정되었습니다."
@@ -544,14 +545,14 @@ export default function MyPage() {
                         <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden"
                           onChange={async (e) => {
                             const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
-                            const err = validateLogo(f); if (err) { alert(err); return; }
-                            try { setLogoPath(await uploadCompanyLogo(user.companyId, f)); alert("로고를 저장했습니다."); }
-                            catch (er) { alert(er instanceof Error ? er.message : "로고를 올리지 못했습니다."); }
+                            const err = validateLogo(f); if (err) { toast(err); return; }
+                            try { setLogoPath(await uploadCompanyLogo(user.companyId, f)); toast("로고를 저장했습니다."); }
+                            catch (er) { toast(er instanceof Error ? er.message : "로고를 올리지 못했습니다."); }
                           }} />
                       </label>
                       {logoPath && (
                         <button type="button" className="text-xs text-foreground/50 hover:text-red-500"
-                          onClick={async () => { if (!confirm("로고를 삭제할까요?")) return; try { await removeCompanyLogo(user.companyId); setLogoPath(null); } catch (er) { alert(er instanceof Error ? er.message : "삭제하지 못했습니다."); } }}>
+                          onClick={async () => { if (!confirm("로고를 삭제할까요?")) return; try { await removeCompanyLogo(user.companyId); setLogoPath(null); } catch (er) { toast(er instanceof Error ? er.message : "삭제하지 못했습니다."); } }}>
                           삭제
                         </button>
                       )}

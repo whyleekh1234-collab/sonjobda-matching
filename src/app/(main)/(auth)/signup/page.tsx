@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Building2, Handshake, Hospital } from "lucide-react";
 import { getInviteByToken } from "@/lib/data/notices";
 import type { PartnerCategory } from "@/types/auth";
+import { toast } from "@/components/ui/Toast";
 
 const partnerCategories: PartnerCategory[] = [
   "CRO",
@@ -70,6 +71,10 @@ function SignupContent() {
   const [bizNote, setBizNote] = useState("");
   const [bizChecking, setBizChecking] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  // 마케팅 수신 안내는 접어 둔다. 늘 펼쳐 두면 가입 폼에서 가장 긴
+  // 문단이 선택 항목 아래에 놓인다. 동의하기 전에 언제든 펼쳐 볼 수
+  // 있으면 알려야 할 내용은 알린 것이다.
+  const [showMarketingDetail, setShowMarketingDetail] = useState(false);
 
   // 쿼리 파라미터로 전달된 카테고리 미리 선택 / 초대 링크 처리
   useEffect(() => {
@@ -288,7 +293,7 @@ function SignupContent() {
       if (licenseError) {
         // 계정은 이미 만들어졌으므로 가입을 되돌리지는 못한다. 운영자가
         // 승인 판단에 쓰는 서류라 없으면 심사가 막히니, 숨기지 않고 알린다.
-        alert(`회원가입은 접수되었으나 사업자등록증을 올리지 못했습니다.
+        toast(`회원가입은 접수되었으나 사업자등록증을 올리지 못했습니다.
 
 ${licenseError}
 
@@ -300,7 +305,7 @@ ${licenseError}
       // 때 확인한 것은 사업자등록번호뿐이고, 사업자등록증은 지금 막 올라와
       // 아직 아무도 보지 않았다. 들어오는 문은 하나로 모은다.
       const waitsForApproval = true;
-      alert(
+      toast(
         needsEmailConfirmation
           ? `회원가입이 접수되었습니다.\n\n1. 방금 보낸 메일의 링크를 눌러 이메일을 인증해주세요.\n2. ${waitsForApproval ? "관리자 승인 후 로그인할 수 있습니다." : "인증을 마치면 바로 로그인할 수 있습니다."}`
           : waitsForApproval
@@ -810,12 +815,23 @@ ${licenseError}
                 마케팅 정보 수신에 동의합니다. <span className="text-foreground/60">(선택)</span>
               </span>
             </label>
-            <p className="ml-7 text-xs text-foreground/60">
-              새로운 서비스와 이벤트 소식을 이메일로 보내드립니다. 동의하지 않아도
-              가입할 수 있으며, 마이페이지에서 언제든 철회할 수 있습니다. 승인 완료,
-              견적 도착, 매칭 성사 등 서비스 이용에 필요한 안내는 동의 여부와
-              관계없이 발송됩니다.
-            </p>
+            {/* 펼치기 단추는 label 바깥에 둔다. 안에 두면 누를 때 체크박스가
+                함께 켜진다 — 안내를 읽으려다 동의하게 되는 셈이다. */}
+            <button
+              type="button"
+              onClick={() => setShowMarketingDetail((v) => !v)}
+              className="ml-7 w-fit text-xs text-foreground/60 underline underline-offset-2 transition-colors hover:text-primary"
+            >
+              {showMarketingDetail ? "안내 접기" : "무엇을 받게 되나요?"}
+            </button>
+            {showMarketingDetail && (
+              <p className="ml-7 rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed text-foreground/60">
+                새로운 서비스와 이벤트 소식을 이메일로 보내드립니다. 동의하지 않아도
+                가입할 수 있으며, 마이페이지에서 언제든 철회할 수 있습니다. 승인 완료,
+                견적 도착, 매칭 성사 등 서비스 이용에 필요한 안내는 동의 여부와
+                관계없이 발송됩니다.
+              </p>
+            )}
             <p className="ml-7 text-xs text-amber-600">
               ※ 매칭 성사 시 상대 업체에 회사명, 담당자명, 이메일, 연락처가 공개됩니다.
             </p>

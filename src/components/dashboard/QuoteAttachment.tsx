@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getAttachmentUrl } from "@/lib/data/requests";
+import { toast } from "@/components/ui/Toast";
 
 // 견적서 첨부 열기 버튼.
 //
@@ -15,14 +16,14 @@ export default function QuoteAttachment({
   if (!name) return null;
 
   const open = async () => {
-    if (!path) { alert("첨부 파일 정보를 찾을 수 없습니다."); return; }
+    if (!path) { toast("첨부 파일 정보를 찾을 수 없습니다."); return; }
     setBusy(true);
     try {
       const url = await getAttachmentUrl(path);
-      if (!url) { alert("첨부 파일을 열 수 없습니다. 권한이 없거나 파일이 삭제되었을 수 있습니다."); return; }
+      if (!url) { toast("첨부 파일을 열 수 없습니다. 권한이 없거나 파일이 삭제되었을 수 있습니다."); return; }
       window.open(url, "_blank", "noopener");
     } catch (e) {
-      alert(e instanceof Error ? e.message : "첨부 파일을 열지 못했습니다.");
+      toast(e instanceof Error ? e.message : "첨부 파일을 열지 못했습니다.");
     } finally {
       setBusy(false);
     }

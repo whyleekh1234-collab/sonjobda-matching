@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { EXTRA_FIELDS, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import { openProfileDoc } from "@/lib/data/companyProfileDoc";
+import { toast } from "@/components/ui/Toast";
 
 // 의뢰사가 견적을 비교할 때 보는 파트너사 역량 요약. 접힌 상태에서는
 // 강점 한 줄 + 핵심 태그, 펼치면 전부. 회사명·연락처는 여기 없다 —
@@ -105,7 +106,7 @@ function ProfileDocButton({ companyId, docName }: { companyId: string; docName: 
         try {
           window.open(await openProfileDoc(companyId), "_blank", "noopener");
         } catch (err) {
-          alert(err instanceof Error ? err.message : "열 수 없습니다.");
+          toast(err instanceof Error ? err.message : "열 수 없습니다.");
         }
       }}
       className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"

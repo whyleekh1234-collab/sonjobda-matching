@@ -5,6 +5,7 @@ import { breakAfterSlash } from "@/lib/text";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { createRequest, updateRequest, getRequest, getCompanyPartnerCategories } from "@/lib/data/requests";
+import { toast } from "@/components/ui/Toast";
 
 const serviceTypes = [
   { id: "cro", label: "CRO", desc: "임상시험 수탁기관 매칭", icon: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" },
@@ -644,11 +645,11 @@ function NewRequestForm() {
 
   const saveDraft = () => {
     if (!projectName.trim()) {
-      alert("프로젝트명을 입력해야 임시저장할 수 있습니다.");
+      toast("프로젝트명을 입력해야 임시저장할 수 있습니다.");
       return;
     }
     localStorage.setItem(DRAFT_KEY, JSON.stringify(getDraftData()));
-    alert("임시저장되었습니다.");
+    toast("임시저장되었습니다.");
   };
 
   const clearDraft = () => {
@@ -786,7 +787,7 @@ function NewRequestForm() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { alert("파일 크기는 10MB 이하만 가능합니다."); return; }
+    if (file.size > 10 * 1024 * 1024) { toast("파일 크기는 10MB 이하만 가능합니다."); return; }
     const reader = new FileReader();
     reader.onload = () => setAttachment({ name: file.name, data: reader.result as string });
     reader.readAsDataURL(file);
@@ -890,7 +891,7 @@ function NewRequestForm() {
   const handleNext = () => {
     const error = getValidationError();
     if (error) {
-      alert(error);
+      toast(error);
       return;
     }
     setStep(step + 1);
@@ -1011,10 +1012,10 @@ function NewRequestForm() {
         await createRequest(payload, user.companyId, user.id);
       }
       clearDraft();
-      alert(editRequestId ? "견적 요청이 수정되었습니다." : "견적요청이 제출되었습니다.");
+      toast(editRequestId ? "견적 요청이 수정되었습니다." : "견적요청이 제출되었습니다.");
       router.push("/dashboard/client");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "제출하지 못했습니다.");
+      toast(err instanceof Error ? err.message : "제출하지 못했습니다.");
     } finally {
       setIsSubmitting(false);
     }
@@ -1093,7 +1094,7 @@ function NewRequestForm() {
                   <button key={type.id} aria-disabled={blocked}
                     onClick={() => {
                       if (blocked) {
-                        alert(`서비스운영정책 제3조 ⑤에 따라 등록할 수 없습니다.
+                        toast(`서비스운영정책 제3조 ⑤에 따라 등록할 수 없습니다.
 
 귀사는 "${type.label}" 분야의 파트너사로 등록되어 있습니다. 파트너사가 같은 분야의 의뢰를 등록하면 경쟁 파트너사의 견적 내용을 열람할 수 있어 이해상충이 발생하므로, 이 분야의 의뢰 등록은 제한됩니다.
 
@@ -1960,7 +1961,7 @@ function NewRequestForm() {
                           e.currentTarget.classList.remove("border-primary", "text-primary", "bg-primary/5");
                           const file = e.dataTransfer.files?.[0];
                           if (!file) return;
-                          if (file.size > 10 * 1024 * 1024) { alert("파일 크기는 10MB 이하만 가능합니다."); return; }
+                          if (file.size > 10 * 1024 * 1024) { toast("파일 크기는 10MB 이하만 가능합니다."); return; }
                           const reader = new FileReader();
                           reader.onload = () => setAttachment({ name: file.name, data: reader.result as string });
                           reader.readAsDataURL(file);
