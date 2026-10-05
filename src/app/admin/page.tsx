@@ -95,6 +95,14 @@ interface UserData {
 // toLocaleDateString("ko-KR")은 "2026. 10. 5."처럼 공백이 섞인 글자를
 // 준다. 좁은 칸에서는 그 공백에서 줄이 갈라져 "2026. 10." / "5."로
 // 끊긴다. 자리를 적게 쓰고 끊기지 않는 모양으로 고정한다.
+function ymdhm(v?: string | null) {
+  if (!v) return "-";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "-";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 function ymd(v?: string | null) {
   if (!v) return "-";
   const d = new Date(v);
@@ -102,6 +110,72 @@ function ymd(v?: string | null) {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
 }
+
+// 알림에 쓰는 정형 문구.
+//
+// 운영자가 매번 처음부터 쓰면 같은 상황에도 말이 달라진다. 받는 쪽은
+// 그게 규정인지 그 사람 생각인지 알 수 없고, 나중에 분쟁이 생기면
+// "뭐라고 안내했는지"가 사람마다 다르게 남는다.
+//
+// 고르면 그대로 들어가고, 거기서 고쳐 보낼 수 있다. 틀을 주되 묶지는
+// 않는다. {담당자명}과 {회사명}은 고른 회원의 값으로 바뀐다.
+const NOTICE_TEMPLATES: { group: string; items: { label: string; body: string }[] }[] = [
+  {
+    group: "서류 · 정보 보완",
+    items: [
+      {
+        label: "담당자명 확인 요청",
+        body: "가입하신 담당자명({담당자명})이 실제 성함과 다른 것으로 보입니다.\n마이페이지에서 실명으로 수정해 주세요.\n확인되지 않으면 이용이 제한될 수 있습니다.",
+      },
+      {
+        label: "사업자등록증 재제출 요청",
+        body: "제출하신 사업자등록증을 확인하기 어렵습니다.\n글자가 선명하게 보이도록 다시 제출해 주세요.\n고객센터(contact@sonjobdamd.com)로 보내주셔도 됩니다.",
+      },
+      {
+        label: "사업자등록증 미제출 안내",
+        body: "{회사명}의 사업자등록증이 아직 제출되지 않았습니다.\n승인 심사에 필요한 서류라 제출 전에는 이용이 제한됩니다.\n고객센터(contact@sonjobdamd.com)로 보내주세요.",
+      },
+      {
+        label: "회사 정보 불일치",
+        body: "가입하신 회사명 또는 사업자등록번호가 제출 서류와 일치하지 않습니다.\n마이페이지에서 회사 정보 변경을 요청해 주세요.",
+      },
+    ],
+  },
+  {
+    group: "승인 · 이용 제한",
+    items: [
+      {
+        label: "가입 승인 완료",
+        body: "{회사명}의 회원가입이 승인되었습니다.\n지금부터 손잡다매칭을 이용하실 수 있습니다.",
+      },
+      {
+        label: "이용 제한 안내",
+        body: "회원 정보에 확인이 필요하여 이용이 일시 제한되었습니다.\n아래 내용을 보완해 주시면 해제해 드립니다.\n\n보완할 내용: \n\n이의가 있으시면 통지일로부터 7일 이내에 고객센터(contact@sonjobdamd.com)로 알려주세요.",
+      },
+      {
+        label: "이용 제한 해제",
+        body: "확인이 완료되어 이용 제한이 해제되었습니다.\n정상적으로 이용하실 수 있습니다.",
+      },
+    ],
+  },
+  {
+    group: "거래 안내",
+    items: [
+      {
+        label: "견적 제출 요청",
+        body: "{회사명} 분야의 새 의뢰가 등록되었습니다.\n받은 의뢰에서 확인하시고 견적을 제출해 주세요.",
+      },
+      {
+        label: "의뢰 마감 임박",
+        body: "등록하신 의뢰의 마감일이 다가오고 있습니다.\n받은 견적을 확인하고 선정을 진행해 주세요.",
+      },
+      {
+        label: "추가 자료 요청",
+        body: "진행 중인 건과 관련해 확인할 내용이 있습니다.\n고객센터(contact@sonjobdamd.com)로 연락 부탁드립니다.",
+      },
+    ],
+  },
+];
 
 // 회원 상세 모달의 동작 버튼. 색을 기능마다 다르게 줬더니 산만해서
 // 하나로 통일했다. 호버 강조는 globals.css의 전역 규칙이 맡는다.
@@ -447,7 +521,7 @@ export default function AdminDashboard() {
   const downloadCSV = (type: "users" | "matchings") => {
     let csv = "";
     if (type === "users") {
-      csv = "고유번호,이름,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,기업주소,상태,사업자등록증,마케팅수신동의,동의일시\n";
+      csv = "고유번호,담당자명,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,기업주소,상태,사업자등록증,마케팅수신동의,동의일시\n";
       users.forEach((u) => {
         csv += `"${u.memberCode || ""}","${u.name}","${u.company}","${u.email}","${u.roles?.join("/")}","${u.partnerCategories?.join("/") || ""}","${u.phone || ""}","${u.businessNumber || ""}","${u.address || ""}","${u.status}","${u.licensePath ? "제출" : "미제출"}","${u.marketingConsent ? "Y" : "N"}","${u.marketingConsentAt ?? ""}"\n`;
       });
@@ -855,7 +929,7 @@ export default function AdminDashboard() {
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">회원번호</th>
-                      <th className="px-4 py-3 text-center font-medium text-foreground/50">회원명</th>
+                      <th className="px-4 py-3 text-center font-medium text-foreground/50">담당자명</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">ID</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">회사명</th>
                       <th className="px-4 py-3 text-center font-medium text-foreground/50">유형</th>
@@ -874,7 +948,7 @@ export default function AdminDashboard() {
                       return (
                       <tr key={user.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                         <td data-label="회원번호" className="px-4 py-3"><span className="font-mono text-xs text-foreground/60">{user.memberCode || "-"}</span></td>
-                        <td data-label="회원명" className="px-4 py-3"><button onClick={() => setSelectedUser(user)} className="font-medium text-primary hover:underline">{user.name}</button></td>
+                        <td data-label="담당자명" className="px-4 py-3"><button onClick={() => setSelectedUser(user)} className="font-medium text-primary hover:underline">{user.name}</button></td>
                         <td data-label="ID" className="px-4 py-3 text-primary/80">{user.email}</td>
                         <td data-label="회사명" className="px-4 py-3 text-foreground/70">{user.company}</td>
                         <td data-label="유형" className="px-4 py-3">
@@ -2224,9 +2298,36 @@ export default function AdminDashboard() {
                 </select>
               </div>
               <div>
+                <label className="block text-sm font-medium text-foreground">
+                  상황 선택 <span className="text-xs font-normal text-foreground/60">(고르면 아래에 들어갑니다. 고쳐서 보낼 수 있습니다)</span>
+                </label>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const body = e.target.value;
+                    if (!body) return;
+                    const u = users.find((x) => x.id === notificationForm.userId);
+                    const filled = body
+                      .replaceAll("{담당자명}", u?.name ?? "담당자")
+                      .replaceAll("{회사명}", u?.company ?? "귀사");
+                    setNotificationForm({ ...notificationForm, message: filled });
+                  }}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">직접 작성</option>
+                  {NOTICE_TEMPLATES.map((g) => (
+                    <optgroup key={g.group} label={g.group}>
+                      {g.items.map((t) => (
+                        <option key={t.label} value={t.body}>{t.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-foreground">메시지</label>
                 <textarea value={notificationForm.message} onChange={(e) => setNotificationForm({ ...notificationForm, message: e.target.value })}
-                  placeholder="알림 메시지를 입력하세요" rows={3}
+                  placeholder="알림 메시지를 입력하세요" rows={6}
                   className="mt-1 w-full resize-none rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
               </div>
             </div>
@@ -2281,7 +2382,7 @@ export default function AdminDashboard() {
                   <p className="text-xs font-semibold text-foreground/50">회원 개인 정보</p>
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     <label className="block">
-                      <span className="text-xs text-foreground/60">회원명</span>
+                      <span className="text-xs text-foreground/60">담당자명</span>
                       <input value={userEdit.name} onChange={(e) => setUserEdit({ ...userEdit, name: e.target.value })} required
                         className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
                     </label>
@@ -2326,7 +2427,7 @@ export default function AdminDashboard() {
             <div className="mt-6 space-y-6">
               <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                 <InfoRow label="회원번호" value={selectedUser.memberCode || "-"} />
-                <InfoRow label="회원명" value={selectedUser.name} />
+                <InfoRow label="담당자명" value={selectedUser.name} />
                 <InfoRow label="이메일" value={selectedUser.email} />
                 <InfoRow label="회사명" value={selectedUser.company} />
                 <InfoRow label="연락처" value={selectedUser.phone || "-"} />
@@ -2350,7 +2451,7 @@ export default function AdminDashboard() {
                 <InfoRow label="유형" value={selectedUser.roles?.map((r) => r === "client" ? "의뢰사" : "파트너사").join(", ") || "-"} />
                 <InfoRow label="상태" value={!selectedUser.status || selectedUser.status === "pending" ? "대기" : selectedUser.status === "approved" ? "활성" : selectedUser.status === "restricted" ? "제한" : "정지"} />
                 <InfoRow label="회사관리자" value={selectedUser.isCompanyAdmin ? "지정됨" : "일반"} />
-                <InfoRow label="가입일" value={ymd(selectedUser.createdAt)} />
+                <InfoRow label="가입일시" value={ymdhm(selectedUser.createdAt)} />
                 {/* 광고성 메일을 보내려면 누가 동의했는지 알아야 하고, 분쟁이
                     생기면 언제 받았는지에 답할 수 있어야 한다. */}
                 <InfoRow
