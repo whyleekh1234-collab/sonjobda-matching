@@ -2064,6 +2064,11 @@ export default function AdminDashboard() {
                 <p className="mt-1.5 whitespace-pre-line text-xs leading-relaxed text-foreground/80">
                   {`[${SANCTION_LABELS[sanctionForm.kind]}] ${sanctionForm.reason}`}
                   {sanctionForm.detail.trim() ? `\n\n${sanctionForm.detail.trim()}` : ""}
+                  {/* 제한만 답변으로 풀린다(phase34). 경고는 풀 것이 없고,
+                      정지는 누적 3회에 이른 상태라 이의 제기 절차를 거친다. */}
+                  {sanctionForm.kind === "restrict"
+                    ? "\n\n조치를 마치신 뒤 이 알림에 답변을 남겨주시면, 확인 후 제한을 해제해 드립니다."
+                    : ""}
                   {"\n\n이의가 있으시면 통지일로부터 7일 이내에 고객센터(contact@sonjobdamd.com)로 알려주세요."}
                 </p>
               </div>
