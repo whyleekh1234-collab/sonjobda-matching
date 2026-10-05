@@ -1872,7 +1872,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground">분야 (복수 선택)</label>
+                    <label className="block text-sm font-medium text-foreground">분야 <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span></label>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {["CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행"].map((cat) => {
                         const on = newPartner.categories.includes(cat);
