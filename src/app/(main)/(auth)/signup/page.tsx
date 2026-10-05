@@ -271,8 +271,12 @@ function SignupContent() {
 
     try {
       // 국세청에 등록된 번호인지, 폐업/휴업은 아닌지 확인한다.
-      // 초대로 들어온 경우는 이미 등록된 회사라 다시 묻지 않는다.
-      if (!inviteInfo) {
+      //
+      // 초대로 들어온 경우는 이미 등록된 회사라 다시 묻지 않는다. 고유번호는
+      // 사업자등록 상태조회의 대상이 아니라 물어봐야 "등록되지 않은 번호"만
+      // 돌아온다 — 화면에서 조회 버튼을 감췄으면 여기서도 묻지 않아야 한다.
+      // 그 기관은 운영자가 고유번호증을 보고 승인한다.
+      if (!inviteInfo && !usesUniqueNo) {
         const res = await fetch("/api/business-number", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
