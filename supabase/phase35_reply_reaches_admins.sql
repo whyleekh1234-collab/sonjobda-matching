@@ -18,11 +18,13 @@
 -- 것보다 겹치는 편이 낫다.
 
 -- ── 1. 알림 발송이 보낸 사람을 남긴다 ──────────────────────
+-- 반환 타입은 원래대로 notifications 행이다. 바꾸면 Postgres가 거부하고,
+-- 지웠다 다시 만들면 그 사이 알림 발송이 멈춘다.
 create or replace function public.admin_send_notification(
-  p_profile_id uuid,
-  p_message    text
-) returns void
+  p_profile_id uuid, p_message text
+) returns notifications
 language plpgsql security definer set search_path = public as $$
+declare v_notif notifications;
 begin
   perform admin_guard();
 
@@ -31,12 +33,15 @@ begin
   end if;
 
   if not exists (select 1 from profiles where id = p_profile_id) then
-    raise exception '해당 회원을 찾을 수 없습니다.';
+    raise exception '받는 회원을 찾을 수 없습니다.';
   end if;
 
   -- 보낸 사람을 남긴다. 회원이 답하면 이 사람에게 알림이 간다(phase33).
   insert into notifications (profile_id, from_profile_id, message, link)
-  values (p_profile_id, auth.uid(), p_message, '/notifications');
+  values (p_profile_id, auth.uid(), p_message, '/notifications')
+  returning * into v_notif;
+
+  return v_notif;
 end;
 $$;
 grant execute on function public.admin_send_notification to authenticated;
