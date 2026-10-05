@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyInquiries, createInquiry, type InquiryWithExtras } from "@/lib/data/notices";
 import { toast } from "@/components/ui/Toast";
@@ -93,7 +94,41 @@ function InquiryPageInner() {
       </div>
     );
   }
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-muted py-20">
+        <div className="mx-auto max-w-lg px-4 text-center sm:px-6">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">문의하기</h1>
+          <p className="mt-4 break-keep text-sm leading-relaxed text-foreground/70">
+            문의는 회원만 남길 수 있습니다. 답변을 보내드리고 진행 상황을 확인하시려면
+            로그인이 필요합니다.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+            <Link href="/login?next=/inquiry"
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+              로그인
+            </Link>
+            <Link href="/signup"
+              className="rounded-lg border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-surface-subtle">
+              회원가입
+            </Link>
+          </div>
+          <p className="mt-8 break-keep text-sm text-foreground/60">
+            가입 전 문의나 광고 문의는{" "}
+            <a href="mailto:contact@sonjobdamd.com" className="font-semibold text-primary hover:underline">
+              contact@sonjobdamd.com
+            </a>
+            {" "}으로 보내주세요.
+          </p>
+          <p className="mt-3 text-sm text-foreground/60">
+            궁금한 점은{" "}
+            <Link href="/faq" className="font-semibold text-primary hover:underline">자주 묻는 질문</Link>
+            에서 먼저 찾아보실 수 있습니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted py-8">

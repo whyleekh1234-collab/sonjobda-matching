@@ -11,8 +11,8 @@ import { listMyNotifications, listNotices, listReadNoticeIds } from "@/lib/data/
 const navItems = [
   { label: "서비스 소개", href: "/#services" },
   { label: "매칭 프로세스", href: "/#process" },
-  { label: "파트너사", href: "/#partners" },
-  { label: "문의하기", href: "/#contact" },
+  { label: "자주 묻는 질문", href: "/faq" },
+  { label: "문의하기", href: "/inquiry" },
 ];
 
 const roleLabels = {
