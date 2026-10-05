@@ -61,15 +61,12 @@ function FilledCard({ ad }: { ad: ActiveAd }) {
         </span>
       </div>
 
+      {/* 설명 문단은 두지 않는다. 카드가 200px인데 거기에 두 줄을 더
+          넣으면 정작 한 줄 문구가 묻힌다. 할 말이 더 있으면 상세 화면에
+          적는다. */}
       <p className="mt-3.5 break-keep text-[15px] font-semibold leading-snug text-foreground">
         {ad.headline}
       </p>
-
-      {ad.body && (
-        <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-foreground/65">
-          {ad.body}
-        </p>
-      )}
 
       {/* 로고를 썼다면 회사명이 아직 글자로는 안 나왔다. 광고주가 누구인지는
           반드시 드러나야 한다 — 누가 돈을 냈는지 모르는 광고는 광고 표시를

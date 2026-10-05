@@ -21,7 +21,6 @@ import { confirmDialog } from "@/components/ui/Confirm";
 type Draft = {
   companyName: string;
   headline: string;
-  body: string;
   linkUrl: string;
   startsOn: string;
   endsOn: string;
@@ -34,7 +33,7 @@ type Draft = {
 };
 
 const EMPTY: Draft = {
-  companyName: "", headline: "", body: "", linkUrl: "",
+  companyName: "", headline: "", linkUrl: "",
   startsOn: "", endsOn: "", isActive: true, memo: "", imagePath: null,
   detailBody: "", detailImages: [], ctaLabel: "",
 };
@@ -43,7 +42,6 @@ function toDraft(ad: AdminAd): Draft {
   return {
     companyName: ad.companyName,
     headline: ad.headline,
-    body: ad.body ?? "",
     linkUrl: ad.linkUrl ?? "",
     startsOn: ad.startsOn ?? "",
     endsOn: ad.endsOn ?? "",
@@ -98,7 +96,6 @@ export default function AdsPanel() {
         slot,
         companyName: draft.companyName.trim(),
         headline: draft.headline.trim(),
-        body: draft.body.trim() || null,
         linkUrl: draft.linkUrl.trim() || null,
         startsOn: draft.startsOn || null,
         endsOn: draft.endsOn || null,
@@ -140,7 +137,7 @@ export default function AdsPanel() {
     try {
       await adminSaveAd({
         id: ad.id, slot: ad.slot, companyName: ad.companyName, headline: ad.headline,
-        body: ad.body, linkUrl: ad.linkUrl, startsOn: ad.startsOn, endsOn: ad.endsOn,
+        linkUrl: ad.linkUrl, startsOn: ad.startsOn, endsOn: ad.endsOn,
         memo: ad.memo, imagePath: ad.imagePath, isActive: !ad.isActive,
         // 같이 보내지 않으면 저장 함수가 빈 값으로 덮어써서 상세 화면이
         // 통째로 날아간다.
@@ -219,9 +216,8 @@ export default function AdsPanel() {
           <p className="text-xs font-semibold text-foreground/70">광고주에게 받을 것</p>
           <ul className="mt-2 space-y-1 text-[13px] leading-relaxed text-foreground/60">
             <li>· 로고 — 가로형 352×88px 권장, PNG·JPG·SVG, 2MB 이내</li>
-            <li>· 한 줄 문구 60자 이내 · 설명 120자 이내</li>
+            <li>· 한 줄 문구 60자 이내</li>
             <li>· 연결할 주소 (http:// 또는 https://)</li>
-            <li>· 게재 시작일·종료일</li>
           </ul>
           <p className="mt-3 text-[13px] leading-relaxed text-foreground/60">
             <b className="font-semibold text-foreground/75">동영상은 올릴 수 없습니다.</b>{" "}
@@ -325,14 +321,7 @@ export default function AdsPanel() {
                     <label className={label}>한 줄 문구 *</label>
                     <input className={`${input} mt-1`} value={draft.headline} maxLength={60}
                       onChange={(e) => setDraft({ ...draft, headline: e.target.value })}
-                      placeholder="카드에서 가장 크게 보이는 줄 (60자 이내)" />
-                  </div>
-
-                  <div>
-                    <label className={label}>설명</label>
-                    <textarea className={`${input} mt-1 resize-none`} rows={2} value={draft.body} maxLength={120}
-                      onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-                      placeholder="두 줄 정도. 카드가 작아서 넘치면 잘립니다. (120자 이내)" />
+                      placeholder="카드에 나가는 유일한 문장입니다 (60자 이내)" />
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

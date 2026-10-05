@@ -76,10 +76,6 @@ export default function AdDetailPage({ params }: { params: Promise<{ id: string 
         {ad.headline}
       </h1>
 
-      {ad.body && (
-        <p className="mt-4 break-keep text-base leading-relaxed text-foreground/70">{ad.body}</p>
-      )}
-
       {ad.detailBody && (
         <div className="mt-8 whitespace-pre-wrap break-keep text-[15px] leading-[1.9] text-foreground/80">
           {ad.detailBody}
