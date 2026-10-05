@@ -37,46 +37,51 @@ function AdBadge() {
 }
 
 function FilledCard({ ad }: { ad: ActiveAd }) {
+  // 크몽처럼 그림이 위에 깔리고 글이 아래로 붙는다. 로고를 구석에 작게
+  // 박아 두면 광고주가 규격에 맞춰 로고를 보내와도 살지 않는다.
   const inner = (
     <>
-      <div className="flex items-center justify-between gap-2">
-        {/* 그림이 없는 광고도 있다. 그 자리를 비워 두면 줄이 흔들리므로
-            회사명을 크게 앉힌다. */}
+      <div className="relative flex h-[68px] items-center justify-center rounded-xl border border-border/70 bg-white px-4">
         {ad.imageUrl ? (
+          // 로고가 쓸 수 있는 자리. 넉 줄로 설 때 칸이 289px까지 좁아지고
+          // 그 안쪽이 249px이라, 좌우 여백을 빼면 176×44가 한계다.
           // eslint-disable-next-line @next/next/no-img-element
-          // 넉 줄로 설 때 칸이 292px까지 좁아진다. 그 안쪽(252px)의 70%,
-          // 높이 44px이 로고가 쓸 수 있는 전부다. 더 키우면 한 줄 문구가
-          // 밀려나고, 광고 카드에서 가장 중요한 건 문구다.
           <img
             src={ad.imageUrl}
             alt={`${ad.companyName} 로고`}
-            className="h-11 max-w-[70%] object-contain object-left"
+            className="max-h-11 max-w-full object-contain"
           />
         ) : (
-          <span className="truncate text-sm font-bold text-foreground">{ad.companyName}</span>
+          // 로고가 없는 광고도 있다. 자리를 비워 두면 줄이 흔들리므로
+          // 회사명을 대신 앉힌다.
+          <span className="truncate text-base font-bold text-foreground">{ad.companyName}</span>
         )}
-        <AdBadge />
+        <span className="absolute right-1.5 top-1.5">
+          <AdBadge />
+        </span>
       </div>
 
-      <p className="mt-4 break-keep text-[15px] font-semibold leading-snug text-foreground">
+      <p className="mt-3.5 break-keep text-[15px] font-semibold leading-snug text-foreground">
         {ad.headline}
       </p>
 
       {ad.body && (
-        <p className="mt-2 break-keep text-[13px] leading-relaxed text-foreground/65">{ad.body}</p>
+        <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-foreground/65">
+          {ad.body}
+        </p>
       )}
 
-      {/* 그림을 썼다면 회사명이 아직 안 나왔다. 광고주가 누구인지는
+      {/* 로고를 썼다면 회사명이 아직 글자로는 안 나왔다. 광고주가 누구인지는
           반드시 드러나야 한다 — 누가 돈을 냈는지 모르는 광고는 광고 표시를
           해도 의미가 없다. */}
       {ad.imageUrl && (
-        <p className="mt-auto pt-4 text-xs font-medium text-foreground/50">{ad.companyName}</p>
+        <p className="mt-auto pt-3 text-xs font-medium text-foreground/50">{ad.companyName}</p>
       )}
     </>
   );
 
   const shell =
-    "flex min-h-[172px] flex-col rounded-2xl border border-border bg-surface p-5 text-left transition-shadow";
+    "flex min-h-[200px] flex-col rounded-2xl border border-border bg-surface p-3.5 text-left transition-shadow";
 
   // 상세 화면을 받아 둔 광고는 우리 쪽 화면으로, 아니면 광고주 사이트로.
   // 광고주가 무엇을 주느냐로 갈린다 — 운영자가 따로 고를 것이 없다.
@@ -112,7 +117,7 @@ function EmptyCard({ first }: { first: boolean }) {
   return (
     <a
       href={INQUIRY_HREF}
-      className={`${first ? "flex" : "hidden sm:flex"} min-h-[140px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-subtle p-5 text-center transition-colors hover:border-primary/40 hover:bg-primary/[0.03] sm:min-h-[172px]`}
+      className={`${first ? "flex" : "hidden sm:flex"} min-h-[160px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-subtle p-5 text-center transition-colors hover:border-primary/40 hover:bg-primary/[0.03] sm:min-h-[200px]`}
     >
       <span className="text-sm font-semibold text-foreground/70">이 자리에 광고를 올려보세요</span>
       <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
@@ -141,18 +146,22 @@ export default function AdsSection() {
   return (
     <section id="ads" className="border-y border-border bg-surface py-12 sm:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* 제목에 "광고"를 넣지 않는다. 크몽도 구역 제목은 손님에게 말을
+            거는 투로 쓰고, 광고라는 사실은 카드마다 딱지로 밝힌다. 다만
+            크몽의 "검증한"류는 쓸 수 없다 — 돈을 받은 자리를 우리가
+            검증했다고 말하는 순간 그게 문제가 된다. */}
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-            파트너사 광고
+          <h2 className="break-keep text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            어떤 기업이 있는지 둘러보세요
           </h2>
           {/* 이 한 줄이 이 구역에서 가장 중요하다. 광고를 샀다고 매칭에서
               유리해지지 않는다는 약속을, 광고 바로 옆에서 한다. */}
           <p className="break-keep text-[13px] text-foreground/55">
-            광고 노출은 견적 비교 순서나 매칭 결과에 영향을 주지 않습니다.
+            각 기업이 직접 올린 광고입니다. 견적 비교 순서나 매칭 결과에는 영향을 주지 않습니다.
           </p>
         </div>
 
-        <div className="mt-6 grid min-h-[172px] grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6 grid min-h-[200px] grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {slots.map((ad, i) =>
             ad ? (
               <FilledCard key={ad.id} ad={ad} />
