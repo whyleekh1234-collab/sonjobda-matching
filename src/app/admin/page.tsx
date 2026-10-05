@@ -73,7 +73,10 @@ interface UserData {
   businessNumber?: string;
   address?: string;
   status: string;
-  verified?: boolean;
+  // profiles.verified는 더 쓰지 않는다. 승인과 같은 판단을 담은 두 번째
+  // 버튼이라 승인만 누르면 덜 한 것처럼 보였다. DB 칸은 남겨 두었다 —
+  // 지우려면 admin_list_users 반환 타입을 바꿔야 하고, 그러는 동안 회원
+  // 목록이 뜨지 않는다.
   isCompanyAdmin?: boolean;
   allowCategoryEdit?: boolean;
   createdAt?: string;
@@ -309,7 +312,6 @@ export default function AdminDashboard() {
     }
     const key =
       field === "status" ? { status: value as string }
-      : field === "verified" ? { verified: value as boolean }
       : field === "allowCategoryEdit" ? { allowCategoryEdit: value as boolean }
       : null;
     if (!key) return;
@@ -404,9 +406,9 @@ export default function AdminDashboard() {
   const downloadCSV = (type: "users" | "matchings") => {
     let csv = "";
     if (type === "users") {
-      csv = "고유번호,이름,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,기업주소,상태,검증,마케팅수신동의,동의일시\n";
+      csv = "고유번호,이름,회사명,이메일,유형,파트너카테고리,연락처,사업자등록번호,기업주소,상태,사업자등록증,마케팅수신동의,동의일시\n";
       users.forEach((u) => {
-        csv += `"${u.memberCode || ""}","${u.name}","${u.company}","${u.email}","${u.roles?.join("/")}","${u.partnerCategories?.join("/") || ""}","${u.phone || ""}","${u.businessNumber || ""}","${u.address || ""}","${u.status}","${u.verified ? "Y" : "N"}","${u.marketingConsent ? "Y" : "N"}","${u.marketingConsentAt ?? ""}"\n`;
+        csv += `"${u.memberCode || ""}","${u.name}","${u.company}","${u.email}","${u.roles?.join("/")}","${u.partnerCategories?.join("/") || ""}","${u.phone || ""}","${u.businessNumber || ""}","${u.address || ""}","${u.status}","${u.licensePath ? "제출" : "미제출"}","${u.marketingConsent ? "Y" : "N"}","${u.marketingConsentAt ?? ""}"\n`;
       });
     } else {
       csv = "프로젝트명,의뢰사,예산,상태,생성일\n";
@@ -522,7 +524,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground/60">{user.name?.charAt(0) || "?"}</div>
                           <div>
-                            <p className="text-sm font-medium text-foreground">{user.name} {user.verified && <span className="text-xs text-primary">&#10003; 검증</span>}</p>
+                            <p className="text-sm font-medium text-foreground">{user.name}</p>
                             <p className="text-xs text-foreground/60">{user.company}</p>
                           </div>
                         </div>
@@ -1646,7 +1648,9 @@ export default function AdminDashboard() {
                   <div className="flex justify-between text-sm"><span className="text-foreground/70">의뢰사</span><span className="font-semibold">{clientCount}명</span></div>
                   <div className="flex justify-between text-sm"><span className="text-foreground/70">파트너사</span><span className="font-semibold">{partnerCount}명</span></div>
                   <div className="flex justify-between text-sm"><span className="text-foreground/70">승인 대기</span><span className="font-semibold text-yellow-600">{pendingUsers}명</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-foreground/70">검증 완료</span><span className="font-semibold text-primary">{users.filter(u => u.verified).length}명</span></div>
+                  {/* 승인을 판단할 때 실제로 보는 숫자다. 등록증을 안 낸
+                      회원은 서류 없이 통과시키게 되므로 눈에 띄어야 한다. */}
+                  <div className="flex justify-between text-sm"><span className="text-foreground/70">등록증 미제출</span><span className="font-semibold text-red-500">{users.filter((u) => !u.licensePath).length}명</span></div>
                 </div>
               </div>
               <div className="rounded-2xl border border-border bg-background p-6">
@@ -2226,7 +2230,6 @@ export default function AdminDashboard() {
                 <InfoRow label="기업주소" value={selectedUser.address || "-"} />
                 <InfoRow label="유형" value={selectedUser.roles?.map((r) => r === "client" ? "의뢰사" : "파트너사").join(", ") || "-"} />
                 <InfoRow label="상태" value={!selectedUser.status || selectedUser.status === "pending" ? "대기" : selectedUser.status === "approved" ? "활성" : selectedUser.status === "restricted" ? "제한" : "정지"} />
-                <InfoRow label="검증" value={selectedUser.verified ? "검증완료" : "미검증"} />
                 <InfoRow label="회사관리자" value={selectedUser.isCompanyAdmin ? "지정됨" : "일반"} />
                 <InfoRow label="가입일" value={selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString("ko-KR") : "-"} />
                 {/* 광고성 메일을 보내려면 누가 동의했는지 알아야 하고, 분쟁이
@@ -2303,10 +2306,6 @@ export default function AdminDashboard() {
                   <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 정지하시겠습니까?`)) { updateUserField(selectedUser.id, "status", "suspended"); setSelectedUser({ ...selectedUser, status: "suspended" }); } }}
                     className={ACTION_BTN}>정지</button>
                 )}
-                <button onClick={() => { updateUserField(selectedUser.id, "verified", !selectedUser.verified); setSelectedUser({ ...selectedUser, verified: !selectedUser.verified }); }}
-                  className={ACTION_BTN}>
-                  {selectedUser.verified ? "검증 해제" : "검증 승인"}
-                </button>
                 {selectedUser.roles?.includes("partner") && (
                   <button onClick={() => {
                     updateUserField(selectedUser.id, "allowCategoryEdit", !selectedUser.allowCategoryEdit);
