@@ -258,14 +258,41 @@ export default function AdminDashboard() {
   // 시퀀스가 부여하므로 빠진 번호를 나중에 메울 일이 없다.
   const loadData = useCallback(async () => {
     if (!isAdmin) return;
+    // 하나가 실패해도 나머지는 그린다. Promise.all은 하나가 거절되면
+    // 나머지 결과까지 버린다 — DB에 아직 없는 칸을 코드가 먼저 찾는
+    // 동안(마이그레이션 전 배포) 의뢰 조회 하나 때문에 회원·문의·공지가
+    // 모두 0으로 보였다. 데이터가 사라진 것처럼 읽힌다.
+    const [userRes, inquiryRes, requestRes, noticeRes, notifRes] = await Promise.allSettled([
+      listAllUsers(),
+      listAllInquiries(),
+      listPartnerRequests(),
+      listAllNotices(),
+      listAllNotifications(),
+    ]);
+    const parts = [
+      { res: userRes, label: "회원" },
+      { res: inquiryRes, label: "문의" },
+      { res: requestRes, label: "의뢰" },
+      { res: noticeRes, label: "공지" },
+      { res: notifRes, label: "알림" },
+    ];
+    const failed = parts.filter((p) => p.res.status === "rejected");
+    if (failed.length > 0) {
+      failed.forEach((p) =>
+        console.error(`[관리자] ${p.label} 불러오기 실패`, (p.res as PromiseRejectedResult).reason));
+      // 조용히 0으로 두지 않는다. 비어 보이는 것과 못 불러온 것은 다르다.
+      toast(
+        `${failed.map((p) => p.label).join(", ")}을(를) 불러오지 못했습니다. ` +
+        "데이터가 사라진 것은 아닙니다. 새로고침해도 같으면 알려주세요.",
+        "error"
+      );
+    }
     try {
-      const [userList, inquiryList, requestList, noticeList, notifList] = await Promise.all([
-        listAllUsers(),
-        listAllInquiries(),
-        listPartnerRequests(),
-        listAllNotices(),
-        listAllNotifications(),
-      ]);
+      const userList = userRes.status === "fulfilled" ? userRes.value : [];
+      const inquiryList = inquiryRes.status === "fulfilled" ? inquiryRes.value : [];
+      const requestList = requestRes.status === "fulfilled" ? requestRes.value : [];
+      const noticeList = noticeRes.status === "fulfilled" ? noticeRes.value : [];
+      const notifList = notifRes.status === "fulfilled" ? notifRes.value : [];
       // 운영자는 회원이 아니다. 계정 구조상 프로필을 갖고 있지만(권한 함수가
       // 프로필을 전제로 한다) 회원 목록·통계·회원번호 체계에서는 빼야 한다.
       // 손잡다메디칼 직원이 "의뢰사 회원"으로 세어지면 안 된다.

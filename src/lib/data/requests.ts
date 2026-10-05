@@ -9,10 +9,17 @@ import type { MatchRequest, Quote, QuoteStatus, RequestStatus, TimelineItem } fr
 // "내 견적"을 찾을 때 q.partnerId가 아니라 q.companyId를 user.companyId와
 // 비교해야 한다.
 
+// client_org_type은 phase30에서 더한 칸이다. 마이그레이션을 돌리기 전에
+// 코드가 먼저 배포되면 그 칸을 찾다가 조회 전체가 실패한다. 한 번 실패해
+// 보고 칸이 없는 것이 확인되면, 그 뒤로는 빼고 묻는다.
+//
+// 칸이 없는 동안에는 병원 표시가 안 보일 뿐 나머지는 그대로 돈다. 화면이
+// 통째로 비는 것보다 낫다.
+let hasOrgTypeColumn = true;
+
 const REQUEST_SELECT = `
   id, request_code, match_code, company_id, created_by,
   title, category, description, budget, deadline, status, form_data, created_at,
-  client_org_type,
   companies!requests_company_id_fkey(name, logo_path),
   quotes(
     id, quote_code, request_id, company_id, submitted_by,
@@ -127,6 +134,16 @@ function toRequest(row: RequestRow): MatchRequest {
   };
 }
 
+/** 지금 물어볼 수 있는 칸 목록. */
+function requestSelect() {
+  return hasOrgTypeColumn ? `${REQUEST_SELECT}, client_org_type` : REQUEST_SELECT;
+}
+
+/** 없는 칸(42703) 때문에 실패했으면 그 칸을 빼고 다시 묻는다. */
+function isMissingColumn(error: { code?: string; message?: string } | null) {
+  return error?.code === "42703" && (error.message ?? "").includes("client_org_type");
+}
+
 // ── 조회 ────────────────────────────────────────────────────
 // 어떤 의뢰가 보이는지는 RLS가 정한다. 의뢰사는 자기 회사 의뢰 전부,
 // 파트너사는 자기 카테고리의 열린 의뢰 + 자기 회사가 견적을 낸 의뢰.
@@ -135,12 +152,14 @@ function toRequest(row: RequestRow): MatchRequest {
 
 // 의뢰사 대시보드: 내 회사가 등록한 의뢰
 export async function listMyCompanyRequests(companyId: string): Promise<MatchRequest[]> {
-  const { data, error } = await createClient()
+  const run = () => createClient()
     .from("requests")
-    .select(REQUEST_SELECT)
+    .select(requestSelect())
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
+  let { data, error } = await run();
+  if (isMissingColumn(error)) { hasOrgTypeColumn = false; ({ data, error } = await run()); }
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as RequestRow[]).map(toRequest);
 }
@@ -150,24 +169,30 @@ export async function listMyCompanyRequests(companyId: string): Promise<MatchReq
 // 내주는데, 뒤쪽은 의뢰사 화면 몫이다. 겸업 회사가 자기 의뢰를 파트너
 // 화면에서 보면 안 되므로 excludeCompanyId로 걸러낸다. 운영자는 안 넘긴다.
 export async function listPartnerRequests(excludeCompanyId?: string): Promise<MatchRequest[]> {
-  let q = createClient()
-    .from("requests")
-    .select(REQUEST_SELECT)
-    .order("created_at", { ascending: false });
-  if (excludeCompanyId) q = q.neq("company_id", excludeCompanyId);
-  const { data, error } = await q;
+  const run = () => {
+    let q = createClient()
+      .from("requests")
+      .select(requestSelect())
+      .order("created_at", { ascending: false });
+    if (excludeCompanyId) q = q.neq("company_id", excludeCompanyId);
+    return q;
+  };
 
+  let { data, error } = await run();
+  if (isMissingColumn(error)) { hasOrgTypeColumn = false; ({ data, error } = await run()); }
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as RequestRow[]).map(toRequest);
 }
 
 export async function getRequest(id: string): Promise<MatchRequest | null> {
-  const { data, error } = await createClient()
+  const run = () => createClient()
     .from("requests")
-    .select(REQUEST_SELECT)
+    .select(requestSelect())
     .eq("id", id)
     .single();
 
+  let { data, error } = await run();
+  if (isMissingColumn(error)) { hasOrgTypeColumn = false; ({ data, error } = await run()); }
   if (error || !data) return null;
   return toRequest(data as unknown as RequestRow);
 }
@@ -202,7 +227,7 @@ export async function createRequest(
       deadline: input.deadline || null,
       form_data: input.formData,
     })
-    .select(REQUEST_SELECT)
+    .select(requestSelect())
     .single();
 
   if (error) throw new Error(error.message);
