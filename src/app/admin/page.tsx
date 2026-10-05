@@ -1786,7 +1786,8 @@ export default function AdminDashboard() {
             <p className="mt-1 text-sm leading-relaxed text-foreground/50">
               회사와 분야는 운영자가 정하고, 비밀번호와 사업자등록증은 초대받은
               담당자가 직접 넣습니다. 스스로 가입할 수 없게 닫아 둔 분야도 이 길로
-              들어옵니다.
+              들어옵니다. 가입이 끝나면 회원 목록에 대기로 올라오니, 올라온
+              사업자등록증을 보고 승인해주세요.
             </p>
 
             {inviteLink ? (
