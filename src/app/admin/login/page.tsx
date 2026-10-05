@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import PasswordInput from "@/components/PasswordInput";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { sendAdminCode, verifyAdminCode } from "@/lib/adminMfa";
@@ -25,6 +25,18 @@ export default function AdminLoginPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 자리 비움으로 끊긴 경우. 왜 로그인 화면으로 돌아왔는지 알려주지
+  // 않으면 로그인이 풀린 것을 고장으로 읽는다.
+  //
+  // useSearchParams 대신 주소를 직접 읽는다. 그 훅을 쓰면 이 화면을
+  // Suspense로 감싸야 빌드가 통과하는데, 문구 하나 때문에 화면 구조를
+  // 바꿀 일은 아니다.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("timeout") === "1") {
+      setNotice("자리를 비우신 동안 자동으로 로그아웃되었습니다. 다시 로그인해주세요.");
+    }
+  }, []);
 
   const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +107,11 @@ export default function AdminLoginPage() {
 
           {step === "password" && (
             <>
+              {/* 자리 비움으로 끊겨 돌아온 경우. 인증번호 단계에만 두면
+                  정작 이 화면으로 떨어졌을 때 아무 설명이 없다. */}
+              {notice && (
+                <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</p>
+              )}
               <div className="space-y-4">
                 <div>
                   <label htmlFor="adminEmail" className="block text-sm font-medium text-foreground">

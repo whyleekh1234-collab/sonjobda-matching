@@ -74,6 +74,14 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    // 세션만 끊으면 2단계 인증 증명이 8시간 동안 살아 있어, 같은
+    // 브라우저에서 다시 로그인할 때 인증번호를 묻지 않는다. 공용 PC를
+    // 생각하면 로그아웃이 절반만 되는 셈이라 증명도 함께 끊는다.
+    try {
+      await fetch("/api/admin/mfa/logout", { method: "POST" });
+    } catch {
+      // 증명을 못 지워도 세션은 끊는다. 둘 다 못 하는 것보다 낫다.
+    }
     await supabase.auth.signOut();
     setIsAdmin(false);
     setAdminId(null);
