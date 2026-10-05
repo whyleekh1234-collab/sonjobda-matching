@@ -673,8 +673,13 @@ export default function AdminDashboard() {
   const todayUsers = users.filter((u) => isToday(u.createdAt)).length;
   const todayRequests = allRequests.filter((r) => isToday(r.createdAt)).length;
 
+  // 회원이 답변을 달면 운영자 앞으로 알림이 온다(phase33). 통지를 보낸
+  // 쪽이 답을 못 보면 회원은 기다리고 제한은 유지된다.
+  const unreadForMe = adminNotifications.filter((n) => n.userId === adminId && !n.read).length;
+
   const todo = [
     { label: "승인 대기", n: pendingUsers, unit: "명", tab: "users" as const },
+    { label: "답변 온 알림", n: unreadForMe, unit: "건", tab: "notifications" as const },
     { label: "답변 대기 문의", n: waitingInquiries, unit: "건", tab: "inquiries" as const },
     { label: "회사정보 변경 요청", n: pendingChangeCount, unit: "건", tab: "users" as const },
     { label: "등록증 미제출", n: noLicenseCompanies, unit: "곳", tab: "users" as const },
@@ -693,7 +698,7 @@ export default function AdminDashboard() {
     {
       key: "notifications",
       label: "알림 관리",
-      badge: adminNotifications.filter((n) => n.userId === adminId && !n.read).length || undefined,
+      badge: unreadForMe || undefined,
     },
     { key: "reports", label: "분석 리포트" },
     // 운영자는 회원이 아니다. 회원 목록과 한 화면에 두면 "사용자 관리"가
