@@ -69,18 +69,11 @@ function FilledCard({ ad }: { ad: ActiveAd }) {
       <p className="mt-3.5 break-keep text-[15px] font-semibold leading-snug text-foreground">
         {ad.headline}
       </p>
-
-      {/* 로고를 썼다면 회사명이 아직 글자로는 안 나왔다. 광고주가 누구인지는
-          반드시 드러나야 한다 — 누가 돈을 냈는지 모르는 광고는 광고 표시를
-          해도 의미가 없다. */}
-      {ad.imageUrl && (
-        <p className="mt-auto pt-3 text-xs font-medium text-foreground/50">{ad.companyName}</p>
-      )}
     </>
   );
 
   const shell =
-    "flex min-h-[200px] flex-col rounded-2xl border border-border bg-surface p-3.5 text-left transition-shadow";
+    "flex min-h-[160px] flex-col rounded-2xl border border-border bg-surface p-3.5 text-left transition-shadow";
 
   // 상세 화면을 받아 둔 광고는 우리 쪽 화면으로, 아니면 광고주 사이트로.
   // 광고주가 무엇을 주느냐로 갈린다 — 운영자가 따로 고를 것이 없다.
@@ -116,7 +109,7 @@ function EmptyCard({ first }: { first: boolean }) {
   return (
     <a
       href={INQUIRY_HREF}
-      className={`${first ? "flex" : "hidden sm:flex"} min-h-[160px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-subtle p-5 text-center transition-colors hover:border-primary/40 hover:bg-primary/[0.03] sm:min-h-[200px]`}
+      className={`${first ? "flex" : "hidden sm:flex"} min-h-[150px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-subtle p-5 text-center transition-colors hover:border-primary/40 hover:bg-primary/[0.03] sm:min-h-[160px]`}
     >
       <span className="text-sm font-semibold text-foreground/70">이 자리에 광고를 올려보세요</span>
       <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
@@ -160,7 +153,7 @@ export default function AdsSection() {
           </p>
         </div>
 
-        <div className="mt-6 grid min-h-[200px] grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6 grid min-h-[160px] grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {slots.map((ad, i) =>
             ad ? (
               <FilledCard key={ad.id} ad={ad} />
