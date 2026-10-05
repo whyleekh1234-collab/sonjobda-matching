@@ -204,6 +204,16 @@ export default function AdminDashboard() {
   const [sanctionHistory, setSanctionHistory] = useState<SanctionRow[]>([]);
   const [showAddAdmin, setShowAddAdmin] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ name: "", email: "", password: "", mfaEmail: "" });
+  // 파트너사 초대. 기업보험처럼 스스로 가입하지 못하게 닫아 둔 분야는
+  // 운영자가 넣어 주지 않으면 비어 있게 된다.
+  const [showInvitePartner, setShowInvitePartner] = useState(false);
+  const [newPartner, setNewPartner] = useState<{ companyName: string; businessNumber: string; email: string; categories: string[] }>(
+    { companyName: "", businessNumber: "", email: "", categories: [] }
+  );
+  const [partnerBiz, setPartnerBiz] = useState<{ ok: boolean | null; note: string; checking: boolean }>(
+    { ok: null, note: "", checking: false }
+  );
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwForm, setPwForm] = useState({ next: "", confirm: "" });
   const [pwBusy, setPwBusy] = useState(false);
@@ -774,8 +784,19 @@ export default function AdminDashboard() {
 
             {/* 전체 회원 목록 */}
             <div className="rounded-2xl border border-border bg-background">
-              <div className="border-b border-border px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
                 <h3 className="font-semibold text-foreground">전체 회원 목록</h3>
+                <button
+                  onClick={() => {
+                    setNewPartner({ companyName: "", businessNumber: "", email: "", categories: [] });
+                    setPartnerBiz({ ok: null, note: "", checking: false });
+                    setInviteLink(null);
+                    setShowInvitePartner(true);
+                  }}
+                  className={ACTION_BTN}
+                >
+                  파트너사 초대
+                </button>
               </div>
               <div className="overflow-x-auto">
                 <table className="cards-on-mobile w-full text-left text-sm">
@@ -1753,6 +1774,164 @@ export default function AdminDashboard() {
                 취소
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 파트너사 초대 */}
+      {showInvitePartner && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-10" onClick={() => setShowInvitePartner(false)}>
+          <div className="w-full max-w-lg rounded-2xl bg-background p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-foreground">파트너사 초대</h3>
+            <p className="mt-1 text-sm leading-relaxed text-foreground/50">
+              회사와 분야는 운영자가 정하고, 비밀번호와 사업자등록증은 초대받은
+              담당자가 직접 넣습니다. 스스로 가입할 수 없게 닫아 둔 분야도 이 길로
+              들어옵니다.
+            </p>
+
+            {inviteLink ? (
+              <div className="mt-5">
+                <p className="text-sm font-medium text-foreground">초대를 만들었습니다.</p>
+                <p className="mt-1 text-sm text-foreground/60">
+                  메일이 나가지 않았습니다. 아래 링크를 담당자에게 직접 전해 주세요.
+                  14일 동안 한 번만 쓸 수 있습니다.
+                </p>
+                <p className="mt-3 break-all rounded-lg border border-border bg-muted px-3 py-2 font-mono text-xs select-all">
+                  {inviteLink}
+                </p>
+                <button
+                  onClick={() => { setShowInvitePartner(false); loadData(); }}
+                  className="mt-5 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark"
+                >
+                  닫기
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground">회사명</label>
+                    <input
+                      value={newPartner.companyName}
+                      onChange={(e) => setNewPartner({ ...newPartner, companyName: e.target.value })}
+                      placeholder="(주) 회사명"
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground">사업자등록번호</label>
+                    <div className="mt-1 flex gap-2">
+                      <input
+                        value={newPartner.businessNumber}
+                        onChange={(e) => { setNewPartner({ ...newPartner, businessNumber: e.target.value }); setPartnerBiz({ ok: null, note: "", checking: false }); }}
+                        placeholder="000-00-00000"
+                        className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                      />
+                      <button
+                        type="button"
+                        disabled={partnerBiz.checking || newPartner.businessNumber.replace(/[^0-9]/g, "").length !== 10}
+                        onClick={async () => {
+                          setPartnerBiz({ ok: null, note: "", checking: true });
+                          try {
+                            const res = await fetch("/api/business-number", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ businessNumber: newPartner.businessNumber }),
+                            });
+                            const d = await res.json();
+                            setPartnerBiz({ ok: d.valid !== false, note: d.message ?? d.status ?? "", checking: false });
+                          } catch {
+                            setPartnerBiz({ ok: null, note: "확인하지 못했습니다.", checking: false });
+                          }
+                        }}
+                        className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground/70 hover:bg-muted disabled:opacity-40"
+                      >
+                        {partnerBiz.checking ? "조회 중" : "사업자 확인"}
+                      </button>
+                    </div>
+                    {partnerBiz.note && (
+                      <p className={`mt-1 text-xs ${partnerBiz.ok === false ? "text-red-500" : "text-foreground/60"}`}>
+                        {partnerBiz.note}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground">담당자 이메일</label>
+                    <input
+                      type="email"
+                      value={newPartner.email}
+                      onChange={(e) => setNewPartner({ ...newPartner, email: e.target.value })}
+                      placeholder="manager@company.com"
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <p className="mt-1 text-xs text-foreground/50">
+                      이 주소로 초대 링크가 갑니다. 운영자 계정과 다른 주소여야 합니다.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground">분야 (복수 선택)</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {["CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행"].map((cat) => {
+                        const on = newPartner.categories.includes(cat);
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setNewPartner({
+                              ...newPartner,
+                              categories: on
+                                ? newPartner.categories.filter((c) => c !== cat)
+                                : [...newPartner.categories, cat],
+                            })}
+                            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                              on ? "border-primary bg-primary/10 text-primary" : "border-border text-foreground/60 hover:border-foreground/30"
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/api/admin/partner-invite", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(newPartner),
+                        });
+                        const d = await res.json().catch(() => ({}));
+                        if (!res.ok) throw new Error(d.message ?? "초대하지 못했습니다.");
+                        if (d.sent) {
+                          setShowInvitePartner(false);
+                          await loadData();
+                          alert(`${newPartner.email}로 초대 메일을 보냈습니다.`);
+                        } else {
+                          // 메일만 실패한 것이다. 초대는 이미 만들어졌으므로
+                          // 다시 누르면 회사가 중복된다 — 링크를 보여 준다.
+                          setInviteLink(d.link ?? null);
+                        }
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : "초대하지 못했습니다.");
+                      }
+                    }}
+                    className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                  >
+                    초대 보내기
+                  </button>
+                  <button onClick={() => setShowInvitePartner(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/60 transition-colors hover:bg-muted">
+                    취소
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

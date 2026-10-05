@@ -280,6 +280,12 @@ export interface InviteInfo {
   companyName: string;
   businessNumber: string;
   invitedByName: string;
+  /** 운영자가 정해 보낸 역할. 비어 있으면 동료 초대라 가입 화면에서 고른다. */
+  roles: string[];
+  /** 운영자가 정해 보낸 파트너 분야. */
+  categories: string[];
+  /** 회사에 사업자등록증이 아직 없다 — 이 사람이 올려야 한다. */
+  needsLicense: boolean;
 }
 
 export async function getInviteByToken(token: string): Promise<InviteInfo | null> {
@@ -287,11 +293,15 @@ export async function getInviteByToken(token: string): Promise<InviteInfo | null
   if (error || !data || (data as unknown[]).length === 0) return null;
   const r = (data as {
     email: string; company_name: string; business_number: string; invited_by_name: string;
+    roles: string[] | null; categories: string[] | null; needs_license: boolean | null;
   }[])[0];
   return {
     email: r.email,
     companyName: r.company_name,
     businessNumber: r.business_number,
     invitedByName: r.invited_by_name,
+    roles: r.roles ?? [],
+    categories: r.categories ?? [],
+    needsLicense: r.needs_license ?? false,
   };
 }

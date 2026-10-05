@@ -51,7 +51,7 @@ function SignupContent() {
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [inviteInfo, setInviteInfo] = useState<{ company: string; businessNumber: string; invitedBy: string } | null>(null);
+  const [inviteInfo, setInviteInfo] = useState<{ company: string; businessNumber: string; invitedBy: string; categories: string[]; needsLicense: boolean } | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [license, setLicense] = useState<File | null>(null);
@@ -94,16 +94,31 @@ function SignupContent() {
           company: invite.companyName,
           businessNumber: invite.businessNumber,
           invitedBy: invite.invitedByName,
+          categories: invite.categories,
+          needsLicense: invite.needsLicense,
         });
+        // 운영자가 역할과 분야를 정해 보낸 초대라면 그대로 넣고 고르지
+        // 못하게 한다. 닫아 둔 분야를 초대장으로만 여는 구조라, 여기서
+        // 다시 고르게 하면 열어 둔 것과 다를 바 없다.
+        const fixed = invite.roles.length > 0;
         setForm((prev) => ({
           ...prev,
           email: invite.email,
           company: invite.companyName,
           businessNumber: invite.businessNumber,
+          ...(fixed && {
+            roles: invite.roles.filter(
+              (r): r is "client" | "partner" => r === "client" || r === "partner"
+            ),
+            partnerCategories: invite.categories as typeof prev.partnerCategories,
+          }),
         }));
       });
     }
   }, [searchParams]);
+
+  // 운영자가 역할과 분야를 정해 보낸 초대. 가입 화면에서 바꿀 수 없다.
+  const fixedByInvite = !!inviteInfo && inviteInfo.categories.length > 0;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -197,7 +212,9 @@ function SignupContent() {
     if (phoneDigits < 10 || phoneDigits > 11) return "연락처를 정확히 입력해주세요.";
     if (!inviteInfo && emailOk !== true) return "이메일 중복확인을 해주세요.";
     if (!inviteInfo && bizOk === false) return "사업자등록번호를 다시 확인해주세요.";
-    if (!inviteInfo && !license) return "사업자등록증을 첨부해주세요.";
+    // 동료 초대라면 회사가 이미 냈다. 운영자가 만든 회사에는 아직 없으므로
+    // 초대로 들어왔더라도 첫 사람이 올려야 한다.
+    if ((!inviteInfo || inviteInfo.needsLicense) && !license) return "사업자등록증을 첨부해주세요.";
     if (!form.agreeTerms) return "이용약관에 동의해주세요.";
     if (!form.agreePrivacy) return "개인정보처리방침에 동의해주세요.";
     return null;
@@ -306,10 +323,16 @@ ${licenseError}
             <label className="block text-sm font-medium text-foreground">
               회원 유형 * <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span>
             </label>
+            {fixedByInvite && (
+              <p className="mt-2 rounded-lg bg-primary/5 px-3 py-2 text-xs text-primary">
+                운영자가 정한 유형과 분야로 초대되었습니다. 이 가입에서는 바꿀 수 없습니다.
+              </p>
+            )}
             <div className="mt-2 grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => toggleRole("client")}
+                disabled={fixedByInvite}
+                onClick={() => !fixedByInvite && toggleRole("client")}
                 className={`rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all ${
                   form.roles.includes("client")
                     ? "border-primary bg-primary/5 text-primary"
@@ -322,7 +345,8 @@ ${licenseError}
               </button>
               <button
                 type="button"
-                onClick={() => toggleRole("partner")}
+                disabled={fixedByInvite}
+                onClick={() => !fixedByInvite && toggleRole("partner")}
                 className={`rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all ${
                   form.roles.includes("partner")
                     ? "border-secondary bg-secondary/5 text-secondary"
@@ -341,7 +365,9 @@ ${licenseError}
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {partnerCategories.map((cat) => {
-                    const isBlocked = cat === "기업보험";
+                    // 기업보험은 스스로 가입하지 못한다 — 운영자 초대로만 들어온다.
+                    // 그 초대로 들어온 경우에는 이미 정해진 값이라 역시 못 바꾼다.
+                    const isBlocked = cat === "기업보험" || fixedByInvite;
                     return (
                     <button
                       key={cat}
@@ -357,11 +383,14 @@ ${licenseError}
                         }));
                         setError("");
                       }}
+                      // 고를 수 없더라도 이미 고른 것은 고른 것처럼 보여야
+                      // 한다. 초대로 분야가 정해진 사람에게 회색으로 보이면
+                      // 자기가 무슨 분야로 들어가는지 알 수 없다.
                       className={`rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
-                        isBlocked
-                          ? "border-border bg-foreground/5 text-foreground/50 cursor-not-allowed"
-                          : form.partnerCategories.includes(cat)
+                        form.partnerCategories.includes(cat)
                           ? "border-secondary bg-secondary/10 text-secondary"
+                          : isBlocked
+                          ? "border-border bg-foreground/5 text-foreground/50 cursor-not-allowed"
                           : "border-border text-foreground/60 hover:border-foreground/30"
                       }`}
                     >
