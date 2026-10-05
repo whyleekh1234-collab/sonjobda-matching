@@ -23,6 +23,8 @@ interface AuthContextType {
     partnerCategories?: PartnerCategory[];
     /** 기관 종류. 병원은 의뢰사로만 가입한다(phase30). */
     orgType?: "company" | "hospital";
+    /** 사업자 등록 형태. 고유번호증은 국세청 조회 대상이 아니다(phase31). */
+    regDocType?: "business" | "unique";
     inviteToken?: string;
     marketingConsent?: boolean; // 선택. 광고성 정보 수신 동의.
     logo?: File | null; // 선택. 가입 직후 올린다.
@@ -200,6 +202,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     partnerCategories?: PartnerCategory[];
     /** 기관 종류. 병원은 의뢰사로만 가입한다(phase30). */
     orgType?: "company" | "hospital";
+    /** 사업자 등록 형태. 고유번호증은 국세청 조회 대상이 아니다(phase31). */
+    regDocType?: "business" | "unique";
     inviteToken?: string;
     marketingConsent?: boolean;
     logo?: File | null;
@@ -224,6 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           partner_categories: data.partnerCategories ?? [],
           // 병원으로 가입하면 트리거가 roles를 {client}로 고정한다.
           org_type: data.orgType ?? "company",
+          reg_doc_type: data.regDocType ?? "business",
           // 이미 등록된 회사에 합류하려면 이 토큰이 있어야 한다.
           // 트리거가 검사하고, 없으면 가입 자체가 취소된다.
           invite_token: data.inviteToken ?? "",

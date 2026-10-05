@@ -48,8 +48,14 @@ function SignupContent() {
     partnerCategories: [] as PartnerCategory[],
     // 기관 종류. 병원을 고르면 역할이 의뢰사 하나로 고정된다(phase30).
     orgType: "company" as "company" | "hospital",
+    // 사업자 등록 형태. 국립대병원·재단·산학협력단은 고유번호를 쓰는데
+    // 그 번호는 국세청 사업자등록 상태조회의 대상이 아니다(phase31).
+    regDocType: "business" as "business" | "unique",
     agreeTerms: false,
     agreePrivacy: false,
+    // 전자상거래법 제20조. 중개자라는 사실을 알리는 데 그치지 않고
+    // 확인받은 기록을 남긴다.
+    agreeBroker: false,
     agreeMarketing: false,
   });
   const [error, setError] = useState("");
@@ -141,6 +147,11 @@ function SignupContent() {
   // 기관 종류. 병원은 일을 맡기는 쪽으로만 들어오므로, 고르면 역할이
   // 의뢰사 하나로 고정되고 파트너 분야 칸이 닫힌다.
   const isHospital = form.orgType === "hospital";
+  // 고유번호는 국세청에 조회할 수 없다. 조회 버튼을 띄우면 누를 때마다
+  // "등록되지 않은 번호"가 나와 가입을 포기하게 된다.
+  const usesUniqueNo = isHospital && form.regDocType === "unique";
+  const regNoLabel = usesUniqueNo ? "고유번호" : "사업자등록번호";
+  const regDocLabel = usesUniqueNo ? "고유번호증" : "사업자등록증";
 
   const toggleRole = (role: "client" | "partner") => {
     if (isHospital) return;
@@ -156,7 +167,7 @@ function SignupContent() {
   const pickHospital = () => {
     setForm((prev) =>
       prev.orgType === "hospital"
-        ? { ...prev, orgType: "company", roles: [] }
+        ? { ...prev, orgType: "company", roles: [], regDocType: "business" }
         : { ...prev, orgType: "hospital", roles: ["client"], partnerCategories: [] }
     );
     setError("");
@@ -227,17 +238,18 @@ function SignupContent() {
     // 회사명: 2자 이상
     if (form.company.trim().length < 2) return "회사명은 2자 이상 입력해주세요.";
     // 사업자등록번호
-    if (form.businessNumber.replace(/\D/g, "").length !== 10) return "사업자등록번호 10자리를 입력해주세요.";
+    if (form.businessNumber.replace(/\D/g, "").length !== 10) return `${regNoLabel} 10자리를 입력해주세요.`;
     // 연락처
     const phoneDigits = form.phone.replace(/\D/g, "").length;
     if (phoneDigits < 10 || phoneDigits > 11) return "연락처를 정확히 입력해주세요.";
     if (!inviteInfo && emailOk !== true) return "이메일 중복확인을 해주세요.";
-    if (!inviteInfo && bizOk === false) return "사업자등록번호를 다시 확인해주세요.";
+    if (!inviteInfo && bizOk === false) return `${regNoLabel}를 다시 확인해주세요.`;
     // 동료 초대라면 회사가 이미 냈다. 운영자가 만든 회사에는 아직 없으므로
     // 초대로 들어왔더라도 첫 사람이 올려야 한다.
-    if ((!inviteInfo || inviteInfo.needsLicense) && !license) return "사업자등록증을 첨부해주세요.";
+    if ((!inviteInfo || inviteInfo.needsLicense) && !license) return `${regDocLabel}을 첨부해주세요.`;
     if (!form.agreeTerms) return "이용약관에 동의해주세요.";
     if (!form.agreePrivacy) return "개인정보처리방침에 동의해주세요.";
+    if (!form.agreeBroker) return "통신판매중개자 고지를 확인해주세요.";
     return null;
   };
 
@@ -284,6 +296,7 @@ function SignupContent() {
         address: form.address,
         roles: form.roles,
         orgType: form.orgType,
+        regDocType: form.regDocType,
         ...(inviteToken && { inviteToken }),
         ...(form.partnerCategories.length > 0 && { partnerCategories: form.partnerCategories }),
         marketingConsent: form.agreeMarketing,
@@ -373,7 +386,7 @@ ${licenseError}
               </button>
               <button
                 type="button"
-                disabled={fixedByInvite}
+                disabled={fixedByInvite || isHospital}
                 onClick={() => !fixedByInvite && toggleRole("partner")}
                 className={`rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all ${
                   form.roles.includes("partner")
@@ -591,10 +604,44 @@ ${licenseError}
               </div>
             </div>
 
-            {/* 사업자등록번호 */}
+            {/* 사업자 등록 형태. 병원·기관만 고른다 — 일반 기업은 사업자등록증
+                뿐이라 물어볼 것이 없다. */}
+            {isHospital && !inviteInfo && (
+              <div>
+                <label className="block text-sm font-medium text-foreground">
+                  사업자 등록 형태 *
+                </label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {([["business", "사업자등록증"], ["unique", "고유번호증"]] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        setForm((prev) => ({ ...prev, regDocType: k, businessNumber: "" }));
+                        setBizOk(null);
+                        setBizNote("");
+                        setError("");
+                      }}
+                      className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
+                        form.regDocType === k
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border text-foreground/60 hover:border-foreground/30"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1 text-xs text-foreground/60">
+                  국립대병원·재단법인·산학협력단은 고유번호증을 쓰는 경우가 많습니다.
+                </p>
+              </div>
+            )}
+
+            {/* 사업자등록번호 또는 고유번호 */}
             <div>
               <label htmlFor="businessNumber" className="block text-sm font-medium text-foreground">
-                사업자등록번호 *
+                {regNoLabel} *
               </label>
               <div className="mt-1 flex gap-2">
                 <input
@@ -609,8 +656,9 @@ ${licenseError}
                   maxLength={12}
                   className={`w-full min-w-0 rounded-lg border border-border px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${inviteInfo ? "bg-muted text-foreground/60" : "bg-background"}`}
                 />
-                {/* 초대로 들어온 경우 회사가 이미 검증돼 있어 다시 묻지 않는다. */}
-                {!inviteInfo && (
+                {/* 초대로 들어온 경우 회사가 이미 검증돼 있어 다시 묻지 않는다.
+                    고유번호는 국세청 조회 대상이 아니라 버튼을 띄우지 않는다. */}
+                {!inviteInfo && !usesUniqueNo && (
                   <button
                     type="button"
                     disabled={bizChecking || form.businessNumber.replace(/[^0-9]/g, "").length !== 10}
@@ -720,7 +768,7 @@ ${licenseError}
             {(!inviteInfo || inviteInfo.needsLicense) && (
               <div>
                 <label className="block text-sm font-medium text-foreground">
-                  사업자등록증 <span className="text-xs font-normal text-primary">*</span>
+                  {regDocLabel} <span className="text-xs font-normal text-primary">*</span>
                 </label>
                 <input type="file" accept={LICENSE_ACCEPT} id="license"
                   onChange={(e) => {
@@ -841,11 +889,21 @@ ${licenseError}
                 아니라는 사실"을 미리 알리도록 한다. 푸터에도 적혀 있지만,
                 계약이 성립하는 지점이 가입 시점이므로 여기서 한 번 더
                 분명히 둔다. 거래 전에 알렸다는 사실이 중요하다. */}
-            <p className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-foreground/55">
-              (주) 손잡다메디칼은 통신판매중개자로서 통신판매의 당사자가 아니며,
-              위수탁사가 제공하는 서비스에 대한 이행, 계약사항 등과 관련한 의무와
-              책임은 거래당사자에게 있습니다.
-            </p>
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+              <input
+                type="checkbox"
+                name="agreeBroker"
+                checked={form.agreeBroker}
+                onChange={handleChange}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
+              />
+              <span className="text-xs leading-relaxed text-foreground/60">
+                (주) 손잡다메디칼은 통신판매중개자로서 통신판매의 당사자가 아니며,
+                위수탁사가 제공하는 서비스에 대한 이행, 계약사항 등과 관련한 의무와
+                책임은 거래당사자에게 있습니다.
+                <span className="ml-1 font-medium text-foreground/80">위 내용을 확인했습니다. (필수)</span>
+              </span>
+            </label>
           </div>
 
           {/* 버튼 바로 위에서 남은 할 일을 알린다. 맨 위 오류 박스까지
@@ -859,7 +917,7 @@ ${licenseError}
             return (
               <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
                 가입하려면 먼저{" "}
-                {[needEmail && "이메일 중복확인", needLicense && "사업자등록증 첨부"]
+                {[needEmail && "이메일 중복확인", needLicense && `${regDocLabel} 첨부`]
                   .filter(Boolean)
                   .join(", ")}
                 이(가) 필요합니다.
