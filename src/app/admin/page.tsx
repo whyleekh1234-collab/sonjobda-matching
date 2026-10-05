@@ -42,7 +42,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import type { MatchingRequest, Notice } from "@/types/auth";
 
-type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports";
+type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports" | "operators";
 const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "notifications", "reports"];
 
 // 펼친 상세의 맨 아래에 붙는 "목록으로" 줄. 긴 상세를 다 읽고 나서 위로
@@ -444,6 +444,9 @@ export default function AdminDashboard() {
     { key: "notices", label: "공지사항" },
     { key: "notifications", label: "알림 관리", badge: adminNotifications.filter((n) => !n.read).length || undefined },
     { key: "reports", label: "분석 리포트" },
+    // 운영자는 회원이 아니다. 회원 목록과 한 화면에 두면 "사용자 관리"가
+    // 두 가지를 뜻하게 된다.
+    { key: "operators", label: "운영자 관리" },
   ];
 
   return (
@@ -576,70 +579,6 @@ export default function AdminDashboard() {
           const reviewedChanges = changeRequests.filter((r) => r.status !== "pending");
           return (
           <div className="mt-8">
-            {/* 운영자 목록.
-                계정을 나눠 쓰면 안 되는 이유는 supabase/phase21에 적어 두었다.
-                요약하면 2단계 인증 증명이 계정당 하나라 서로를 로그아웃시키고,
-                누가 무엇을 했는지 남지 않는다. 사람마다 계정을 따로 둔다. */}
-            <div className="mb-6 rounded-2xl border border-border bg-background p-6">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-base font-bold text-foreground">운영자</h3>
-                <button onClick={() => { setNewAdmin({ name: "", email: "", password: "", mfaEmail: "" }); setShowAddAdmin(true); }} className={ACTION_BTN}>
-                  운영자 추가
-                </button>
-              </div>
-              <p className="mt-1 text-sm leading-relaxed text-foreground/50">
-                운영자 계정은 한 사람이 하나씩 씁니다. 나눠 쓰면 2단계 인증 때문에
-                서로 로그아웃되고, 회원을 제재한 사람이 누구인지 남지 않습니다.
-              </p>
-              <div className="mt-4 space-y-2">
-                {admins.map((a) => (
-                  <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        {a.name}
-                        <span className="ml-2 font-mono text-xs font-normal text-foreground/50">{a.memberCode}</span>
-                        {a.id === adminId && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground/50">나</span>}
-                      </p>
-                      <p className="mt-0.5 text-xs text-foreground/50">{a.email}</p>
-                      <p className="mt-0.5 text-xs text-foreground/60">
-                        인증번호 수신: {a.mfaEmail ?? <span className="text-red-500">미설정 — 로그인 불가</span>}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={async () => {
-                          const next = prompt(`${a.name}님이 인증번호를 받을 주소`, a.mfaEmail ?? "");
-                          if (!next) return;
-                          try { await setMfaEmail(a.id, next); await loadData(); alert("변경했습니다."); }
-                          catch (err) { alert(err instanceof Error ? err.message : "변경하지 못했습니다."); }
-                        }}
-                        className={ACTION_BTN}
-                      >
-                        주소 변경
-                      </button>
-                      {a.id !== adminId && (
-                        <button
-                          onClick={async () => {
-                            if (!confirm(`${a.name}님의 운영자 권한을 해제하시겠습니까?
-
-즉시 관리자 화면에서 로그아웃됩니다.`)) return;
-                            try { await setPlatformAdmin(a.id, false); await loadData(); }
-                            catch (err) { alert(err instanceof Error ? err.message : "해제하지 못했습니다."); }
-                          }}
-                          className={ACTION_BTN}
-                        >
-                          권한 해제
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-xs text-foreground/60">
-                운영자는 의뢰사·파트너사 회원과 다릅니다. 회원가입을 거치지 않고 여기서
-                계정을 바로 만듭니다.
-              </p>
-            </div>
 
             {/* 회사 정보 변경 요청. 대기 건이 없어도 섹션은 보여 준다 —
                 안 보이면 이런 절차가 있는지조차 모른다. */}
@@ -1638,6 +1577,75 @@ export default function AdminDashboard() {
         )}
 
         {/* ════════════ 분석 리포트 ════════════ */}
+        {activeTab === "operators" && (
+          <div className="mt-8">
+            {/* 운영자 목록.
+                계정을 나눠 쓰면 안 되는 이유는 supabase/phase21에 적어 두었다.
+                요약하면 2단계 인증 증명이 계정당 하나라 서로를 로그아웃시키고,
+                누가 무엇을 했는지 남지 않는다. 사람마다 계정을 따로 둔다. */}
+            <div className="mb-6 rounded-2xl border border-border bg-background p-6">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-base font-bold text-foreground">운영자</h3>
+                <button onClick={() => { setNewAdmin({ name: "", email: "", password: "", mfaEmail: "" }); setShowAddAdmin(true); }} className={ACTION_BTN}>
+                  운영자 추가
+                </button>
+              </div>
+              <p className="mt-1 text-sm leading-relaxed text-foreground/50">
+                운영자 계정은 한 사람이 하나씩 씁니다. 나눠 쓰면 2단계 인증 때문에
+                서로 로그아웃되고, 회원을 제재한 사람이 누구인지 남지 않습니다.
+              </p>
+              <div className="mt-4 space-y-2">
+                {admins.map((a) => (
+                  <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {a.name}
+                        <span className="ml-2 font-mono text-xs font-normal text-foreground/50">{a.memberCode}</span>
+                        {a.id === adminId && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground/50">나</span>}
+                      </p>
+                      <p className="mt-0.5 text-xs text-foreground/50">{a.email}</p>
+                      <p className="mt-0.5 text-xs text-foreground/60">
+                        인증번호 수신: {a.mfaEmail ?? <span className="text-red-500">미설정 — 로그인 불가</span>}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          const next = prompt(`${a.name}님이 인증번호를 받을 주소`, a.mfaEmail ?? "");
+                          if (!next) return;
+                          try { await setMfaEmail(a.id, next); await loadData(); alert("변경했습니다."); }
+                          catch (err) { alert(err instanceof Error ? err.message : "변경하지 못했습니다."); }
+                        }}
+                        className={ACTION_BTN}
+                      >
+                        주소 변경
+                      </button>
+                      {a.id !== adminId && (
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`${a.name}님의 운영자 권한을 해제하시겠습니까?
+
+즉시 관리자 화면에서 로그아웃됩니다.`)) return;
+                            try { await setPlatformAdmin(a.id, false); await loadData(); }
+                            catch (err) { alert(err instanceof Error ? err.message : "해제하지 못했습니다."); }
+                          }}
+                          className={ACTION_BTN}
+                        >
+                          권한 해제
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-xs text-foreground/60">
+                운영자는 의뢰사·파트너사 회원과 다릅니다. 회원가입을 거치지 않고 여기서
+                계정을 바로 만듭니다.
+              </p>
+            </div>
+          </div>
+        )}
+
         {activeTab === "reports" && (
           <div className="mt-8">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
