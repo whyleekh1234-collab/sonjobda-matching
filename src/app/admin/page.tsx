@@ -1898,8 +1898,16 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                {partnerBiz.ok !== true && (
+                  <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    보내기 전에 「사업자 확인」을 눌러 국세청 등록 여부를 확인해주세요.
+                    초대로 들어오는 사람은 이 조회를 거치지 않습니다.
+                  </p>
+                )}
+
                 <div className="mt-5 flex gap-2">
                   <button
+                    disabled={partnerBiz.ok !== true}
                     onClick={async () => {
                       try {
                         const res = await fetch("/api/admin/partner-invite", {
@@ -1922,7 +1930,7 @@ export default function AdminDashboard() {
                         alert(err instanceof Error ? err.message : "초대하지 못했습니다.");
                       }
                     }}
-                    className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                    className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     초대 보내기
                   </button>

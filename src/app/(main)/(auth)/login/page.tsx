@@ -30,7 +30,17 @@ export default function LoginPage() {
 
     try {
       await login(form.email, form.password);
-      router.push("/dashboard");
+      // 화면 안에서 주소만 바꾸지 않고 통째로 다시 연다.
+      //
+      // /dashboard는 proxy가 지키는 경로라 서버가 쿠키를 읽어 로그인
+      // 여부를 판단한다. 로그인 직후에는 브라우저 쪽 상태가 먼저 서고
+      // 쿠키가 서버에 닿는 것은 그다음이라, 화면 안에서만 옮기면 서버가
+      // "아직 로그인 전"으로 보고 /login으로 되돌려보낸다. 그러면 머리말에는
+      // 이름이 떠 있는데 본문은 로그인 폼인 상태로 멈춘다.
+      //
+      // 한 번 더 느리지만 로그인은 하루에 몇 번 하는 일이 아니다.
+      window.location.replace("/dashboard");
+      return;
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
     } finally {
