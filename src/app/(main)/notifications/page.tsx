@@ -17,6 +17,7 @@ import {
 } from "@/lib/data/notices";
 import type { Notification, Notice } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
+import { confirmDialog } from "@/components/ui/Confirm";
 
 export default function NotificationsPage() {
   const { user, isLoading } = useAuth();
@@ -105,8 +106,8 @@ export default function NotificationsPage() {
     run(() => editNotificationReply(notifId, replyIdx, text));
   };
 
-  const deleteReply = (notifId: string, replyIdx: number) => {
-    if (!confirm("답변을 삭제하시겠습니까?") || !user) return;
+  const deleteReply = async (notifId: string, replyIdx: number) => {
+    if (!await confirmDialog("답변을 삭제하시겠습니까?") || !user) return;
     run(() => editNotificationReply(notifId, replyIdx, null));
   };
 

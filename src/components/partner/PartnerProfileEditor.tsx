@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "@/components/ui/Toast";
+import { confirmDialog } from "@/components/ui/Confirm";
 import {
   EMPTY_PROFILE, CERTIFICATIONS, EXTRA_FIELDS,
   getPartnerProfile, savePartnerProfile, profileCompleteness, categoryCompleteness,
@@ -170,7 +171,7 @@ export default function PartnerProfileEditor({ companyId, categories }: { compan
                   <span className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground/70">{docName}</span>
                   <button type="button" disabled={docBusy}
                     onClick={async () => {
-                      if (!confirm("회사소개서를 삭제하시겠습니까?")) return;
+                      if (!await confirmDialog("회사소개서를 삭제하시겠습니까?")) return;
                       setDocBusy(true);
                       try { await removeProfileDoc(companyId); setDocName(null); }
                       catch (err) { toast(err instanceof Error ? err.message : "삭제하지 못했습니다."); }

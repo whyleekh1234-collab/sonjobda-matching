@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ToastHost } from "@/components/ui/Toast";
+import { ConfirmHost } from "@/components/ui/Confirm";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -90,6 +91,7 @@ export default function RootLayout({
         {/* 알림을 그리는 자리. 브라우저가 그리던 alert 창은 화면 맨 위에
             붙어, 아래쪽 버튼을 누른 사람의 눈이 따라가지 못했다. */}
         <ToastHost />
+        <ConfirmHost />
       </body>
     </html>
   );

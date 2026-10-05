@@ -23,6 +23,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import { listPartnerProfiles, listProfileDocs, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import { toast } from "@/components/ui/Toast";
+import { confirmDialog } from "@/components/ui/Confirm";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
 
@@ -83,8 +84,8 @@ export default function ClientDashboard() {
     }
   }, []);
 
-  const deleteDraft = () => {
-    if (confirm("임시저장된 견적 요청서를 삭제하시겠습니까?")) {
+  const deleteDraft = async () => {
+    if (await confirmDialog("임시저장된 견적 요청서를 삭제하시겠습니까?")) {
       localStorage.removeItem("sonjobda_request_draft");
       setHasDraft(false);
       setDraftInfo(null);
@@ -102,13 +103,13 @@ export default function ClientDashboard() {
     }
   };
 
-  const withdrawRequest = (id: string) => {
-    if (!confirm("이 견적 요청을 회수하시겠습니까?\n회수된 요청은 파트너사에게 더 이상 노출되지 않습니다.")) return;
+  const withdrawRequest = async (id: string) => {
+    if (!await confirmDialog("이 견적 요청을 회수하시겠습니까?\n회수된 요청은 파트너사에게 더 이상 노출되지 않습니다.")) return;
     runAction(() => withdrawRequestApi(id));
   };
 
-  const extendDeadline = (id: string) => {
-    if (!confirm("마감일을 오늘 기준 5일 연장하시겠습니까?")) return;
+  const extendDeadline = async (id: string) => {
+    if (!await confirmDialog("마감일을 오늘 기준 5일 연장하시겠습니까?")) return;
     runAction(() => extendDeadlineApi(id, 5), "마감일이 연장되었습니다.");
   };
 
@@ -130,16 +131,16 @@ export default function ClientDashboard() {
       on ? "1차 선정했습니다. 파트너사가 조건을 보완해 다시 제출할 수 있습니다."
          : "1차 선정을 해제했습니다.");
 
-  const updateQuoteStatus = (requestId: string, quoteId: string, newStatus: string) => {
+  const updateQuoteStatus = async (requestId: string, quoteId: string, newStatus: string) => {
     if (newStatus === "accepted") {
-      if (!confirm("이 파트너사로 최종 매칭을 확정하시겠습니까?\n\n· 다른 파트너사의 견적은 모두 미결정 처리됩니다.\n· 이 시점부터 양쪽의 회사명·담당자·연락처가 서로 공개됩니다.\n· 되돌릴 수 없습니다.")) return;
+      if (!await confirmDialog("이 파트너사로 최종 매칭을 확정하시겠습니까?\n\n· 다른 파트너사의 견적은 모두 미결정 처리됩니다.\n· 이 시점부터 양쪽의 회사명·담당자·연락처가 서로 공개됩니다.\n· 되돌릴 수 없습니다.")) return;
       // 견적 수락은 여러 행을 한 번에 바꾼다(고른 견적 수락, 나머지 미결정,
       // 의뢰 마감, 매칭번호 부여). 중간에 끊기면 안 되므로 서버가 한
       // 트랜잭션으로 처리한다.
       runAction(() => acceptQuote(quoteId));
       return;
     }
-    if (newStatus === "client_rejected" && !confirm("이 견적을 거절하시겠습니까?")) return;
+    if (newStatus === "client_rejected" && !await confirmDialog("이 견적을 거절하시겠습니까?")) return;
     runAction(() => setQuoteStatusAsClient(quoteId, newStatus as QuoteStatus));
   };
 

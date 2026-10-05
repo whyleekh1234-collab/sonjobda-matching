@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { createRequest, updateRequest, getRequest, getCompanyPartnerCategories } from "@/lib/data/requests";
 import { toast } from "@/components/ui/Toast";
+import { confirmDialog } from "@/components/ui/Confirm";
 
 const serviceTypes = [
   { id: "cro", label: "CRO", desc: "임상시험 수탁기관 매칭", icon: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" },
@@ -1002,7 +1003,7 @@ function NewRequestForm() {
     const confirmMessage = editRequestId
       ? "수정된 견적 요청을 제출하시겠습니까?"
       : "최종 견적을 제출하시겠습니까?\n파트너사가 견적을 확인한 이후에는 회수 및 수정이 불가능합니다.";
-    if (!confirm(confirmMessage)) return;
+    if (!await confirmDialog(confirmMessage)) return;
 
     setIsSubmitting(true);
     try {

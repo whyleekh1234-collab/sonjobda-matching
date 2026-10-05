@@ -42,6 +42,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import type { MatchingRequest, Notice } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
+import { confirmDialog } from "@/components/ui/Confirm";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "notifications" | "reports" | "operators";
 const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "notifications", "reports"];
@@ -453,10 +454,10 @@ export default function AdminDashboard() {
   // 승인은 등록증을 보고 판단하는 일이다. 목록 줄에서 바로 승인할 수 있으니
   // 서류를 안 보고 통과시키기 쉽다. 미제출이면 한 번 되묻는다 — 막지는
   // 않는다. 전화로 먼저 확인했거나 나중에 받기로 한 경우가 있다.
-  const approveUser = (user: UserData): boolean => {
+  const approveUser = async (user: UserData): Promise<boolean> => {
     if (
       !user.licensePath &&
-      !confirm(
+      !await confirmDialog(
         '"' + user.company + '"는 사업자등록증을 제출하지 않았습니다.' + String.fromCharCode(10) +
         "서류 없이 그대로 승인하시겠습니까?"
       )
@@ -522,8 +523,8 @@ export default function AdminDashboard() {
     run(() => editInquiryReply(inqId, replyIdx, text));
   };
 
-  const deleteInqReply = (inqId: string, replyIdx: number) => {
-    if (!confirm("답변을 삭제하시겠습니까?")) return;
+  const deleteInqReply = async (inqId: string, replyIdx: number) => {
+    if (!await confirmDialog("답변을 삭제하시겠습니까?")) return;
     run(() => editInquiryReply(inqId, replyIdx, null));
   };
 
@@ -1026,7 +1027,7 @@ export default function AdminDashboard() {
                             )}
                             <button onClick={() => { setNotificationForm({ userId: user.id, message: "" }); setShowNotificationModal(true); }}
                               className={ROW_BTN}>알림</button>
-                            <button onClick={() => { if (confirm(`"${user.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`) && confirm(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) deleteUser(user.id); }}
+                            <button onClick={async () => { if (await confirmDialog(`"${user.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`, { confirmLabel: "삭제", danger: true }) && await confirmDialog(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`, { confirmLabel: "삭제", danger: true })) deleteUser(user.id); }}
                               className={ROW_BTN}>삭제</button>
                           </div>
                         </td>
@@ -1843,7 +1844,7 @@ export default function AdminDashboard() {
                       {a.id !== adminId && (
                         <button
                           onClick={async () => {
-                            if (!confirm(`${a.name}님의 운영자 권한을 해제하시겠습니까?
+                            if (!await confirmDialog(`${a.name}님의 운영자 권한을 해제하시겠습니까?
 
 즉시 관리자 화면에서 로그아웃됩니다.`)) return;
                             try { await setPlatformAdmin(a.id, false); await loadData(); }
@@ -2403,7 +2404,7 @@ export default function AdminDashboard() {
                 const profileChanged = f.name !== u.name || f.phone !== (u.phone ?? "");
                 const companyChanged = f.company !== u.company || f.businessNumber !== (u.businessNumber ?? "") || f.address !== (u.address ?? "");
                 if (!profileChanged && !companyChanged) { setUserEdit(null); return; }
-                if (companyChanged && !confirm("회사 정보는 같은 회사의 모든 멤버에게 함께 반영됩니다. 저장할까요?")) return;
+                if (companyChanged && !await confirmDialog("회사 정보는 같은 회사의 모든 멤버에게 함께 반영됩니다. 저장할까요?")) return;
                 await run(async () => {
                   if (profileChanged) await updateProfileAsAdmin(u.id, { name: f.name, phone: f.phone });
                   if (companyChanged && u.companyId) await updateCompanyAsAdmin(u.companyId, {
@@ -2546,7 +2547,7 @@ export default function AdminDashboard() {
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
               <div className="flex flex-wrap gap-2">
                 {(selectedUser.status === "pending" || !selectedUser.status) && (
-                  <button onClick={() => { if (approveUser(selectedUser)) setSelectedUser({ ...selectedUser, status: "approved" }); }}
+                  <button onClick={async () => { if (await approveUser(selectedUser)) setSelectedUser({ ...selectedUser, status: "approved" }); }}
                     className={ACTION_BTN}>승인</button>
                 )}
                 {(selectedUser.status === "suspended" || selectedUser.status === "restricted") && (
@@ -2570,9 +2571,9 @@ export default function AdminDashboard() {
                     {selectedUser.allowCategoryEdit ? "파트너사 유형 수정 잠금" : "파트너사 유형 수정 허용"}
                   </button>
                 )}
-                <button onClick={() => {
+                <button onClick={async () => {
                   const next = !selectedUser.isCompanyAdmin;
-                  if (next && !confirm(`"${selectedUser.name}"을 회사관리자로 지정하시겠습니까?\n같은 회사의 기존 관리자는 자동 해제됩니다.`)) return;
+                  if (next && !await confirmDialog(`"${selectedUser.name}"을 회사관리자로 지정하시겠습니까?\n같은 회사의 기존 관리자는 자동 해제됩니다.`)) return;
                   // 같은 회사의 기존 담당자 해제까지 서버가 한 번에 처리한다.
                   run(() => setCompanyAdmin(selectedUser.id, next));
                   setSelectedUser({ ...selectedUser, isCompanyAdmin: next });
@@ -2584,7 +2585,7 @@ export default function AdminDashboard() {
               <div className="flex gap-2">
                 <button onClick={() => { setNotificationForm({ userId: selectedUser.id, message: "" }); setShowNotificationModal(true); setSelectedUser(null); }}
                   className={ACTION_BTN}>알림 발송</button>
-                <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`) && confirm(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) { deleteUser(selectedUser.id); setSelectedUser(null); } }}
+                <button onClick={async () => { if (await confirmDialog(`"${selectedUser.name}" 회원을 삭제하시겠습니까?\n삭제된 회원 정보는 복구할 수 없습니다.`, { confirmLabel: "삭제", danger: true }) && await confirmDialog(`정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`, { confirmLabel: "삭제", danger: true })) { deleteUser(selectedUser.id); setSelectedUser(null); } }}
                   className={ACTION_BTN}>삭제</button>
               </div>
             </div>

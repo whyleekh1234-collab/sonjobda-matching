@@ -27,6 +27,7 @@ import {
 } from "@/lib/data/changeRequests";
 import type { PartnerCategory } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
+import { confirmDialog } from "@/components/ui/Confirm";
 
 const allPartnerCategories: PartnerCategory[] = [
   "CRO", "CMO/CDMO", "SMO", "RA/인허가", "기업보험", "소모품 공급", "원료·첨가제 공급", "마케팅 대행",
@@ -169,8 +170,8 @@ export default function MyPage() {
   };
 
   const deleteAccount = async () => {
-    if (!confirm("회원 탈퇴를 진행하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.")) return;
-    if (!confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    if (!await confirmDialog("회원 탈퇴를 진행하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.")) return;
+    if (!await confirmDialog('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
     const ok = await run(() => deleteMyAccount());
     if (!ok) return;
     await logout();
@@ -189,12 +190,12 @@ export default function MyPage() {
   };
 
   const delegateAdmin = async (memberId: string) => {
-    if (!confirm("이 멤버에게 회사 관리자 권한을 위임하시겠습니까?\n본인의 관리자 권한은 해제됩니다.")) return;
+    if (!await confirmDialog("이 멤버에게 회사 관리자 권한을 위임하시겠습니까?\n본인의 관리자 권한은 해제됩니다.")) return;
     if (await run(() => delegateCompanyAdmin(memberId), "관리자 권한이 위임되었습니다.")) reloadMembers();
   };
 
   const deactivateMember = async (memberId: string) => {
-    if (!confirm("이 멤버를 비활성화하시겠습니까?")) return;
+    if (!await confirmDialog("이 멤버를 비활성화하시겠습니까?")) return;
     if (await run(() => setMemberStatus(memberId, "suspended"), "멤버가 비활성화되었습니다.")) reloadMembers();
   };
 
@@ -552,7 +553,7 @@ export default function MyPage() {
                       </label>
                       {logoPath && (
                         <button type="button" className="text-xs text-foreground/50 hover:text-red-500"
-                          onClick={async () => { if (!confirm("로고를 삭제할까요?")) return; try { await removeCompanyLogo(user.companyId); setLogoPath(null); } catch (er) { toast(er instanceof Error ? er.message : "삭제하지 못했습니다."); } }}>
+                          onClick={async () => { if (!await confirmDialog("로고를 삭제할까요?")) return; try { await removeCompanyLogo(user.companyId); setLogoPath(null); } catch (er) { toast(er instanceof Error ? er.message : "삭제하지 못했습니다."); } }}>
                           삭제
                         </button>
                       )}

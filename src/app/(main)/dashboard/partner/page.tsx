@@ -25,6 +25,7 @@ import type { Notice, Notification } from "@/types/auth";
 import Greeting from "@/components/dashboard/Greeting";
 import CompanyLogo from "@/components/CompanyLogo";
 import { toast } from "@/components/ui/Toast";
+import { confirmDialog } from "@/components/ui/Confirm";
 
 // request/new의 marketingTypeOptions와 같은 키를 쓴다.
 const MARKETING_TYPES = [
@@ -217,7 +218,7 @@ export default function PartnerDashboard() {
       return;
     }
 
-    if (!confirm("최종 견적서를 제출하시겠습니까?\n의뢰사가 견적을 확인한 이후에는 수정 및 회수가 불가능합니다.")) return;
+    if (!await confirmDialog("최종 견적서를 제출하시겠습니까?\n의뢰사가 견적을 확인한 이후에는 수정 및 회수가 불가능합니다.")) return;
 
     setIsSaving(true);
     const uploaded = await uploadAttachmentIfAny(selectedRequest.id);
@@ -234,7 +235,7 @@ export default function PartnerDashboard() {
 
   // 의뢰 거절
   const rejectRequest = async (requestId: string) => {
-    if (!user || !confirm("이 의뢰를 거절하시겠습니까?")) return;
+    if (!user || !await confirmDialog("이 의뢰를 거절하시겠습니까?")) return;
     await writeQuote(requestId, "rejected", { memo: "거절" });
   };
 
@@ -833,7 +834,7 @@ export default function PartnerDashboard() {
                                           setIsEditing(true);
                                         }} className="rounded-lg border border-primary/30 px-4 py-2 text-xs font-medium text-primary hover:bg-primary/5">수정</button>
                                         <button onClick={async () => {
-                                          if (!confirm("제출한 견적서를 회수하시겠습니까?\n회수된 견적은 의뢰사에게 더 이상 노출되지 않습니다.")) return;
+                                          if (!await confirmDialog("제출한 견적서를 회수하시겠습니까?\n회수된 견적은 의뢰사에게 더 이상 노출되지 않습니다.")) return;
                                           try {
                                             await withdrawMyQuote(req.id);
                                             setSelectedRequest(null);
