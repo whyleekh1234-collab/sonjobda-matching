@@ -41,15 +41,17 @@ function FilledCard({ ad }: { ad: ActiveAd }) {
   // 박아 두면 광고주가 규격에 맞춰 로고를 보내와도 살지 않는다.
   const inner = (
     <>
-      <div className="relative flex h-[68px] items-center justify-center rounded-xl border border-border/70 bg-white px-4">
+      {/* 규격(352×88)과 같은 4:1 상자다. 높이를 고정하면 규격대로 보낸
+          그림이 상자보다 작게 들어가 글씨가 안 읽힌다. 비율을 맞춰 두면
+          폭에 꽉 차고, 화면이 넓어질수록 같이 커진다. 비율이 다른 로고는
+          object-contain이 가운데로 맞춰 준다. */}
+      <div className="relative flex aspect-[4/1] w-full items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-white">
         {ad.imageUrl ? (
-          // 로고가 쓸 수 있는 자리. 넉 줄로 설 때 칸이 289px까지 좁아지고
-          // 그 안쪽이 249px이라, 좌우 여백을 빼면 176×44가 한계다.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={ad.imageUrl}
             alt={`${ad.companyName} 로고`}
-            className="max-h-11 max-w-full object-contain"
+            className="h-full w-full object-contain"
           />
         ) : (
           // 로고가 없는 광고도 있다. 자리를 비워 두면 줄이 흔들리므로
