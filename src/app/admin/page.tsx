@@ -457,13 +457,48 @@ export default function AdminDashboard() {
     if (
       !user.licensePath &&
       !confirm(
-        `"${user.company}"는 사업자등록증을 제출하지 않았습니다.\n서류 없이 그대로 승인하시겠습니까?`
+        '"' + user.company + '"는 사업자등록증을 제출하지 않았습니다.' + String.fromCharCode(10) +
+        "서류 없이 그대로 승인하시겠습니까?"
       )
     ) {
       return false;
     }
-    updateUserField(user.id, "status", "approved");
+    // 승인하고 나서 메일로 알린다. 회원은 가입해 놓고 기다리는 중이라,
+    // 사이트에 들어와 봐야 아는 것은 앞뒤가 맞지 않는다.
+    //
+    // 메일이 실패해도 승인은 이미 끝났다. 되돌리지 않고 운영자에게만
+    // 알린다 — 알림 발송으로 따로 알릴 수 있다.
+    run(async () => {
+      await updateUserApi(user.id, { status: "approved" });
+      try {
+        const res = await fetch("/api/admin/approve-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profileId: user.id }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (!d.sent) {
+          toast(
+            `승인은 끝났지만 안내 메일이 나가지 않았습니다. (${d.reason ?? d.message ?? "원인 미상"})`,
+            "error"
+          );
+        }
+      } catch {
+        toast("승인은 끝났지만 안내 메일이 나가지 않았습니다.", "error");
+      }
+    }, "승인했습니다. 안내 메일을 보냈습니다.");
     return true;
+  };
+
+  // 제한·정지는 제재 창으로 보낸다.
+  //
+  // 전에는 "제한하시겠습니까?"만 묻고 조용히 상태를 바꿨다. 당사자는
+  // 무엇 때문에 막혔는지 모른 채 기능이 안 되는 것만 겪고, 운영자 쪽에도
+  // 왜 그랬는지가 남지 않는다. 제재 창은 사유를 받아 이력에 남기고
+  // 당사자에게 통지까지 한 번에 한다(phase24).
+  const openSanction = (user: UserData, kind: SanctionKind) => {
+    setSanctionFor({ user });
+    setSanctionForm({ kind, reason: "" });
   };
 
   const deleteUser = (userId: string) => {
@@ -982,11 +1017,11 @@ export default function AdminDashboard() {
                               <button onClick={() => updateUserField(user.id, "status", "approved")} className={ROW_BTN}>해제</button>
                             )}
                             {(user.status === "approved" || user.status === "pending" || !user.status) && (
-                              <button onClick={() => { if (confirm(`"${user.name}" 회원을 제한하시겠습니까?\n제한된 회원은 조회만 가능합니다.`)) updateUserField(user.id, "status", "restricted"); }}
+                              <button onClick={() => openSanction(user, "restrict")}
                                 className={ROW_BTN}>제한</button>
                             )}
                             {(user.status === "approved" || user.status === "restricted" || user.status === "pending" || !user.status) && (
-                              <button onClick={() => { if (confirm(`"${user.name}" 회원을 정지하시겠습니까?\n정지된 회원은 로그인할 수 없습니다.`)) updateUserField(user.id, "status", "suspended"); }}
+                              <button onClick={() => openSanction(user, "suspend")}
                                 className={ROW_BTN}>정지</button>
                             )}
                             <button onClick={() => { setNotificationForm({ userId: user.id, message: "" }); setShowNotificationModal(true); }}
@@ -2519,11 +2554,11 @@ export default function AdminDashboard() {
                     className={ACTION_BTN}>해제</button>
                 )}
                 {selectedUser.status === "approved" && (
-                  <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 제한하시겠습니까?`)) { updateUserField(selectedUser.id, "status", "restricted"); setSelectedUser({ ...selectedUser, status: "restricted" }); } }}
+                  <button onClick={() => { openSanction(selectedUser, "restrict"); setSelectedUser(null); }}
                     className={ACTION_BTN}>제한</button>
                 )}
                 {(selectedUser.status === "approved" || selectedUser.status === "restricted") && (
-                  <button onClick={() => { if (confirm(`"${selectedUser.name}" 회원을 정지하시겠습니까?`)) { updateUserField(selectedUser.id, "status", "suspended"); setSelectedUser({ ...selectedUser, status: "suspended" }); } }}
+                  <button onClick={() => { openSanction(selectedUser, "suspend"); setSelectedUser(null); }}
                     className={ACTION_BTN}>정지</button>
                 )}
                 {selectedUser.roles?.includes("partner") && (

@@ -79,6 +79,31 @@ export function inviteTemplate(companyName: string, invitedBy: string, link: str
   );
 }
 
+/**
+ * 가입 승인 안내.
+ *
+ * 회원은 가입해 놓고 기다리는 중이다. 승인은 사이트에 들어와 봐야 아는
+ * 일이 아니다 — 승인된 줄 모르고 며칠을 더 기다리거나, 안 됐다고 여겨
+ * 떠난다. 거래 이행에 필요한 안내라 마케팅 수신 동의와 무관하게 보낸다.
+ */
+export function approvedTemplate(companyName: string, link: string) {
+  return layout(
+    "회원가입이 승인되었습니다",
+    `<p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#4c5766">
+       <strong>${companyName}</strong>의 회원가입이 승인되었습니다.
+       지금부터 손잡다매칭을 이용하실 수 있습니다.
+     </p>
+     <p style="margin:0 0 20px">
+       <a href="${link}" style="display:inline-block;padding:12px 24px;background:#2563eb;
+          color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">
+          로그인하기</a>
+     </p>
+     <p style="margin:0;font-size:13px;color:#7b8695">
+       문의가 있으시면 contact@sonjobdamd.com으로 알려주세요.
+     </p>`
+  );
+}
+
 // ── 매칭 알림 ───────────────────────────────────────────────
 //
 // 지금까지는 앱 안에 알림만 띄웠다. 그러면 파트너사가 대시보드에 들어와야
