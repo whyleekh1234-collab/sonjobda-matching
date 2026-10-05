@@ -82,8 +82,11 @@ export default function ServicesSection() {
     window.scrollTo({ top: window.scrollY + rect.top - headerH, behavior: "smooth" });
   }, [activeDetail]);
 
+  // 위쪽 여백만 줄인다. 바로 위 히어로가 이미 아래 여백을 갖고 있어,
+  // 둘이 겹치면 260px 넘게 비어 화면이 끊겨 보인다. 아래쪽은 다음
+  // 구역과의 간격이라 그대로 둔다.
   return (
-    <section id="services" className="bg-surface py-24 sm:py-28">
+    <section id="services" className="bg-surface pb-24 pt-14 sm:pb-28 sm:pt-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* 섹션 헤더 */}
         <div className="text-center">

@@ -93,7 +93,9 @@ export default function HeroSection() {
         </div>
 
         {/* 카테고리별 파트너 찾기 */}
-        <div className="mx-auto mt-16 max-w-5xl pb-24 sm:mt-20">
+        {/* 아래 여백은 조금만 둔다. 다음 구역(서비스)이 이미 위쪽에 넉넉한
+            여백을 갖고 있어, 둘이 겹치면 268px이 비어 화면이 끊겨 보였다. */}
+        <div className="mx-auto mt-16 max-w-5xl pb-10 sm:mt-20 sm:pb-14">
           <div className="mb-8 text-center">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
               Categories
