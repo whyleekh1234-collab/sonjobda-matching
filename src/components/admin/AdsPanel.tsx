@@ -307,7 +307,7 @@ export default function AdsPanel() {
                       <label className={label}>광고주 회사명 *</label>
                       <input className={`${input} mt-1`} value={draft.companyName} maxLength={60}
                         onChange={(e) => setDraft({ ...draft, companyName: e.target.value })}
-                        placeholder="예: 에비드넷" />
+                        placeholder="예: 홍길동회사" />
                     </div>
                     <div>
                       <label className={label}>링크 (클릭하면 열릴 주소)</label>
