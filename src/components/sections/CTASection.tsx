@@ -5,7 +5,7 @@ import { Building2, Handshake, ArrowRight } from "lucide-react";
 
 export default function CTASection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-dark py-16 sm:py-20">
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-dark py-12 sm:py-14">
       {/* 배경: 미묘한 글로우 + 그리드 */}
       <div
         aria-hidden
