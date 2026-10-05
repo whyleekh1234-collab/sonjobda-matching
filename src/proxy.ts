@@ -12,7 +12,10 @@ import { ADMIN_MFA_COOKIE } from "@/lib/adminMfa";
 // 파일명은 proxy.ts다. Next.js 16부터 middleware.ts는 deprecated고 proxy.ts로
 // 이름이 바뀌었다. (https://nextjs.org/docs/messages/middleware-to-proxy)
 
-const PROTECTED_PREFIXES = ["/dashboard", "/mypage"];
+// 로그인한 회원만 쓰는 화면. 데이터는 RLS가 따로 막지만, 막기 전에
+// 화면이 열리면 비어 있는 껍데기를 보여주게 되고 검색엔진도 그것을
+// 주워간다. 들어오기 전에 돌려보낸다.
+const PROTECTED_PREFIXES = ["/dashboard", "/mypage", "/notifications", "/request/new"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
