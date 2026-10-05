@@ -1794,7 +1794,7 @@ export default function AdminDashboard() {
                                   {notif.userId === adminId ? "받은 알림" : "보낸 알림"}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-foreground/70">{notif.message.length > 40 ? notif.message.slice(0, 40) + "..." : notif.message}</td>
+                              <td className="px-4 py-3 text-foreground/70">{(() => { const h = notif.message.split("\n")[0]; return h.length > 40 ? h.slice(0, 40) + "..." : h; })()}</td>
                               <td className="px-4 py-3 text-foreground/70">{targetInfo}</td>
                               <td className="px-4 py-3 text-xs text-foreground/50">{new Date(notif.createdAt).toLocaleString("ko-KR")}</td>
                               <td className="px-4 py-3">
@@ -1808,7 +1808,9 @@ export default function AdminDashboard() {
                                 <td colSpan={5} className="border-b border-border bg-muted/10 px-6 py-5">
                                   <div>
                                     {/* 전체 메시지 */}
-                                    <p className={`text-sm ${notif.read || notif.userId !== "admin" ? "text-foreground/60" : "font-medium text-foreground"}`}>{notif.message}</p>
+                                    {/* 줄바꿈을 살린다. 안 살리면 제목과 본문,
+                                        이의 제기 안내가 한 덩어리로 뭉친다. */}
+                                    <p className={`whitespace-pre-line text-sm leading-relaxed ${notif.read || notif.userId !== "admin" ? "text-foreground/60" : "font-medium text-foreground"}`}>{notif.message}</p>
                                     {/* 답변 이력 */}
                                     {notif.replies?.map((reply, ri) => (
                                       <div key={ri} className="mt-2 rounded-lg bg-muted/50 p-3">

@@ -183,7 +183,22 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                           <p className="mb-0.5 text-xs text-primary/60">손잡다매칭 관리자</p>
-                          <p className={`text-sm ${notif.read ? "text-foreground/60" : "font-medium text-foreground"}`}>{notif.message}</p>
+                          {/* 통지는 "[조치] 사유" 한 줄, 설명, 안내 순서로
+                              줄을 나눠 온다(phase32). 줄바꿈을 살리지 않으면
+                              한 덩어리로 뭉쳐 무엇이 문제인지 안 보인다.
+                              첫 줄은 제목이라 굵게 둔다. */}
+                          {(() => {
+                            const [head, ...rest] = notif.message.split("\n");
+                            const body = rest.join("\n").trim();
+                            return (
+                              <>
+                                <p className={`text-sm font-semibold ${notif.read ? "text-foreground/70" : "text-foreground"}`}>{head}</p>
+                                {body && (
+                                  <p className={`mt-1 whitespace-pre-line text-sm leading-relaxed ${notif.read ? "text-foreground/60" : "text-foreground/80"}`}>{body}</p>
+                                )}
+                              </>
+                            );
+                          })()}
                           <p className="mt-1 text-xs text-foreground/50">{new Date(notif.createdAt).toLocaleString("ko-KR")}</p>
                         </div>
                       </div>
