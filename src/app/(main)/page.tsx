@@ -50,11 +50,14 @@ export default function Home() {
       />
       <HeroSection />
       <ServicesSection />
-      <ProcessSection />
       {/* 광고 자리. 넉 칸 중 빈 칸은 "이 자리를 팝니다"라는 알림이라
-          비어 있어도 구역이 사라지지 않는다. 네 칸이 다 차면 매칭
-          프로세스 위로 올려도 된다 — 그때가 가장 비싼 자리가 된다. */}
+          비어 있어도 구역이 사라지지 않는다.
+
+          프로세스 위에 둔다. 아래에서는 눈에 띄지 않았다. 다만 바로 위의
+          서비스 소개와 배경색이 같아서, 위아래 실선으로 구역을 끊어
+          주지 않으면 서비스 소개의 꼬리처럼 읽힌다. */}
       <AdsSection />
+      <ProcessSection />
       <CTASection />
     </>
   );

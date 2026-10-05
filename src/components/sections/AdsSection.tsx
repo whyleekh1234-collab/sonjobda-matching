@@ -125,7 +125,7 @@ export default function AdsSection() {
   );
 
   return (
-    <section id="ads" className="bg-surface py-12 sm:py-14">
+    <section id="ads" className="border-y border-border bg-surface py-12 sm:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
           <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
