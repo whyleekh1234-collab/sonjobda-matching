@@ -66,14 +66,14 @@ function FilledCard({ ad }: { ad: ActiveAd }) {
       {/* 설명 문단은 두지 않는다. 카드가 200px인데 거기에 두 줄을 더
           넣으면 정작 한 줄 문구가 묻힌다. 할 말이 더 있으면 상세 화면에
           적는다. */}
-      <p className="mt-3.5 break-keep text-[15px] font-semibold leading-snug text-foreground">
+      <p className="mt-3.5 break-keep px-1 text-[17px] font-bold leading-snug tracking-tight text-foreground">
         {ad.headline}
       </p>
     </>
   );
 
   const shell =
-    "flex min-h-[160px] flex-col rounded-2xl border border-border bg-surface p-3.5 text-left transition-shadow";
+    "flex min-h-[160px] flex-col rounded-2xl border border-border bg-surface p-3.5 text-center transition-shadow";
 
   // 상세 화면을 받아 둔 광고는 우리 쪽 화면으로, 아니면 광고주 사이트로.
   // 광고주가 무엇을 주느냐로 갈린다 — 운영자가 따로 고를 것이 없다.
