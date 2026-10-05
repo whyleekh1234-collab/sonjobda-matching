@@ -181,6 +181,24 @@ export default function AdsPanel() {
           항상 붙습니다 — 대가를 받은 노출을 광고가 아닌 것처럼 보이게 하는 것은
           표시광고법 위반이라 끌 수 없게 두었습니다.
         </p>
+
+        {/* 광고주에게 그대로 전달할 수 있게 한 자리에 모아 둔다. 매번
+            "사이즈가 뭐죠"를 되묻게 되는 항목들이다. */}
+        <div className="mt-4 rounded-xl bg-surface-subtle p-4">
+          <p className="text-xs font-semibold text-foreground/70">광고주에게 받을 것</p>
+          <ul className="mt-2 space-y-1 text-[13px] leading-relaxed text-foreground/60">
+            <li>· 로고 — 가로형 352×88px 권장, PNG·JPG·SVG, 2MB 이내</li>
+            <li>· 한 줄 문구 60자 이내 · 설명 120자 이내</li>
+            <li>· 연결할 주소 (http:// 또는 https://)</li>
+            <li>· 게재 시작일·종료일</li>
+          </ul>
+          <p className="mt-3 text-[13px] leading-relaxed text-foreground/60">
+            <b className="font-semibold text-foreground/75">동영상은 올릴 수 없습니다.</b>{" "}
+            그림 파일만 받도록 막아 두었습니다. 움직이는 그림(애니메이션 GIF·WebP)도
+            올리지 마세요 — 파일 형식만으로는 완전히 걸러지지 않으니, 저장 전에 왼쪽
+            미리보기로 움직이지 않는지 확인해주세요.
+          </p>
+        </div>
       </div>
 
       <div className="mt-6 space-y-4">
@@ -303,8 +321,9 @@ export default function AdsPanel() {
                           onChange={(e) => pickImage(slot, e.target.files?.[0])}
                           className="w-full text-xs text-foreground/60" />
                       </div>
-                      <p className="mt-1 text-[11px] text-foreground/50">
-                        2MB 이내. 없으면 회사명이 글자로 나갑니다.
+                      <p className="mt-1 text-[11px] leading-relaxed text-foreground/50">
+                        가로형 <b className="font-semibold">352×88px</b> 권장 (화면 표시 176×44px).
+                        PNG·JPG·SVG, 2MB 이내. 없으면 회사명이 글자로 나갑니다.
                       </p>
                     </div>
                   </div>

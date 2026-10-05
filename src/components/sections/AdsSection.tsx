@@ -43,10 +43,13 @@ function FilledCard({ ad }: { ad: ActiveAd }) {
             회사명을 크게 앉힌다. */}
         {ad.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
+          // 넉 줄로 설 때 칸이 292px까지 좁아진다. 그 안쪽(252px)의 70%,
+          // 높이 44px이 로고가 쓸 수 있는 전부다. 더 키우면 한 줄 문구가
+          // 밀려나고, 광고 카드에서 가장 중요한 건 문구다.
           <img
             src={ad.imageUrl}
             alt={`${ad.companyName} 로고`}
-            className="h-9 max-w-[60%] object-contain object-left"
+            className="h-11 max-w-[70%] object-contain object-left"
           />
         ) : (
           <span className="truncate text-sm font-bold text-foreground">{ad.companyName}</span>
@@ -138,7 +141,7 @@ export default function AdsSection() {
           </p>
         </div>
 
-        <div className="mt-6 grid min-h-[172px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid min-h-[172px] grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {slots.map((ad, i) =>
             ad ? (
               <FilledCard key={ad.id} ad={ad} />
