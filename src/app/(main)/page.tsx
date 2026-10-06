@@ -20,6 +20,7 @@ const organizationJsonLd = {
   url: "https://www.sonjobdamd.com",
   logo: "https://www.sonjobdamd.com/logo-mark.png",
   email: "contact@sonjobdamd.com",
+  telephone: "+82-10-8064-6954",
   address: {
     "@type": "PostalAddress",
     streetAddress: "별내3로 322, 4층 403호",

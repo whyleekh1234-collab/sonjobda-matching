@@ -15,11 +15,8 @@ import EmailCollectionNotice from "./EmailCollectionNotice";
 //   const MAIL_ORDER_REG_NO = "2026-경기남양주-0000";
 
 // 전화번호는 전자상거래법 제10조의 필수 표시사항이고 이메일로 대신할 수
-// 없다. 다만 아직 대표번호가 없어 "번호 입력 예정"이라고만 띄우고 있었다.
-// 없는 번호를 예고하는 것은 표시도 아니고 안내도 아니라 지웠다. 번호를
-// 받으면 아래 상수를 되살려 Contact 영역과 사업자정보에 한 줄씩 넣는다.
-//
-//   const CONTACT_PHONE = "02-0000-0000";
+// 없다. 한동안 번호가 없어 비워 두었다가 2026-10-06에 받아 넣었다.
+const CONTACT_PHONE = "010-8064-6954";
 //
 // 개인정보 보호책임자는 개인정보 보호법 제31조가 공개를 요구한다. 푸터에
 // 함께 적는 것이 관례지만, 공개 의무는 처리방침으로 충족된다 — 이 사이트는
@@ -105,6 +102,12 @@ export default function Footer() {
               >
                 contact@sonjobdamd.com
               </a>
+              <a
+                href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
+                className="mt-1 block text-sm font-medium text-foreground/85 transition-colors hover:text-primary"
+              >
+                {CONTACT_PHONE}
+              </a>
               <p className="mt-1 text-xs text-foreground/75">
                 평일 09:00 – 18:00 (주말 · 공휴일 휴무)
               </p>
@@ -147,6 +150,10 @@ export default function Footer() {
               <dd className="text-foreground/70">
                 경기도 남양주시 별내3로 322, 4층 403호 (별내동, 스카이프라자)
               </dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt>대표전화</dt>
+              <dd className="text-foreground/70">{CONTACT_PHONE}</dd>
             </div>
           </dl>
 
