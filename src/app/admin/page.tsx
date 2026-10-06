@@ -637,6 +637,38 @@ export default function AdminDashboard() {
   const completedMatchings = allRequests.filter((r) => r.status === "completed").length;
   const newInquiries = inquiries.filter((i) => i.status === "new").length;
 
+  // ─── 알림을 대화 단위로 묶는다 ───
+  //
+  // 한 번 주고받은 대화가 두 줄로 보였다. 제재를 보낸 알림 하나와, 그에
+  // 대한 답변이 왔다고 알리는 알림 하나. 번호가 달라 운영자 눈에는 서로
+  // 남인 것처럼 보인다.
+  //
+  // 답변 통지 행을 없애지는 않는다. 읽음 표시와 안 읽은 개수가 그 행에
+  // 달려 있다. 대신 reply_to_id(38단계)로 원본에 매달아 화면에서만 묶는다.
+  //
+  // 최근 것이 위로 오되, 기준은 "대화가 시작된 때"가 아니라 "마지막으로
+  // 오간 때"다. 시작한 때로 세우면 방금 답변이 온 대화가 아래에 묻힌다.
+  const notifThreads = React.useMemo(() => {
+    const byRoot = new Map<string, AdminNotification[]>();
+    for (const n of adminNotifications) {
+      if (!n.replyToId) continue;
+      const list = byRoot.get(n.replyToId) ?? [];
+      list.push(n);
+      byRoot.set(n.replyToId, list);
+    }
+    const asc = (a: AdminNotification, b: AdminNotification) =>
+      a.createdAt.localeCompare(b.createdAt);
+
+    return adminNotifications
+      .filter((n) => !n.replyToId)
+      .map((root) => ({ root, children: (byRoot.get(root.id) ?? []).sort(asc) }))
+      .sort((a, b) => {
+        const at = a.children.at(-1)?.createdAt ?? a.root.createdAt;
+        const bt = b.children.at(-1)?.createdAt ?? b.root.createdAt;
+        return bt.localeCompare(at);
+      });
+  }, [adminNotifications]);
+
   // 전체 현황에 쓰는 셈.
   //
   // 운영자가 아침에 여는 화면이다. "숫자가 몇인가"보다 "내가 손대야 할
@@ -1765,7 +1797,7 @@ export default function AdminDashboard() {
         {activeTab === "notifications" && (
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-foreground/50">전체 알림 {adminNotifications.length}건 (읽지 않은 알림 {adminNotifications.filter((n) => n.userId === adminId && !n.read).length}건)</p>
+              <p className="text-sm text-foreground/50">전체 {notifThreads.length}건 (읽지 않은 알림 {adminNotifications.filter((n) => n.userId === adminId && !n.read).length}건)</p>
               {adminNotifications.filter((n) => n.userId === adminId && !n.read).length > 0 && (
                 <button onClick={() => run(() => markAllMyNotificationsRead())}
                   className="text-xs font-medium text-primary hover:underline">모두 읽음 처리</button>
@@ -1791,32 +1823,55 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[...adminNotifications].reverse().map((notif) => {
+                      {notifThreads.map(({ root: notif, children }) => {
                         // 보낸 사람/받는 사람이 컬럼으로 있어 메시지 본문을
                         // 파싱할 필요가 없다.
                         const counterpartId = notif.userId === adminId ? notif.fromUserId : notif.userId;
                         const counterpart = users.find((u) => u.id === counterpartId);
                         const targetInfo = counterpart ? `${counterpart.name} (${counterpart.company})` : "-";
+
+                        // 대화 전체에서 내가 아직 안 읽은 것. 답변 통지는 따로
+                        // 줄을 차지하지 않으므로 여기서 같이 센다.
+                        const mine = [notif, ...children].filter((n) => n.userId === adminId);
+                        const unread = mine.filter((n) => !n.read);
+                        // 답변은 원본 안에도 쌓이고(replies) 통지 행으로도 생긴다.
+                        // 많은 쪽을 센다 — 예전 것은 한쪽만 있다.
+                        const replyCount = Math.max(notif.replies?.length ?? 0, children.length);
+                        // 답변을 달려면 내 알림이어야 한다(서버가 막는다).
+                        // 대화에서 내가 가진 가장 최근 것에 단다.
+                        const replyTarget = mine[mine.length - 1];
+                        const lastAt = children.length > 0 ? children[children.length - 1].createdAt : notif.createdAt;
                         return (
                           <React.Fragment key={notif.id}>
                             <tr onClick={() => {
-                              if (notif.userId === adminId && !notif.read) {
-                                run(() => markNotificationReadApi(notif.id));
+                              // 답변 통지가 줄로 보이지 않으니 따로 눌러 지울
+                              // 방법이 없다. 대화를 열 때 함께 읽음으로 바꾼다.
+                              if (unread.length > 0) {
+                                run(() => Promise.all(unread.map((n) => markNotificationReadApi(n.id))).then(() => {}));
                               }
                               setSelectedRequestDetail(selectedRequestDetail === `notif-${notif.id}` ? null : `notif-${notif.id}`);
-                            }} className={`cursor-pointer border-b border-border last:border-0 hover:bg-muted/30 ${notif.userId === adminId && !notif.read ? "bg-blue-50/50" : ""}`}>
+                            }} className={`cursor-pointer border-b border-border last:border-0 hover:bg-muted/30 ${unread.length > 0 ? "bg-blue-50/50" : ""}`}>
                               <td className="px-4 py-3 text-xs font-mono text-foreground/50">{notif.notifCode || "-"}</td>
                               <td className="px-4 py-3">
                                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${notif.userId === adminId ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
                                   {notif.userId === adminId ? "받은 알림" : "보낸 알림"}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-foreground/70">{(() => { const h = notif.message.split("\n")[0]; return h.length > 40 ? h.slice(0, 40) + "..." : h; })()}</td>
+                              <td className="px-4 py-3 text-foreground/70">
+                                {(() => { const h = notif.message.split("\n")[0]; return h.length > 40 ? h.slice(0, 40) + "..." : h; })()}
+                                {replyCount > 0 && (
+                                  <span className="ml-2 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">
+                                    답변 {replyCount}
+                                  </span>
+                                )}
+                              </td>
                               <td className="px-4 py-3 text-foreground/70">{targetInfo}</td>
-                              <td className="px-4 py-3 text-xs text-foreground/50">{new Date(notif.createdAt).toLocaleString("ko-KR")}</td>
+                              {/* 마지막으로 오간 때를 보여준다. 시작한 때를 보여주면
+                                  방금 답변이 온 대화가 아래에 묻힌다. */}
+                              <td className="px-4 py-3 text-xs text-foreground/50">{new Date(lastAt).toLocaleString("ko-KR")}</td>
                               <td className="px-4 py-3">
-                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${notif.read || notif.userId !== "admin" ? "bg-gray-100 text-gray-500" : "bg-blue-100 text-blue-700"}`}>
-                                  {notif.read || notif.userId !== "admin" ? "읽음" : "안읽음"}
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${unread.length > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                                  {unread.length > 0 ? "안읽음" : "읽음"}
                                 </span>
                               </td>
                             </tr>
@@ -1836,10 +1891,10 @@ export default function AdminDashboard() {
                                       </div>
                                     ))}
                                     {/* 관리자 답변 입력 */}
-                                    {notif.userId === adminId && (
+                                    {replyTarget && (
                                       <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
-                                        <input type="text" value={adminReplyingTo === notif.id ? adminReplyText : ""} onChange={(e) => { setAdminReplyingTo(notif.id); setAdminReplyText(e.target.value); }}
-                                          onFocus={() => { if (adminReplyingTo !== notif.id) { setAdminReplyingTo(notif.id); setAdminReplyText(""); } }}
+                                        <input type="text" value={adminReplyingTo === replyTarget.id ? adminReplyText : ""} onChange={(e) => { setAdminReplyingTo(replyTarget.id); setAdminReplyText(e.target.value); }}
+                                          onFocus={() => { if (adminReplyingTo !== replyTarget.id) { setAdminReplyingTo(replyTarget.id); setAdminReplyText(""); } }}
                                           placeholder="답변을 입력하세요"
                                           onKeyDown={(e) => {
                                             if (e.key === "Enter" && adminReplyText.trim()) {
@@ -1847,16 +1902,16 @@ export default function AdminDashboard() {
                                               setAdminReplyingTo(null);
                                               setAdminReplyText("");
                                               // 원본에 답변을 남기고, 보낸 사람에게 새 알림이 간다.
-                                              run(() => replyNotification(notif.id, text));
+                                              run(() => replyNotification(replyTarget.id, text));
                                             }
                                           }}
                                           className="flex-1 rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                                         <button onClick={() => {
-                                          if (!adminReplyText.trim() || adminReplyingTo !== notif.id) return;
+                                          if (!adminReplyText.trim() || adminReplyingTo !== replyTarget.id) return;
                                           const text = adminReplyText;
                                           setAdminReplyingTo(null);
                                           setAdminReplyText("");
-                                          run(() => replyNotification(notif.id, text));
+                                          run(() => replyNotification(replyTarget.id, text));
                                         }}
                                           className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary-dark">전송</button>
                                       </div>

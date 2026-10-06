@@ -247,18 +247,34 @@ export interface AdminNotification {
   read: boolean;
   createdAt: string;
   replies?: { from: string; company: string; message: string; createdAt: string }[];
+  /** 답변이 왔다는 통지면 원본 알림의 id. 원본이면 비어 있다(38단계). */
+  replyToId?: string;
 }
 
+// reply_to_id는 38단계에서 생긴다. SQL보다 코드가 먼저 올라가면 이 조회가
+// 통째로 실패해서 알림 탭이 비어 버린다 — 전에 client_org_type으로 같은
+// 일을 겪었다. 컬럼이 없으면 빼고 한 번 더 묻는다.
+const NOTIF_BASE = "id, notif_code, profile_id, from_profile_id, message, read, replies, created_at";
+let notifHasThread = true;
+
 export async function listAllNotifications(): Promise<AdminNotification[]> {
-  const { data, error } = await createClient()
-    .from("notifications")
-    .select("id, notif_code, profile_id, from_profile_id, message, read, replies, created_at")
-    .order("created_at", { ascending: false });
+  const run = () =>
+    createClient()
+      .from("notifications")
+      .select(notifHasThread ? `${NOTIF_BASE}, reply_to_id` : NOTIF_BASE)
+      .order("created_at", { ascending: false });
+
+  let { data, error } = await run();
+  if (error?.code === "42703" && (error.message ?? "").includes("reply_to_id")) {
+    notifHasThread = false;
+    ({ data, error } = await run());
+  }
 
   if (error) throw new Error(error.message);
-  return ((data ?? []) as {
+  return ((data ?? []) as unknown as {
     id: string; notif_code: string | null; profile_id: string; from_profile_id: string | null;
-    message: string; read: boolean; replies: AdminNotification["replies"]; created_at: string;
+    message: string; read: boolean; replies: AdminNotification["replies"];
+    reply_to_id?: string | null; created_at: string;
   }[]).map((r) => ({
     id: r.id,
     notifCode: r.notif_code ?? undefined,
@@ -267,6 +283,7 @@ export async function listAllNotifications(): Promise<AdminNotification[]> {
     message: r.message,
     read: r.read,
     replies: r.replies ?? [],
+    replyToId: r.reply_to_id ?? undefined,
     createdAt: r.created_at,
   }));
 }
