@@ -448,6 +448,38 @@ export default function AdminDashboard() {
     return () => window.removeEventListener("focus", loadData);
   }, [loadData]);
 
+  // ─── 알림을 대화 단위로 묶는다 ───
+  //
+  // 한 번 주고받은 대화가 두 줄로 보였다. 제재를 보낸 알림 하나와, 그에
+  // 대한 답변이 왔다고 알리는 알림 하나. 번호가 달라 운영자 눈에는 서로
+  // 남인 것처럼 보인다.
+  //
+  // 답변 통지 행을 없애지는 않는다. 읽음 표시와 안 읽은 개수가 그 행에
+  // 달려 있다. 대신 reply_to_id(38단계)로 원본에 매달아 화면에서만 묶는다.
+  //
+  // 최근 것이 위로 오되, 기준은 "대화가 시작된 때"가 아니라 "마지막으로
+  // 오간 때"다. 시작한 때로 세우면 방금 답변이 온 대화가 아래에 묻힌다.
+  const notifThreads = React.useMemo(() => {
+    const byRoot = new Map<string, AdminNotification[]>();
+    for (const n of adminNotifications) {
+      if (!n.replyToId) continue;
+      const list = byRoot.get(n.replyToId) ?? [];
+      list.push(n);
+      byRoot.set(n.replyToId, list);
+    }
+    const asc = (a: AdminNotification, b: AdminNotification) =>
+      a.createdAt.localeCompare(b.createdAt);
+
+    return adminNotifications
+      .filter((n) => !n.replyToId)
+      .map((root) => ({ root, children: (byRoot.get(root.id) ?? []).sort(asc) }))
+      .sort((a, b) => {
+        const at = a.children.at(-1)?.createdAt ?? a.root.createdAt;
+        const bt = b.children.at(-1)?.createdAt ?? b.root.createdAt;
+        return bt.localeCompare(at);
+      });
+  }, [adminNotifications]);
+
   if (isLoading || !isAdmin) {
     return <div className="flex min-h-screen items-center justify-center"><div className="text-foreground/50">로딩 중...</div></div>;
   }
@@ -636,38 +668,6 @@ export default function AdminDashboard() {
   const activeMatchings = allRequests.filter((r) => r.status === "pending" || r.status === "matched").length;
   const completedMatchings = allRequests.filter((r) => r.status === "completed").length;
   const newInquiries = inquiries.filter((i) => i.status === "new").length;
-
-  // ─── 알림을 대화 단위로 묶는다 ───
-  //
-  // 한 번 주고받은 대화가 두 줄로 보였다. 제재를 보낸 알림 하나와, 그에
-  // 대한 답변이 왔다고 알리는 알림 하나. 번호가 달라 운영자 눈에는 서로
-  // 남인 것처럼 보인다.
-  //
-  // 답변 통지 행을 없애지는 않는다. 읽음 표시와 안 읽은 개수가 그 행에
-  // 달려 있다. 대신 reply_to_id(38단계)로 원본에 매달아 화면에서만 묶는다.
-  //
-  // 최근 것이 위로 오되, 기준은 "대화가 시작된 때"가 아니라 "마지막으로
-  // 오간 때"다. 시작한 때로 세우면 방금 답변이 온 대화가 아래에 묻힌다.
-  const notifThreads = React.useMemo(() => {
-    const byRoot = new Map<string, AdminNotification[]>();
-    for (const n of adminNotifications) {
-      if (!n.replyToId) continue;
-      const list = byRoot.get(n.replyToId) ?? [];
-      list.push(n);
-      byRoot.set(n.replyToId, list);
-    }
-    const asc = (a: AdminNotification, b: AdminNotification) =>
-      a.createdAt.localeCompare(b.createdAt);
-
-    return adminNotifications
-      .filter((n) => !n.replyToId)
-      .map((root) => ({ root, children: (byRoot.get(root.id) ?? []).sort(asc) }))
-      .sort((a, b) => {
-        const at = a.children.at(-1)?.createdAt ?? a.root.createdAt;
-        const bt = b.children.at(-1)?.createdAt ?? b.root.createdAt;
-        return bt.localeCompare(at);
-      });
-  }, [adminNotifications]);
 
   // 전체 현황에 쓰는 셈.
   //
