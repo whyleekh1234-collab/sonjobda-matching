@@ -53,6 +53,7 @@ const linkColumns = [
     heading: "고객지원",
     links: [
       { label: "문의하기", href: "/inquiry" },
+      { label: "광고 안내", href: "/advertise" },
       { label: "공지 · 알림", href: "/notifications" },
       { label: "대시보드", href: "/dashboard" },
     ],
@@ -98,13 +99,13 @@ export default function Footer() {
               </p>
               <a
                 href="mailto:contact@sonjobdamd.com"
-                className="mt-1.5 inline-block text-sm font-medium text-foreground/85 transition-colors hover:text-primary"
+                className="mt-1.5 inline-block text-sm text-foreground/70 transition-colors hover:text-primary"
               >
                 contact@sonjobdamd.com
               </a>
               <a
                 href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
-                className="mt-1 block text-sm font-medium text-foreground/85 transition-colors hover:text-primary"
+                className="mt-1 block text-sm text-foreground/70 transition-colors hover:text-primary"
               >
                 {CONTACT_PHONE}
               </a>
