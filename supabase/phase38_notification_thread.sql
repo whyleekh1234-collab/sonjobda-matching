@@ -94,9 +94,10 @@ grant execute on function public.reply_to_notification to authenticated;
 -- 틀리게 이어질 수 있지만 그 피해는 "화면에서 엉뚱하게 묶여 보이는 것"이고,
 -- 알림 내용이나 읽음 상태는 건드리지 않는다. 이미 이어진 것은 두고,
 -- 못 찾으면 그대로 혼자 남는다.
+-- from lateral로는 쓸 수 없다. UPDATE의 FROM 절은 대상 행(r)을 참조하지
+-- 못한다(42P10). set 안의 상관 서브쿼리는 참조할 수 있다.
 update notifications r
-set reply_to_id = p.id
-from lateral (
+set reply_to_id = (
   select n.id
   from notifications n
   where n.profile_id = r.from_profile_id
@@ -105,7 +106,7 @@ from lateral (
     and n.id <> r.id
   order by n.created_at desc
   limit 1
-) p
+)
 where r.reply_to_id is null
   and r.from_profile_id is not null
   and r.message like '[답변]%';
