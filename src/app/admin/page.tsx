@@ -754,9 +754,21 @@ export default function AdminDashboard() {
             <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground/50">관리자</span>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowNotificationModal(true)} className="relative rounded-lg p-2 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground">
+<button
+              type="button"
+              onClick={() => { setActiveTab("notifications"); window.scrollTo({ top: 0 }); }}
+              title={unreadForMe > 0 ? `읽지 않은 알림 ${unreadForMe}건` : "알림 관리"}
+              aria-label={unreadForMe > 0 ? `읽지 않은 알림 ${unreadForMe}건` : "알림 관리"}
+              className="relative rounded-lg p-2 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+            >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-              {(pendingUsers > 0 || newInquiries > 0) && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />}
+              {/* 점이 아니라 숫자다. 점은 "뭔가 있다"까지만 알려주고, 몇 건인지
+                  보려면 어차피 들어가 봐야 한다. */}
+              {unreadForMe > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white">
+                  {unreadForMe > 99 ? "99+" : unreadForMe}
+                </span>
+              )}
             </button>
             {/* 관리자에게는 마이페이지가 없어 비밀번호를 바꾸려면 Supabase
                 대시보드까지 들어가야 했다. 쓰는 사람이 못 바꾸는 비밀번호는
@@ -1798,10 +1810,19 @@ export default function AdminDashboard() {
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-foreground/50">전체 {notifThreads.length}건 (읽지 않은 알림 {adminNotifications.filter((n) => n.userId === adminId && !n.read).length}건)</p>
-              {adminNotifications.filter((n) => n.userId === adminId && !n.read).length > 0 && (
-                <button onClick={() => run(() => markAllMyNotificationsRead())}
-                  className="text-xs font-medium text-primary hover:underline">모두 읽음 처리</button>
-              )}
+              <div className="flex items-center gap-3">
+                {adminNotifications.filter((n) => n.userId === adminId && !n.read).length > 0 && (
+                  <button onClick={() => run(() => markAllMyNotificationsRead())}
+                    className="text-xs font-medium text-primary hover:underline">모두 읽음 처리</button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setNotificationForm({ userId: "", message: "" }); setShowNotificationModal(true); }}
+                  className="rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-dark"
+                >
+                  알림 발송
+                </button>
+              </div>
             </div>
             {adminNotifications.length === 0 ? (
               <div className="rounded-2xl border border-border bg-background p-12 text-center">
