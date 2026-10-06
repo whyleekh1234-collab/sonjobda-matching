@@ -20,13 +20,9 @@ import { listActiveAds, recordAdClick, AD_SLOTS, type ActiveAd } from "@/lib/dat
 // 링크를 그냥 두면 검색엔진이 링크를 사고판 것으로 보고 우리 사이트까지
 // 깎는다. sponsored가 바로 이 경우를 위한 표시다.
 
-const CONTACT = "contact@sonjobdamd.com";
-const INQUIRY_HREF =
-  `mailto:${CONTACT}` +
-  `?subject=${encodeURIComponent("[광고 문의] 손잡다매칭 메인 화면 광고")}` +
-  `&body=${encodeURIComponent(
-    "회사명:\n담당자:\n연락처:\n희망 게재 기간:\n문의 내용:\n",
-  )}`;
+// 빈 칸을 누르면 안내 화면으로 보낸다. 바로 메일 창을 띄우면 규격도
+// 게재 기준도 모른 채로 빈 메일 앞에 앉게 된다.
+const INQUIRY_HREF = "/advertise";
 
 function AdBadge() {
   return (
@@ -107,7 +103,7 @@ function FilledCard({ ad }: { ad: ActiveAd }) {
 // 읽힌다. 한 번만 제대로 말하는 편이 광고주를 더 부른다.
 function EmptyCard({ first }: { first: boolean }) {
   return (
-    <a
+    <Link
       href={INQUIRY_HREF}
       className={`${first ? "flex" : "hidden sm:flex"} min-h-[150px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface-subtle p-5 text-center transition-colors hover:border-primary/40 hover:bg-primary/[0.03] sm:min-h-[160px]`}
     >
@@ -115,8 +111,8 @@ function EmptyCard({ first }: { first: boolean }) {
       <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
         2주 무료
       </span>
-      <span className="text-xs text-foreground/50">광고 문의하기</span>
-    </a>
+      <span className="text-xs text-foreground/50">광고 안내 보기</span>
+    </Link>
   );
 }
 
