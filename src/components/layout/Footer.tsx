@@ -16,7 +16,7 @@ import EmailCollectionNotice from "./EmailCollectionNotice";
 
 // 전화번호는 전자상거래법 제10조의 필수 표시사항이고 이메일로 대신할 수
 // 없다. 한동안 번호가 없어 비워 두었다가 2026-10-06에 받아 넣었다.
-const CONTACT_PHONE = "010-8064-6954";
+const CONTACT_PHONE = "070-8064-6954";
 //
 // 개인정보 보호책임자는 개인정보 보호법 제31조가 공개를 요구한다. 푸터에
 // 함께 적는 것이 관례지만, 공개 의무는 처리방침으로 충족된다 — 이 사이트는
