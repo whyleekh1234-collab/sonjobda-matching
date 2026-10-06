@@ -2,13 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-type Method = "phone" | "email";
-
 export default function FindEmailPage() {
-  const [method, setMethod] = useState<Method>("phone");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
 
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -18,23 +14,11 @@ export default function FindEmailPage() {
   const [isBusy, setIsBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
-  // 탭 전환 시 진행 상태 초기화 (이름은 공통이라 유지)
-  const switchMethod = (next: Method) => {
-    if (next === method) return;
-    setMethod(next);
-    setPhone("");
-    setEmail("");
-    setCode("");
-    setCodeSent(false);
-    setDevCode(null);
-    setError("");
-  };
-
   const call = async (payload: Record<string, unknown>) => {
     const res = await fetch("/api/find-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ method, name, phone, email, ...payload }),
+      body: JSON.stringify({ method: "phone", name, phone, ...payload }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message ?? "요청에 실패했습니다.");
@@ -104,32 +88,6 @@ export default function FindEmailPage() {
           </div>
         ) : (
           <div className="mt-8 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
-            {/* 인증 방법 탭 */}
-            <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
-              <button
-                type="button"
-                onClick={() => switchMethod("phone")}
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                  method === "phone"
-                    ? "bg-background text-primary shadow-sm"
-                    : "text-foreground/60 hover:text-foreground"
-                }`}
-              >
-                전화번호로 찾기
-              </button>
-              <button
-                type="button"
-                onClick={() => switchMethod("email")}
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                  method === "email"
-                    ? "bg-background text-primary shadow-sm"
-                    : "text-foreground/60 hover:text-foreground"
-                }`}
-              >
-                이메일로 찾기
-              </button>
-            </div>
-
             <form onSubmit={handleVerify} className="mt-6">
               {error && (
                 <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -169,8 +127,6 @@ export default function FindEmailPage() {
                   />
                 </div>
 
-                {/* 방법별 입력 */}
-                {method === "phone" ? (
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-foreground">
                       휴대폰 번호
@@ -190,31 +146,18 @@ export default function FindEmailPage() {
                     />
                     {/* 번호는 본인을 찾는 열쇠일 뿐, 인증번호는 문자가 아니라
                         메일로 간다. 이 줄이 없으면 사용자가 오지 않을 문자를
-                        기다린다. 문자 발송은 붙여 둔 적이 없다. */}
-                    <p className="mt-1 text-xs text-foreground/50">
-                      문자가 아니라, 가입하신 이메일로 인증번호를 보내드립니다.
+                        기다린다. 문자 발송은 붙여 둔 적이 없다.
+
+                        하이픈 얘기도 같이 한다. 숫자만 남겨 비교하므로 넣든
+                        말든 같은데, 보기에는 010-1234-5678이어야 할 것처럼
+                        읽힌다. */}
+                    <p className="mt-1.5 break-keep text-xs leading-relaxed text-foreground/55">
+                      하이픈(-)은 넣으셔도, 안 넣으셔도 됩니다.
+                      <br />
+                      이 번호로는 문자가 가지 않습니다. 본인 확인에만 쓰고,
+                      인증번호는 가입하신 이메일로 보내드립니다.
                     </p>
                   </div>
-                ) : (
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                      이메일
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      required
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setError("");
-                      }}
-                      disabled={codeSent}
-                      placeholder="example@company.com"
-                      className="mt-1 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-muted disabled:text-foreground/50"
-                    />
-                  </div>
-                )}
 
                 {/* 인증번호 입력 (발송 후 노출) */}
                 {codeSent && (

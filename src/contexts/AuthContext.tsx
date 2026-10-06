@@ -34,7 +34,7 @@ interface AuthContextType {
   findEmailByEmail: (name: string, email: string) => Promise<string>;
   // 이름 + 전화번호로 본인을 확인한 뒤, 그 계정 이메일로 Supabase가 실제
   // 재설정 링크를 발송한다. 링크를 눌러 도착하는 곳은 /reset-password/confirm.
-  requestPasswordReset: (name: string, phone: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
   /** 로그인 이메일을 바꾼다. 새 주소로 확인 링크가 가고, 누르면 반영된다. */
   changeEmail: (newEmail: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -308,8 +308,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data as string;
   };
 
-  const requestPasswordReset = async (name: string, phone: string) => {
-    const email = await findEmailByPhone(name, phone);
+  // 가입 이메일로 재설정 링크를 보낸다.
+  //
+  // 그 주소로 계정이 있는지는 확인하지 않는다. Supabase도 없는 주소에
+  // 오류를 내지 않는다 — 다르게 답하면 주소를 하나씩 넣어 보며 "이 회사
+  // 사람이 가입했는지"를 알아낼 수 있다.
+  const requestPasswordReset = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password/confirm`,
     });
