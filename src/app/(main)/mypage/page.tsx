@@ -27,6 +27,7 @@ import {
 } from "@/lib/data/changeRequests";
 import type { PartnerCategory } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
+import { promptDialog } from "@/components/ui/Prompt";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 const allPartnerCategories: PartnerCategory[] = [
@@ -234,7 +235,12 @@ export default function MyPage() {
             `메일 발송이 아직 연결되지 않아 링크를 클립보드에 복사했습니다.\n${invite.email}에게 직접 전달해주세요.\n\n링크는 14일 후 만료됩니다.`
           );
         } catch {
-          prompt("아래 링크를 복사하여 전달해주세요:", link);
+          // 클립보드가 막힌 환경. 글자를 띄워 두고 직접 복사하게 둔다.
+          await promptDialog(
+            `아래 링크를 복사해 ${invite.email}에게 전달해주세요.
+링크는 14일 후 만료됩니다.`,
+            { defaultValue: link, confirmLabel: "확인", cancelLabel: "닫기" },
+          );
         }
       }
       setInviteEmail("");

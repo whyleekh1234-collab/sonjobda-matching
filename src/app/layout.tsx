@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ToastHost } from "@/components/ui/Toast";
 import { ConfirmHost } from "@/components/ui/Confirm";
+import { PromptHost } from "@/components/ui/Prompt";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -92,6 +93,7 @@ export default function RootLayout({
             붙어, 아래쪽 버튼을 누른 사람의 눈이 따라가지 못했다. */}
         <ToastHost />
         <ConfirmHost />
+        <PromptHost />
       </body>
     </html>
   );

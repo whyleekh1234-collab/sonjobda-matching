@@ -44,6 +44,7 @@ import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import type { MatchingRequest, Notice } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
 import { confirmDialog } from "@/components/ui/Confirm";
+import { promptDialog } from "@/components/ui/Prompt";
 
 type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "ads" | "notifications" | "reports" | "operators";
 const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "ads", "notifications", "reports"];
@@ -921,8 +922,12 @@ export default function AdminDashboard() {
                           className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary-dark">
                           승인하고 반영
                         </button>
-                        <button onClick={() => {
-                          const note = prompt("반려 사유를 입력하세요 (요청자에게 전달됩니다)");
+                        <button onClick={async () => {
+                          const note = await promptDialog("반려 사유를 입력해주세요.", {
+                            placeholder: "요청자에게 그대로 전달됩니다. 무엇을 고쳐 다시 내면 되는지 적어주세요.",
+                            multiline: true, required: true, maxLength: 300,
+                            confirmLabel: "반려",
+                          });
                           if (note === null) return;
                           run(() => reviewChangeRequest(r.id, false, note), "반려 처리했습니다.");
                         }}
@@ -1624,7 +1629,11 @@ export default function AdminDashboard() {
                                                 </button>
                                                 <button
                                                   onClick={async () => {
-                                                    const why = prompt("기각 사유를 적어주세요. (신고 기록에는 남습니다)");
+                                                    const why = await promptDialog("기각 사유를 적어주세요.", {
+                                                      placeholder: "신고 기록에 남습니다. 왜 조치하지 않았는지 적어주세요.",
+                                                      multiline: true, required: true, maxLength: 300,
+                                                      confirmLabel: "기각",
+                                                    });
                                                     if (!why?.trim()) return;
                                                     try {
                                                       await sanctionMember(target.id, "dismiss", why.trim(), inq.id);
@@ -1903,7 +1912,11 @@ export default function AdminDashboard() {
                     <div className="flex gap-2">
                       <button
                         onClick={async () => {
-                          const next = prompt(`${a.name}님이 인증번호를 받을 주소`, a.mfaEmail ?? "");
+                          const next = await promptDialog(`${a.name}님이 인증번호를 받을 주소`, {
+                            defaultValue: a.mfaEmail ?? "",
+                            placeholder: "로그인 이메일과 다른 주소를 쓰세요",
+                            required: true, maxLength: 120, confirmLabel: "변경",
+                          });
                           if (!next) return;
                           try { await setMfaEmail(a.id, next); await loadData(); toast("변경했습니다."); }
                           catch (err) { toast(err instanceof Error ? err.message : "변경하지 못했습니다."); }
