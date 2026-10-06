@@ -9,15 +9,24 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 // 관리자 화면에는 전 회원의 이름·연락처·사업자등록증이 떠 있다. 자리를
 // 비운 사이 화면이 그대로 열려 있으면 그것을 지나가는 사람이 본다.
 //
-// "20분마다" 묻지 않고 "20분 동안 아무 조작이 없으면" 묻는다. 일하는
-// 중에 20분마다 끼어들면 연장 버튼을 습관적으로 누르게 되고, 그러면
-// 묻는 의미가 없어진다. 손을 놓은 20분만 센다.
+// 일정 시간"마다" 묻지 않고 "그만큼 아무 조작이 없으면" 묻는다. 일하는
+// 중에 주기적으로 끼어들면 연장 버튼을 습관적으로 누르게 되고, 그러면
+// 묻는 의미가 없어진다. 손을 놓은 시간만 센다.
 //
 // 묻고 1분을 더 기다린다. 그 안에 아무 답이 없으면 자리에 없다고 보고
 // 끊는다. 끊을 때는 2단계 인증 증명까지 함께 지운다 — 세션만 끊으면
 // 다시 들어올 때 인증번호를 묻지 않는다.
+//
+// ※ 2026-10-06, 개발 기간 동안 20분 → 120분으로 늘렸다.
+//   20분이면 코드를 고치다 돌아올 때마다 끊겨, 하루에도 몇 번씩 인증번호를
+//   다시 받아야 했다. 관리자 세션 자체는 8시간짜리라 끊긴 쪽은 늘 이것이었다.
+//   개발이 끝나면 20분으로 되돌린다 — 이 화면에는 회원의 연락처와
+//   사업자등록증이 떠 있고, 그걸 지키자고 둔 장치다.
+//   NEXT_PUBLIC_ADMIN_IDLE_MIN으로 덮어쓸 수 있다(빌드 시점에 박힌다).
 
-const IDLE_MS = 20 * 60 * 1000;  // 손을 놓은 지 20분
+const DEFAULT_IDLE_MIN = 120;
+const IDLE_MIN = Number(process.env.NEXT_PUBLIC_ADMIN_IDLE_MIN) || DEFAULT_IDLE_MIN;
+const IDLE_MS = IDLE_MIN * 60 * 1000;
 const GRACE_SEC = 60;            // 물어보고 기다리는 1분
 
 export default function AdminIdleGuard() {
@@ -88,7 +97,7 @@ export default function AdminIdleGuard() {
       <div className="w-full max-w-sm rounded-2xl bg-background p-6 shadow-2xl">
         <h3 className="text-base font-semibold text-foreground">아직 보고 계신가요?</h3>
         <p className="mt-2 text-sm leading-relaxed text-foreground/60">
-          20분 동안 아무 조작이 없었습니다. 관리자 화면에는 회원의 연락처와
+          {IDLE_MIN}분 동안 아무 조작이 없었습니다. 관리자 화면에는 회원의 연락처와
           사업자등록증이 떠 있어, 자리를 비운 채로 두지 않습니다.
         </p>
         <p className="mt-4 text-sm text-foreground">
