@@ -174,8 +174,18 @@ export default function MyPage() {
   };
 
   const deleteAccount = async () => {
-    if (!await confirmDialog("회원 탈퇴를 진행하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.")) return;
-    if (!await confirmDialog('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    // "모든 데이터가 삭제된다"는 사실이 아니었다. 의뢰와 견적은 남는다 —
+    // 전자상거래법상 5년 보존 대상이고, 상대 회사의 기록이기도 하다.
+    // 무엇이 남는지 모르고 누르게 두면 나중에 분쟁이 된다.
+    if (!await confirmDialog(
+      "회원 탈퇴를 진행하시겠습니까?\n\n" +
+      "· 계정과 담당자 정보는 삭제됩니다.\n" +
+      "· 사업자등록증 사본과 회사소개서는 회사의 마지막 멤버가 탈퇴할 때 파기됩니다.\n" +
+      "· 주고받은 의뢰와 견적은 남습니다. 거래 기록은 법에 따라 5년간 보존해야 합니다.",
+      { confirmLabel: "계속", danger: true },
+    )) return;
+    if (!await confirmDialog("정말로 탈퇴하시겠습니까? 되돌릴 수 없습니다.",
+      { confirmLabel: "탈퇴", danger: true })) return;
     const ok = await run(() => deleteMyAccount());
     if (!ok) return;
     await logout();
@@ -536,7 +546,11 @@ export default function MyPage() {
             {/* 회원 탈퇴 */}
             <div className="rounded-xl border border-red-100 bg-surface p-6">
               <h3 className="text-base font-semibold text-foreground">회원 탈퇴</h3>
-              <p className="mt-1 text-sm text-foreground/50">탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
+              <p className="mt-1 break-keep text-sm leading-relaxed text-foreground/60">
+                계정과 담당자 정보가 삭제되며 되돌릴 수 없습니다. 주고받은 의뢰와 견적은
+                거래 기록이라 남습니다. 사업자등록증 사본과 회사소개서는 회사의 마지막 멤버가
+                탈퇴할 때 파기됩니다.
+              </p>
               <button onClick={deleteAccount}
                 className="mt-4 rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-50">
                 회원 탈퇴
