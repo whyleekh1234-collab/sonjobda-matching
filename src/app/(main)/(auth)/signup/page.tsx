@@ -12,6 +12,16 @@ import { getInviteByToken } from "@/lib/data/notices";
 import type { PartnerCategory } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
 
+// 가입할 때 고를 수 있는 분야 수.
+//
+// 여덟 개를 다 고르면 모든 의뢰가 그 회사로 간다. 받는 쪽은 맞지 않는
+// 의뢰까지 들여다봐야 하고, 의뢰사는 분야를 가리지 않는 곳에서 견적을
+// 받는다. 세 개까지만 고르게 해서 "무엇을 하는 회사인가"가 남게 한다.
+//
+// 이미 가입한 회원에게는 적용하지 않는다. 일곱 개씩 등록한 곳이 있는데,
+// 저장할 때마다 넷을 잃게 만들 수는 없다.
+const MAX_PARTNER_CATEGORIES = 3;
+
 const partnerCategories: PartnerCategory[] = [
   "CRO",
   "CMO/CDMO",
@@ -224,6 +234,7 @@ function SignupContent() {
   const validate = (): string | null => {
     if (form.roles.length === 0) return "회원 유형을 하나 이상 선택해주세요.";
     if (form.roles.includes("partner") && form.partnerCategories.length === 0) return "파트너사 유형을 하나 이상 선택해주세요.";
+    if (form.partnerCategories.length > MAX_PARTNER_CATEGORIES) return `파트너사 유형은 최대 ${MAX_PARTNER_CATEGORIES}개까지 선택할 수 있습니다.`;
     // 이메일
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) return "올바른 이메일 형식을 입력해주세요.";
@@ -436,13 +447,26 @@ ${licenseError}
             {form.roles.includes("partner") && (
               <div className="mt-3">
                 <label className="block text-sm font-medium text-foreground">
-                  파트너사 유형 * <span className="text-xs font-normal text-foreground/60">(복수 선택 가능)</span>
+                  파트너사 유형 *{" "}
+                  <span className="text-xs font-normal text-foreground/60">
+                    (최대 {MAX_PARTNER_CATEGORIES}개)
+                  </span>
+                  {form.partnerCategories.length > 0 && (
+                    <span className="ml-1.5 text-xs font-normal text-secondary">
+                      {form.partnerCategories.length}/{MAX_PARTNER_CATEGORIES}
+                    </span>
+                  )}
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {partnerCategories.map((cat) => {
                     // 기업보험은 스스로 가입하지 못한다 — 운영자 초대로만 들어온다.
                     // 그 초대로 들어온 경우에는 이미 정해진 값이라 역시 못 바꾼다.
-                    const isBlocked = cat === "기업보험" || fixedByInvite;
+                    const picked = form.partnerCategories.includes(cat);
+                    // 다 채웠으면 아직 안 고른 것만 잠근다. 고른 것은 눌러서
+                    // 뺄 수 있어야 바꿀 수 있다.
+                    const atLimit =
+                      !picked && form.partnerCategories.length >= MAX_PARTNER_CATEGORIES;
+                    const isBlocked = cat === "기업보험" || fixedByInvite || atLimit;
                     return (
                     <button
                       key={cat}
@@ -454,7 +478,7 @@ ${licenseError}
                           ...prev,
                           partnerCategories: prev.partnerCategories.includes(cat)
                             ? prev.partnerCategories.filter((c) => c !== cat)
-                            : [...prev.partnerCategories, cat],
+                            : [...prev.partnerCategories, cat].slice(0, MAX_PARTNER_CATEGORIES),
                         }));
                         setError("");
                       }}
@@ -462,7 +486,7 @@ ${licenseError}
                       // 한다. 초대로 분야가 정해진 사람에게 회색으로 보이면
                       // 자기가 무슨 분야로 들어가는지 알 수 없다.
                       className={`rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
-                        form.partnerCategories.includes(cat)
+                        picked
                           ? "border-secondary bg-secondary/10 text-secondary"
                           : isBlocked
                           ? "border-border bg-foreground/5 text-foreground/50 cursor-not-allowed"
@@ -474,6 +498,13 @@ ${licenseError}
                     );
                   })}
                 </div>
+                {/* 눌러도 반응이 없으면 고장으로 읽는다. 왜 잠겼는지 적는다. */}
+                {form.partnerCategories.length >= MAX_PARTNER_CATEGORIES && !fixedByInvite && (
+                  <p className="mt-2 break-keep text-xs leading-relaxed text-foreground/55">
+                    {MAX_PARTNER_CATEGORIES}개까지 고르실 수 있습니다. 다른 분야를 고르시려면
+                    먼저 선택한 것을 눌러 빼주세요.
+                  </p>
+                )}
               </div>
             )}
             {form.roles.length === 2 && (
