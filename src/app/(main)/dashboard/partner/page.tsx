@@ -25,6 +25,7 @@ import type { Notice, Notification } from "@/types/auth";
 import Greeting from "@/components/dashboard/Greeting";
 import CompanyLogo from "@/components/CompanyLogo";
 import { toast } from "@/components/ui/Toast";
+import { userMessage } from "@/lib/errorMessage";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 // request/new의 marketingTypeOptions와 같은 키를 쓴다.
@@ -194,7 +195,7 @@ export default function PartnerDashboard() {
       await loadRequests();
       return true;
     } catch (err) {
-      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      toast(userMessage(err, "처리하지 못했습니다."));
       return false;
     }
   };
@@ -264,7 +265,7 @@ export default function PartnerDashboard() {
       const { path, name } = await uploadQuoteAttachment(user.companyId, requestId, attachment);
       return { attachmentPath: path, attachmentName: name };
     } catch (err) {
-      toast(err instanceof Error ? err.message : "첨부파일 업로드에 실패했습니다.");
+      toast(userMessage(err, "첨부파일 업로드에 실패했습니다."));
       return null;
     }
   };
@@ -840,7 +841,7 @@ export default function PartnerDashboard() {
                                             setSelectedRequest(null);
                                             await loadRequests();
                                           } catch (err) {
-                                            toast(err instanceof Error ? err.message : "회수하지 못했습니다.");
+                                            toast(userMessage(err, "회수하지 못했습니다."));
                                           }
                                         }} className="rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-50">견적 회수</button>
                                       </div>

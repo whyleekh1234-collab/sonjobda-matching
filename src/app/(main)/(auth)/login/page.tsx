@@ -1,6 +1,7 @@
 "use client";
 
 import PasswordInput from "@/components/PasswordInput";
+import { userMessage } from "@/lib/errorMessage";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,7 +43,7 @@ export default function LoginPage() {
       window.location.replace("/dashboard");
       return;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
+      setError(userMessage(err, "로그인에 실패했습니다."));
     } finally {
       setIsSubmitting(false);
     }

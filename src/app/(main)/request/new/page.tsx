@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { breakAfterSlash } from "@/lib/text";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { createRequest, updateRequest, getRequest, getCompanyPartnerCategories } from "@/lib/data/requests";
 import { toast } from "@/components/ui/Toast";
+import { userMessage } from "@/lib/errorMessage";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 const serviceTypes = [
@@ -1016,7 +1018,7 @@ function NewRequestForm() {
       toast(editRequestId ? "견적 요청이 수정되었습니다." : "견적요청이 제출되었습니다.");
       router.push("/dashboard/client");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "제출하지 못했습니다.");
+      toast(userMessage(err, "제출하지 못했습니다."));
     } finally {
       setIsSubmitting(false);
     }
@@ -1028,6 +1030,38 @@ function NewRequestForm() {
     { num: 3, title: "요구사항", sub: "세부 요구사항" },
     { num: 4, title: "검토", sub: "최종 확인" },
   ];
+
+  // 승인되지 않은 회원은 의뢰를 등록할 수 없다. 데이터베이스가 막고 있지만
+  // 화면은 열려 있어서, 제한된 회원이 네 단계를 다 채우고 제출을 누른 뒤에야
+  // 막혔다 — 그것도 "new row violates row-level security policy"라는 말로.
+  // 시작하기 전에 알려 준다.
+  if (user && user.status !== "approved") {
+    const restricted = user.status === "restricted";
+    return (
+      <div className="min-h-screen bg-muted py-20">
+        <div className="mx-auto max-w-md px-4 text-center sm:px-6">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {restricted ? "이용이 제한된 계정입니다" : user.status === "suspended" ? "이용이 정지된 계정입니다" : "승인 대기 중입니다"}
+          </h1>
+          <p className="mt-4 break-keep text-sm leading-relaxed text-foreground/70">
+            {restricted || user.status === "suspended"
+              ? "제한이 해제되기 전에는 의뢰를 등록할 수 없습니다. 알림에서 사유를 확인하시고, 조치를 마치신 뒤 그 알림에 답변을 남겨주세요."
+              : "운영자 승인이 끝나면 의뢰를 등록하실 수 있습니다. 영업일 기준 1~2일이 걸립니다."}
+          </p>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+            <Link href="/notifications"
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark">
+              알림 확인하기
+            </Link>
+            <Link href="/dashboard"
+              className="rounded-lg border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-surface-subtle">
+              대시보드로
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted py-8">

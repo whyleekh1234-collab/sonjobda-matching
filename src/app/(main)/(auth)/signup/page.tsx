@@ -11,6 +11,7 @@ import { Building2, Handshake, Hospital } from "lucide-react";
 import { getInviteByToken } from "@/lib/data/notices";
 import type { PartnerCategory } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
+import { userMessage } from "@/lib/errorMessage";
 
 // 가입할 때 고를 수 있는 분야 수.
 //
@@ -349,7 +350,7 @@ ${licenseError}
       );
       router.push("/login");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "회원가입에 실패했습니다.");
+      setError(userMessage(err, "회원가입에 실패했습니다."));
     } finally {
       setIsSubmitting(false);
     }
@@ -552,7 +553,7 @@ ${licenseError}
                         if (!data.available) setError("이미 가입된 이메일입니다. 이메일 찾기 또는 비밀번호 재설정을 이용해주세요.");
                       } catch (err) {
                         setEmailOk(null);
-                        setError(err instanceof Error ? err.message : "확인하지 못했습니다.");
+                        setError(userMessage(err, "확인하지 못했습니다."));
                       } finally {
                         setEmailChecking(false);
                       }

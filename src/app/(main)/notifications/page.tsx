@@ -17,6 +17,7 @@ import {
 } from "@/lib/data/notices";
 import type { Notification, Notice } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
+import { userMessage } from "@/lib/errorMessage";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 export default function NotificationsPage() {
@@ -64,7 +65,7 @@ export default function NotificationsPage() {
       await reload();
       if (successMessage) toast(successMessage);
     } catch (err) {
-      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      toast(userMessage(err, "처리하지 못했습니다."));
     }
   };
 

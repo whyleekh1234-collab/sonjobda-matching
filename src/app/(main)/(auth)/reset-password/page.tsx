@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { userMessage } from "@/lib/errorMessage";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -33,7 +34,7 @@ export default function ResetPasswordPage() {
       await requestPasswordReset(email.trim());
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "재설정 메일 발송에 실패했습니다.");
+      setError(userMessage(err, "재설정 메일 발송에 실패했습니다."));
     } finally {
       setIsBusy(false);
     }

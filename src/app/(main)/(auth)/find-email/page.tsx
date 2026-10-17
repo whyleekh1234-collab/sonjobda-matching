@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { userMessage } from "@/lib/errorMessage";
 import Link from "next/link";
 export default function FindEmailPage() {
   const [name, setName] = useState("");
@@ -36,7 +37,7 @@ export default function FindEmailPage() {
       // 메일 발송이 아직 연결되지 않은 개발 환경에서만 코드가 내려온다.
       setDevCode(data.devCode ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "인증번호를 보내지 못했습니다.");
+      setError(userMessage(err, "인증번호를 보내지 못했습니다."));
     } finally {
       setIsBusy(false);
     }
@@ -51,7 +52,7 @@ export default function FindEmailPage() {
       const data = await call({ action: "verify", code });
       if (data.verified && data.maskedEmail) setResult(data.maskedEmail);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "인증에 실패했습니다.");
+      setError(userMessage(err, "인증에 실패했습니다."));
     } finally {
       setIsBusy(false);
     }

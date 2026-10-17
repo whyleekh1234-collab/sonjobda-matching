@@ -27,6 +27,7 @@ import {
 } from "@/lib/data/changeRequests";
 import type { PartnerCategory } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
+import { userMessage } from "@/lib/errorMessage";
 import { promptDialog } from "@/components/ui/Prompt";
 import { confirmDialog } from "@/components/ui/Confirm";
 
@@ -74,7 +75,7 @@ export default function MyPage() {
     } catch (err) {
       setMarketingOn(prev.on);
       setMarketingAt(prev.at);
-      toast(err instanceof Error ? err.message : "동의 설정을 변경하지 못했습니다.");
+      toast(userMessage(err, "동의 설정을 변경하지 못했습니다."));
     } finally {
       setMarketingSaving(false);
     }
@@ -255,7 +256,7 @@ export default function MyPage() {
       }
       setInviteEmail("");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "초대하지 못했습니다.");
+      toast(userMessage(err, "초대하지 못했습니다."));
     }
   };
 
@@ -372,7 +373,7 @@ export default function MyPage() {
                               setNewEmail("");
                               toast(`${newEmail.trim()}로 확인 메일을 보냈습니다. 그 메일의 링크를 눌러주세요.`);
                             } catch (err) {
-                              toast(err instanceof Error ? err.message : "바꾸지 못했습니다.", "error");
+                              toast(userMessage(err, "바꾸지 못했습니다."), "error");
                             }
                           }}
                           className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark"

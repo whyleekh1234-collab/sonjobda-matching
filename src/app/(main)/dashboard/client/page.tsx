@@ -23,6 +23,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import { listPartnerProfiles, listProfileDocs, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import { toast } from "@/components/ui/Toast";
+import { userMessage } from "@/lib/errorMessage";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
@@ -99,7 +100,7 @@ export default function ClientDashboard() {
       await reloadRequests();
       if (successMessage) toast(successMessage);
     } catch (err) {
-      toast(err instanceof Error ? err.message : "처리하지 못했습니다.");
+      toast(userMessage(err, "처리하지 못했습니다."));
     }
   };
 
