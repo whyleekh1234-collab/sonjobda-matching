@@ -262,3 +262,46 @@ export function shortlistedTemplate(title: string, link: string) {
      </p>`
   );
 }
+
+/**
+ * 새 의뢰가 올라왔을 때 그 분야 파트너사에게.
+ *
+ * 의뢰사 회사명은 적지 않는다. 최종 매칭 전까지 공개되지 않는 정보이고,
+ * 메일이 그 구멍이 되면 안 된다. 제목·예산·마감일만으로도 열어볼지는
+ * 판단할 수 있다.
+ *
+ * 이 메일은 광고가 아니다. 파트너사가 가입한 목적 자체가 "내 분야 의뢰를
+ * 받는 것"이므로, 거래 관계에 따른 정보 제공이지 영리목적의 광고성
+ * 정보가 아니다. 그래서 마케팅 수신동의와 무관하게 나간다 — 대신 이
+ * 메일에 다른 홍보를 끼워 넣으면 그 순간 성격이 바뀐다.
+ */
+export function newRequestTemplate(
+  category: string,
+  title: string,
+  budget: string,
+  deadline: string,
+  link: string,
+) {
+  const row = (label: string, value: string) =>
+    `<tr>
+       <td style="padding:6px 0;font-size:13px;color:#7b8695;white-space:nowrap">${label}</td>
+       <td style="padding:6px 0 6px 16px;font-size:13px;color:#2b3440;font-weight:600">${value}</td>
+     </tr>`;
+
+  return layout(
+    `${category} 의뢰가 올라왔습니다`,
+    `<p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#4c5766">
+       귀사가 등록한 분야에 새 의뢰가 들어왔습니다.
+     </p>
+     <table style="margin:0 0 22px;border-collapse:collapse">
+       ${row("의뢰명", title)}
+       ${row("분야", category)}
+       ${budget ? row("예산", budget) : ""}
+       ${deadline ? row("희망 시작일", deadline) : ""}
+     </table>
+     ${button(link, "의뢰 확인하고 견적 내기")}
+     <p style="margin:0;font-size:13px;color:#7b8695">
+       의뢰사의 회사명과 연락처는 최종 매칭이 성사된 뒤에 공개됩니다.
+     </p>`
+  );
+}

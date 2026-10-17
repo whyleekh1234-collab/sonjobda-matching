@@ -231,7 +231,19 @@ export async function createRequest(
     .single();
 
   if (error) throw new Error(error.message);
-  return toRequest(data as unknown as RequestRow);
+  const made = toRequest(data as unknown as RequestRow);
+
+  // 그 분야 파트너사에게 알린다. 앱 안 알림은 47단계의 트리거가 만들지만
+  // 그것만으로는 로그인한 사람만 안다 — 매일 들어와 보지는 않는다.
+  //
+  // 실패해도 삼킨다. 메일이 안 갔다고 이미 올라간 의뢰를 무를 수는 없다.
+  // 안 나간 것은 sendEmail 쪽에서 실패 기록으로 남아 운영자에게 간다.
+  //
+  // 고칠 때(updateRequest)는 보내지 않는다. 한 건을 두세 번 손보면 그
+  // 횟수만큼 메일이 가고, 그런 메일은 곧 안 읽히게 된다.
+  void notify("/api/notify/request", { requestId: made.id });
+
+  return made;
 }
 
 export async function updateRequest(id: string, input: RequestInput): Promise<void> {
