@@ -852,7 +852,7 @@ ${licenseError}
                       : <span className="text-lg font-bold text-foreground/50">{form.company.trim().charAt(0) || "로고"}</span>}
                   </div>
                   <div className="flex-1">
-                    <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" id="logo"
+                    <input type="file" accept="image/png,image/jpeg,image/webp" id="logo"
                       onChange={(e) => {
                         const f = e.target.files?.[0] ?? null;
                         if (!f) { setLogo(null); setLogoPreview(null); return; }
@@ -861,7 +861,7 @@ ${licenseError}
                         setLogo(f); setLogoPreview(URL.createObjectURL(f)); setError("");
                       }}
                       className="block w-full text-sm text-foreground/70 file:mr-3 file:rounded-lg file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground/70 hover:file:bg-muted" />
-                    <p className="mt-1 text-xs text-foreground/60">PNG·JPG·WEBP·SVG, 2MB 이하. 견적 카드와 상단 바에 표시됩니다. 나중에 마이페이지에서도 올릴 수 있어요.</p>
+                    <p className="mt-1 text-xs text-foreground/60">PNG·JPG·WEBP, 2MB 이하. 견적 카드와 상단 바에 표시됩니다. 나중에 마이페이지에서도 올릴 수 있어요.</p>
                   </div>
                   {logo && (
                     <button type="button" onClick={() => { setLogo(null); setLogoPreview(null); }} className="text-xs text-foreground/50 hover:text-red-500">삭제</button>

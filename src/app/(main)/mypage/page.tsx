@@ -616,7 +616,7 @@ export default function MyPage() {
                     <div className="mt-1 flex items-center gap-3">
                       <label className="cursor-pointer text-xs font-medium text-primary hover:underline">
                         {logoPath ? "변경" : "올리기"}
-                        <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden"
+                        <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
                           onChange={async (e) => {
                             const f = e.target.files?.[0]; e.target.value = ""; if (!f) return;
                             const err = validateLogo(f); if (err) { toast(err); return; }
@@ -634,7 +634,7 @@ export default function MyPage() {
                   ) : (
                     <p className="mt-1 text-xs text-foreground/60">회사 관리자가 변경할 수 있습니다.</p>
                   )}
-                  <p className="mt-1 text-[11px] text-foreground/50">PNG·JPG·WEBP·SVG, 2MB 이하</p>
+                  <p className="mt-1 text-[11px] text-foreground/50">PNG·JPG·WEBP, 2MB 이하</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">

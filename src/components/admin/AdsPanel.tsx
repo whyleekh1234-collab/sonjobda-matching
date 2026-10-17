@@ -215,7 +215,7 @@ export default function AdsPanel() {
         <div className="mt-4 rounded-xl bg-surface-subtle p-4">
           <p className="text-xs font-semibold text-foreground/70">광고주에게 받을 것</p>
           <ul className="mt-2 space-y-1 text-[13px] leading-relaxed text-foreground/60">
-            <li>· 로고 — 가로형 352×88px 권장, PNG·JPG·SVG, 2MB 이내</li>
+            <li>· 로고 — 가로형 352×88px 권장, PNG·JPG·WEBP, 2MB 이내</li>
             <li>· 한 줄 문구 60자 이내</li>
             <li>· 연결할 주소 (http:// 또는 https://)</li>
           </ul>
@@ -344,13 +344,13 @@ export default function AdsPanel() {
                           <img src={`${supabaseUrl()}/storage/v1/object/public/ad-images/${draft.imagePath}`}
                             alt="광고 그림" className="h-9 w-16 rounded border border-border bg-white object-contain" />
                         )}
-                        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp"
                           onChange={(e) => pickImage(slot, e.target.files?.[0])}
                           className="w-full text-xs text-foreground/60" />
                       </div>
                       <p className="mt-1 text-[11px] leading-relaxed text-foreground/50">
                         가로형 <b className="font-semibold">352×88px</b> 권장 (화면 표시 176×44px).
-                        PNG·JPG·SVG, 2MB 이내. 없으면 회사명이 글자로 나갑니다.
+                        PNG·JPG·WEBP, 2MB 이내. 없으면 회사명이 글자로 나갑니다.
                       </p>
                     </div>
                   </div>
@@ -396,7 +396,7 @@ export default function AdsPanel() {
                         </div>
                       )}
                       <input ref={detailRef} type="file" multiple
-                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        accept="image/png,image/jpeg,image/webp"
                         onChange={(e) => pickDetailImages(slot, e.target.files)}
                         className="mt-2 w-full text-xs text-foreground/60" />
                       <p className="mt-1 text-[11px] text-foreground/50">

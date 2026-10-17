@@ -5,7 +5,10 @@ import { supabaseUrl } from "@/lib/supabase/env";
 
 const BUCKET = "ad-images";
 export const AD_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
-export const AD_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+// SVG는 받지 않는다. 그림이 아니라 스크립트를 품을 수 있는 문서다.
+// 광고 그림은 공개 버킷에 올라가고, 광고주가 보낸 파일을 우리가 그대로
+// 얹는 자리라 더 위험하다. 로고와 같은 이유다([[companyLogo]]).
+export const AD_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 // 메인에 둔 자리 수. 넉 칸을 채우고, 빈 칸은 "광고 문의"로 남는다.
 export const AD_SLOTS = 4;
@@ -179,7 +182,7 @@ export async function adminDeleteAd(id: string): Promise<void> {
 }
 
 export function validateAdImage(file: File): string | null {
-  if (!AD_IMAGE_TYPES.includes(file.type)) return "PNG, JPG, WEBP, SVG 파일만 올릴 수 있습니다.";
+  if (!AD_IMAGE_TYPES.includes(file.type)) return "PNG, JPG, WEBP 파일만 올릴 수 있습니다.";
   if (file.size > AD_IMAGE_MAX_BYTES) return "그림 파일은 2MB 이하여야 합니다.";
   return null;
 }
@@ -190,7 +193,6 @@ export async function uploadAdImage(slot: number, file: File): Promise<string> {
   const err = validateAdImage(file);
   if (err) throw new Error(err);
   const ext =
-    file.type === "image/svg+xml" ? "svg" :
     file.type === "image/png" ? "png" :
     file.type === "image/webp" ? "webp" : "jpg";
   // 같은 밀리초에 여러 장이 올라가면 경로가 겹친다. 상세 그림은 한 번에
