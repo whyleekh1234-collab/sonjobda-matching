@@ -81,7 +81,16 @@ function InquiryPageInner() {
       toast("문의가 접수되었습니다.");
       setActiveTab("history");
     } catch (err) {
-      toast(err instanceof Error ? err.message : "접수하지 못했습니다.");
+      // DB 오류 문구를 그대로 띄우지 않는다. 권한 설정이 어긋났을 때
+      // "permission denied for table inquiries"가 사용자 화면에 그대로
+      // 떴고, 받은 사람은 무슨 말인지도 모른 채 다섯 번을 다시 눌렀다.
+      // 안쪽 사정은 콘솔에만 남기고, 화면에는 지금 할 수 있는 일을 준다.
+      console.error("문의 접수 실패:", err);
+      toast(
+        "문의를 접수하지 못했습니다. 잠시 후 다시 시도해주세요.\n" +
+        "계속 안 되면 contact@sonjobdamd.com 으로 보내주시면 바로 확인하겠습니다.",
+        "error",
+      );
     } finally {
       setIsSubmitting(false);
     }

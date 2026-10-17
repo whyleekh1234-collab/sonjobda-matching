@@ -1373,41 +1373,6 @@ function NewRequestForm() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-foreground">계약자 *</label>
-                      <div className="mt-2 flex gap-4">
-                        {[{ value: "individual", label: "개인" }, { value: "corporation", label: "법인" }].map((opt) => (
-                          <label key={opt.value} className="flex cursor-pointer items-center gap-1.5">
-                            <input type="radio" name="insContractorType" checked={insContractorType === opt.value} onChange={() => { setInsContractorType(opt.value); setInsContractorId(""); }} className="h-4 w-4 accent-primary" />
-                            <span className="text-sm text-foreground/70">{opt.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    {insContractorType && (
-                      <div>
-                        <label className="block text-sm font-medium text-foreground">
-                          {insContractorType === "individual" ? "주민등록번호" : "사업자등록번호"} *
-                        </label>
-                        <input type="text" inputMode="numeric" value={insContractorId}
-                          onChange={(e) => {
-                            const digits = e.target.value.replace(/\D/g, "");
-                            if (insContractorType === "individual") {
-                              const d = digits.slice(0, 13);
-                              setInsContractorId(d.length <= 6 ? d : `${d.slice(0, 6)}-${d.slice(6)}`);
-                            } else {
-                              const d = digits.slice(0, 10);
-                              if (d.length <= 3) setInsContractorId(d);
-                              else if (d.length <= 5) setInsContractorId(`${d.slice(0, 3)}-${d.slice(3)}`);
-                              else setInsContractorId(`${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`);
-                            }
-                          }}
-                          placeholder={insContractorType === "individual" ? "000000-0000000" : "000-00-00000"}
-                          maxLength={insContractorType === "individual" ? 14 : 12}
-                          className="mt-1 w-full max-w-xs rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                        <p className="mt-1 text-xs text-amber-600">※ 보험사 견적 산출을 위한 필수 정보입니다.</p>
-                      </div>
-                    )}
-                    <div>
                       <label className="block text-sm font-medium text-foreground">실시기관명 *</label>
                       <input type="text" value={insSiteNames} onChange={(e) => setInsSiteNames(e.target.value)}
                         placeholder="예: 서울대학교병원, 연세대학교 세브란스병원" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
@@ -1439,6 +1404,45 @@ function NewRequestForm() {
                               placeholder="예: 1,000,000,000" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                           </div>
                         </div>
+                        {/* 계약자와 등록번호도 마찬가지다. 보험을 드는
+                            주체는 어떤 보험이든 있어야 한다. 임상 블록
+                            안에 있어서, 검증은 모든 보험에 요구하는데
+                            칸은 임상시험 보험에만 나왔다. */}
+                        <div>
+                          <label className="block text-sm font-medium text-foreground">계약자 *</label>
+                          <div className="mt-2 flex gap-4">
+                            {[{ value: "individual", label: "개인" }, { value: "corporation", label: "법인" }].map((opt) => (
+                              <label key={opt.value} className="flex cursor-pointer items-center gap-1.5">
+                                <input type="radio" name="insContractorType" checked={insContractorType === opt.value} onChange={() => { setInsContractorType(opt.value); setInsContractorId(""); }} className="h-4 w-4 accent-primary" />
+                                <span className="text-sm text-foreground/70">{opt.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        {insContractorType && (
+                          <div>
+                            <label className="block text-sm font-medium text-foreground">
+                              {insContractorType === "individual" ? "주민등록번호" : "사업자등록번호"} *
+                            </label>
+                            <input type="text" inputMode="numeric" value={insContractorId}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, "");
+                                if (insContractorType === "individual") {
+                                  const d = digits.slice(0, 13);
+                                  setInsContractorId(d.length <= 6 ? d : `${d.slice(0, 6)}-${d.slice(6)}`);
+                                } else {
+                                  const d = digits.slice(0, 10);
+                                  if (d.length <= 3) setInsContractorId(d);
+                                  else if (d.length <= 5) setInsContractorId(`${d.slice(0, 3)}-${d.slice(3)}`);
+                                  else setInsContractorId(`${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`);
+                                }
+                              }}
+                              placeholder={insContractorType === "individual" ? "000000-0000000" : "000-00-00000"}
+                              maxLength={insContractorType === "individual" ? 14 : 12}
+                              className="mt-1 w-full max-w-xs rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                            <p className="mt-1 text-xs text-amber-600">※ 보험사 견적 산출을 위한 필수 정보입니다.</p>
+                          </div>
+                        )}
                       </>
                     )}
                   </>
