@@ -224,9 +224,14 @@ export async function setMemberStatus(targetId: string, status: "approved" | "su
   if (error) throw new Error(error.message);
 }
 
+// 함수를 직접 부르지 않고 서버를 거친다. 마지막 멤버가 나갈 때는 회사
+// 서류를 파기해야 하는데, Supabase가 storage 테이블의 직접 삭제를 막아
+// 함수 안에서는 할 수 없다. 파일 파기는 /api/account/delete가 Storage
+// API로 맡는다.
 export async function deleteMyAccount(): Promise<void> {
-  const { error } = await createClient().rpc("delete_my_account");
-  if (error) throw new Error(error.message);
+  const res = await fetch("/api/account/delete", { method: "POST" });
+  const body = (await res.json().catch(() => ({}))) as { message?: string };
+  if (!res.ok) throw new Error(body.message ?? "탈퇴하지 못했습니다.");
 }
 
 // 이름·연락처는 컬럼 권한으로 본인만 쓸 수 있게 열려 있다.
