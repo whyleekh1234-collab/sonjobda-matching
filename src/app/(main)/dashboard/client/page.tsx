@@ -100,7 +100,7 @@ export default function ClientDashboard() {
       await reloadRequests();
       if (successMessage) toast(successMessage);
     } catch (err) {
-      toast(userMessage(err, "처리하지 못했습니다."));
+      toast(userMessage(err, "처리하지 못했습니다.", "의뢰사 대시보드 처리"));
     }
   };
 

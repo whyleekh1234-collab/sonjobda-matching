@@ -440,3 +440,62 @@ export async function resolveInquiry(inquiryId: string, resolution: string): Pro
   });
   if (error) throw new Error(error.message);
 }
+
+// ── 조용히 실패한 일 (43단계) ───────────────────────────────
+//
+// 문의 접수가 막힌 것을 한 달 동안 몰랐다. 화면은 "다시 시도해주세요"를
+// 띄우고 끝났고, 기록은 누르던 사람의 브라우저 콘솔에만 남았다. 지금은
+// 예상 못한 실패가 DB에 쌓이고 운영자에게 메일이 간다.
+
+export interface FailureRow {
+  id: string;
+  at: string;
+  lastAt: string;
+  hits: number;
+  place: string;
+  message: string;
+  path: string | null;
+  memberCode: string | null;
+  memberName: string | null;
+  company: string | null;
+  resolvedAt: string | null;
+  resolvedByName: string | null;
+}
+
+export async function listFailures(): Promise<FailureRow[]> {
+  const { data, error } = await createClient().rpc("admin_list_failures");
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as {
+    id: string; at: string; last_at: string; hits: number;
+    place: string; message: string; path: string | null;
+    member_code: string | null; member_name: string | null; company: string | null;
+    resolved_at: string | null; resolved_by_name: string | null;
+  }[]).map((r) => ({
+    id: r.id,
+    at: r.at,
+    lastAt: r.last_at,
+    hits: r.hits,
+    place: r.place,
+    message: r.message,
+    path: r.path,
+    memberCode: r.member_code,
+    memberName: r.member_name,
+    company: r.company,
+    resolvedAt: r.resolved_at,
+    resolvedByName: r.resolved_by_name,
+  }));
+}
+
+/**
+ * 처리했다고 표시한다. 되돌릴 수도 있다 — 잘못 눌러 영영 묻히면 안 되고,
+ * 고친 줄 알았다가 아니었던 경우도 있다.
+ *
+ * 표시를 지우면 같은 실패가 또 났을 때 새 줄로 올라가고 메일도 다시 온다.
+ */
+export async function resolveFailure(id: string, resolved = true): Promise<void> {
+  const { error } = await createClient().rpc("admin_resolve_failure", {
+    p_id: id,
+    p_resolved: resolved,
+  });
+  if (error) throw new Error(error.message);
+}

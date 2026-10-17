@@ -350,7 +350,7 @@ ${licenseError}
       );
       router.push("/login");
     } catch (err) {
-      setError(userMessage(err, "회원가입에 실패했습니다."));
+      setError(userMessage(err, "회원가입에 실패했습니다.", "회원가입"));
     } finally {
       setIsSubmitting(false);
     }
@@ -553,7 +553,7 @@ ${licenseError}
                         if (!data.available) setError("이미 가입된 이메일입니다. 이메일 찾기 또는 비밀번호 재설정을 이용해주세요.");
                       } catch (err) {
                         setEmailOk(null);
-                        setError(userMessage(err, "확인하지 못했습니다."));
+                        setError(userMessage(err, "확인하지 못했습니다.", "가입 중 이메일 중복 확인"));
                       } finally {
                         setEmailChecking(false);
                       }

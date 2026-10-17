@@ -1018,7 +1018,7 @@ function NewRequestForm() {
       toast(editRequestId ? "견적 요청이 수정되었습니다." : "견적요청이 제출되었습니다.");
       router.push("/dashboard/client");
     } catch (err) {
-      toast(userMessage(err, "제출하지 못했습니다."));
+      toast(userMessage(err, "제출하지 못했습니다.", "견적 요청 제출"));
     } finally {
       setIsSubmitting(false);
     }

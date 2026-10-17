@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
       await requestPasswordReset(email.trim());
       setSent(true);
     } catch (err) {
-      setError(userMessage(err, "재설정 메일 발송에 실패했습니다."));
+      setError(userMessage(err, "재설정 메일 발송에 실패했습니다.", "비밀번호 재설정 메일"));
     } finally {
       setIsBusy(false);
     }

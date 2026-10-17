@@ -35,6 +35,7 @@ import { listPartnerRequests } from "@/lib/data/requests";
 import { changeMyPassword } from "@/lib/data/notices";
 import { setPlatformAdmin, setMfaEmail, sanctionMember, listSanctions, resolveInquiry,
   SANCTION_LABELS, type SanctionKind, type SanctionRow } from "@/lib/data/admin";
+import { listFailures, resolveFailure, type FailureRow } from "@/lib/data/admin";
 import PasswordInput from "@/components/PasswordInput";
 import { getPartnerProfile, verifyPartnerProfile, type PartnerProfile , listProfileDocs } from "@/lib/data/partnerProfiles";
 import PartnerProfileCard from "@/components/partner/PartnerProfileCard";
@@ -46,8 +47,10 @@ import { toast } from "@/components/ui/Toast";
 import { confirmDialog } from "@/components/ui/Confirm";
 import { promptDialog } from "@/components/ui/Prompt";
 
-type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "ads" | "notifications" | "reports" | "operators";
-const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "ads", "notifications", "reports"];
+type Tab = "overview" | "users" | "matching" | "matched" | "inquiries" | "notices" | "ads" | "notifications" | "failures" | "reports" | "operators";
+// 주소(?tab=)로 열 수 있는 이름을 여기서 받는다. 빠진 이름은 전체 현황으로
+// 되돌아가므로, 메일이 보내는 링크의 탭은 반드시 여기 있어야 한다.
+const TAB_KEYS: Tab[] = ["overview", "users", "matching", "matched", "inquiries", "notices", "ads", "notifications", "failures", "reports", "operators"];
 
 // 펼친 상세의 맨 아래에 붙는 "목록으로" 줄. 긴 상세를 다 읽고 나서 위로
 // 스크롤해 다시 제목을 누르지 않아도 되게.
@@ -321,6 +324,7 @@ export default function AdminDashboard() {
   };
   const [adminNotifications, setAdminNotifications] = useState<AdminNotification[]>([]);
   const [changeRequests, setChangeRequests] = useState<CompanyChangeRequest[]>([]);
+  const [failures, setFailures] = useState<FailureRow[]>([]);
   const [adminReplyText, setAdminReplyText] = useState("");
   const [inquiryReplyingTo, setInquiryReplyingTo] = useState<string | null>(null);
   const [inquiryReplyText, setInquiryReplyText] = useState("");
@@ -434,6 +438,15 @@ export default function AdminDashboard() {
       setChangeRequests(await listAllChangeRequests());
     } catch (err) {
       console.error(err);
+    }
+
+    // 실패 기록도 따로 불러온다. 43단계 SQL을 적용하기 전에 배포가 먼저
+    // 나가면 함수가 없어 거절되는데, 그것 때문에 관리자 화면이 비면
+    // 안 된다. 이 화면은 그럴 때 들여다보는 화면이다.
+    try {
+      setFailures(await listFailures());
+    } catch (err) {
+      console.error("[관리자] 실패 기록 불러오기 실패", err);
     }
   }, [isAdmin]);
 
@@ -711,7 +724,12 @@ export default function AdminDashboard() {
   // 쪽이 답을 못 보면 회원은 기다리고 제한은 유지된다.
   const unreadForMe = adminNotifications.filter((n) => n.userId === adminId && !n.read).length;
 
+  // 안 본 실패. 돈이 되는 길이 끊긴 일이라 처리할 일의 맨 앞에 둔다 —
+  // 문의 접수가 막혀 있던 한 달 동안 이 자리에 아무것도 뜨지 않았다.
+  const openFailures = failures.filter((f) => !f.resolvedAt).length;
+
   const todo = [
+    { label: "조용히 실패한 일", n: openFailures, unit: "건", tab: "failures" as const },
     { label: "승인 대기", n: pendingUsers, unit: "명", tab: "users" as const },
     { label: "답변 온 알림", n: unreadForMe, unit: "건", tab: "notifications" as const },
     { label: "답변 대기 문의", n: waitingInquiries, unit: "건", tab: "inquiries" as const },
@@ -735,6 +753,7 @@ export default function AdminDashboard() {
       label: "알림 관리",
       badge: unreadForMe || undefined,
     },
+    { key: "failures", label: "실패 기록", badge: openFailures || undefined },
     { key: "reports", label: "분석 리포트" },
     // 운영자는 회원이 아니다. 회원 목록과 한 화면에 두면 "사용자 관리"가
     // 두 가지를 뜻하게 된다.
@@ -2023,6 +2042,82 @@ export default function AdminDashboard() {
                 운영자는 의뢰사·파트너사 회원과 다릅니다. 회원가입을 거치지 않고 여기서
                 계정을 바로 만듭니다.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════ 실패 기록 ════════════ */}
+        {activeTab === "failures" && (
+          <div className="mt-8">
+            <div className="rounded-2xl border border-border bg-background p-6">
+              <h3 className="text-lg font-bold text-foreground">조용히 실패한 일</h3>
+              <p className="mt-1.5 break-keep text-sm leading-relaxed text-foreground/60">
+                회원 화면에서 우리가 예상하지 못한 오류가 났을 때 여기로 모입니다.
+                우리가 써 둔 안내(&ldquo;이미 등록된 사업자등록번호입니다&rdquo; 같은 것)는
+                규칙이 제대로 돈 결과라 올라오지 않습니다.
+                같은 곳에서 난 실패는 하루에 한 번 메일로도 갑니다.
+              </p>
+
+              {failures.length === 0 ? (
+                <p className="mt-6 rounded-xl bg-emerald-50 px-4 py-10 text-center text-sm font-medium text-emerald-800">
+                  최근 90일 동안 기록된 실패가 없습니다.
+                </p>
+              ) : (
+                <div className="mt-6 space-y-3">
+                  {failures.map((f) => (
+                    <div key={f.id}
+                      className={`rounded-xl border p-4 ${f.resolvedAt ? "border-border bg-muted/40" : "border-red-200 bg-red-50/40"}`}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-foreground">
+                            {f.place}
+                            {/* 1회와 40회는 같은 급함이 아니다. */}
+                            {f.hits > 1 ? (
+                              <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold leading-none text-white">{f.hits}회</span>
+                            ) : null}
+                            {f.resolvedAt ? (
+                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold leading-none text-emerald-700">처리됨</span>
+                            ) : null}
+                          </p>
+                          <p className="mt-1 text-xs text-foreground/60">
+                            {f.hits > 1 ? `${ymdhm(f.at)} ~ ${ymdhm(f.lastAt)}` : ymdhm(f.at)}
+                            {" · "}
+                            {f.memberName
+                              ? `${f.memberName}${f.company ? ` · ${f.company}` : ""}${f.memberCode ? ` (${f.memberCode})` : ""}`
+                              : "비회원"}
+                          </p>
+                          {f.path ? <p className="mt-0.5 break-all text-xs text-foreground/50">{f.path}</p> : null}
+                        </div>
+                        {/* 처리 표시를 지우면 같은 실패가 또 났을 때 새 줄로
+                            올라가고 메일도 다시 온다. 고친 줄 알았다가 아니었던
+                            경우를 위해 되돌릴 수 있게 둔다. */}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await resolveFailure(f.id, !f.resolvedAt);
+                              setFailures(await listFailures());
+                            } catch (err) {
+                              toast(err instanceof Error ? err.message : "바꾸지 못했습니다.", "error");
+                            }
+                          }}
+                          className="shrink-0 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground/70 transition-colors hover:bg-muted">
+                          {f.resolvedAt ? "다시 열기" : "처리했음"}
+                        </button>
+                      </div>
+                      {/* 원문 그대로. 고칠 사람이 보는 줄이다. */}
+                      <p className="mt-3 break-all rounded-lg bg-slate-900 px-3 py-2.5 font-mono text-xs leading-relaxed text-slate-100">
+                        {f.message}
+                      </p>
+                      {f.resolvedAt ? (
+                        <p className="mt-2 text-xs text-foreground/50">
+                          {ymdhm(f.resolvedAt)} · {f.resolvedByName ?? "운영자"} 처리
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

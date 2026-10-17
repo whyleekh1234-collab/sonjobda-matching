@@ -43,7 +43,7 @@ export default function LoginPage() {
       window.location.replace("/dashboard");
       return;
     } catch (err) {
-      setError(userMessage(err, "로그인에 실패했습니다."));
+      setError(userMessage(err, "로그인에 실패했습니다.", "로그인"));
     } finally {
       setIsSubmitting(false);
     }

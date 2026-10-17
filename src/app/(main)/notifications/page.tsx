@@ -65,7 +65,7 @@ export default function NotificationsPage() {
       await reload();
       if (successMessage) toast(successMessage);
     } catch (err) {
-      toast(userMessage(err, "처리하지 못했습니다."));
+      toast(userMessage(err, "처리하지 못했습니다.", "알림 처리"));
     }
   };
 

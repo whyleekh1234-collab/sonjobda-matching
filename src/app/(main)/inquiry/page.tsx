@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyInquiries, createInquiry, type InquiryWithExtras } from "@/lib/data/notices";
 import { toast } from "@/components/ui/Toast";
+import { userMessage } from "@/lib/errorMessage";
 
 const inquiryTypes = [
   { value: "general", label: "일반 문의" },
@@ -84,11 +85,17 @@ function InquiryPageInner() {
       // DB 오류 문구를 그대로 띄우지 않는다. 권한 설정이 어긋났을 때
       // "permission denied for table inquiries"가 사용자 화면에 그대로
       // 떴고, 받은 사람은 무슨 말인지도 모른 채 다섯 번을 다시 눌렀다.
-      // 안쪽 사정은 콘솔에만 남기고, 화면에는 지금 할 수 있는 일을 준다.
-      console.error("문의 접수 실패:", err);
+      //
+      // 콘솔에만 남기던 것을 운영자에게 보낸다. 그 콘솔은 누르던 사람의
+      // 브라우저에 있어서 우리가 볼 수 없는 자리였고, 그래서 접수가
+      // 통째로 막힌 것을 한 달 동안 몰랐다. 전화가 와서 알았다.
       toast(
-        "문의를 접수하지 못했습니다. 잠시 후 다시 시도해주세요.\n" +
-        "계속 안 되면 contact@sonjobdamd.com 으로 보내주시면 바로 확인하겠습니다.",
+        userMessage(
+          err,
+          "문의를 접수하지 못했습니다. 잠시 후 다시 시도해주세요.\n" +
+          "계속 안 되면 contact@sonjobdamd.com 으로 보내주시면 바로 확인하겠습니다.",
+          "문의 접수",
+        ),
         "error",
       );
     } finally {
