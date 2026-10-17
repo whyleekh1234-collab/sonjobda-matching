@@ -1413,24 +1413,33 @@ function NewRequestForm() {
                         placeholder="예: 서울대학교병원, 연세대학교 세브란스병원" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                       <p className="mt-1 text-xs text-foreground/60">여러 기관은 쉼표(,)로 구분해주세요</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground">예상 보험 기간 (개월) *</label>
-                      <input type="text" inputMode="numeric" value={insurancePeriod} onChange={(e) => setInsurancePeriod(e.target.value.replace(/\D/g, ""))}
-                        placeholder="예: 24" className="mt-1 w-full max-w-xs rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-foreground">보상 한도 (1인당)</label>
-                        <input type="text" inputMode="numeric" value={compensationPerPerson} onChange={(e) => setCompensationPerPerson(e.target.value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","))}
-                          placeholder="예: 100,000,000" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground">보상 한도 (총)</label>
-                        <input type="text" inputMode="numeric" value={compensationTotal} onChange={(e) => setCompensationTotal(e.target.value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","))}
-                          placeholder="예: 1,000,000,000" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-                      </div>
-                    </div>
                     </>
+                    )}
+                    {/* 보험 기간과 보상 한도는 임상시험 보험에만 있는 항목이
+                        아니다. 어떤 보험이든 기간이 있고 한도가 있다.
+                        그런데 임상 블록 안에 들어 있어서, 생산물배상책임보험을
+                        고른 사람에게는 칸이 보이지 않는데 검증은 입력을
+                        요구했다 — 넘어갈 방법이 없는 막다른 길이었다. */}
+                    {insKind && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-foreground">예상 보험 기간 (개월) *</label>
+                          <input type="text" inputMode="numeric" value={insurancePeriod} onChange={(e) => setInsurancePeriod(e.target.value.replace(/\D/g, ""))}
+                            placeholder="예: 24" className="mt-1 w-full max-w-xs rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-medium text-foreground">보상 한도 (1인당)</label>
+                            <input type="text" inputMode="numeric" value={compensationPerPerson} onChange={(e) => setCompensationPerPerson(e.target.value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","))}
+                              placeholder="예: 100,000,000" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-foreground">보상 한도 (총)</label>
+                            <input type="text" inputMode="numeric" value={compensationTotal} onChange={(e) => setCompensationTotal(e.target.value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","))}
+                              placeholder="예: 1,000,000,000" className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                          </div>
+                        </div>
+                      </>
                     )}
                   </>
                 ) : serviceType === "ra" ? (
