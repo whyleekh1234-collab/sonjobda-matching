@@ -185,19 +185,23 @@ begin
     return;   -- 없는 줄이거나 이미 보냈다.
   end if;
 
+  -- f2로 별명을 붙인다. 별명 없이 place라고 쓰면 반환 칸 이름(returns
+  -- table의 place)과 겹쳐 42702로 터진다. plpgsql은 본문을 만들 때
+  -- 검사하지 않고 그 문장이 처음 돌 때 비로소 걸리므로, 적용 직후에는
+  -- "Success"만 보이고 실제로 실패가 한 번 나야 드러난다(44단계).
   if exists (
-    select 1 from failures
-    where place = v_place
-      and email_sent_at is not null
-      and email_sent_at > now() - interval '24 hours'
+    select 1 from failures f2
+    where f2.place = v_place
+      and f2.email_sent_at is not null
+      and f2.email_sent_at > now() - interval '24 hours'
   ) then
     -- 하루 안에 같은 자리로 이미 보냈다. 보낸 것으로 찍어 두고 넘긴다 —
     -- 찍지 않으면 다음 실패마다 이 판단을 다시 하게 된다.
-    update failures set email_sent_at = now() where id = p_id;
+    update failures f3 set email_sent_at = now() where f3.id = p_id;
     return;
   end if;
 
-  update failures set email_sent_at = now() where id = p_id;
+  update failures f4 set email_sent_at = now() where f4.id = p_id;
 
   return query
     select f.place, f.message, f.path,
