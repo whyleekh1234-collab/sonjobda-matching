@@ -353,8 +353,24 @@ const printItemOptions = [
   "동의서(ICF)",
   "라벨/스티커",
   "자료집/프로토콜",
+  "브로셔",
+  "홍보책자",
   "기타",
 ];
+
+// 공급 유형과 위탁업무가 같은 것을 두 번 묻는 자리가 있다. 유형에서
+// "인쇄물 제작"을 고르고 위탁업무에서 또 "인쇄물 제작"을 찾아 눌러야
+// 했고, 안 누르면 "위탁업무를 하나 이상 선택해주세요"에서 막혔다.
+// 유형을 고르면 그에 맞는 업무를 켜고 나머지는 끈다. 더 필요한 것은
+// 그 위에 덧붙이면 된다 — 유형을 다시 고를 때만 초기화된다.
+const supplyTypeTask: Record<string, string> = {
+  print: "인쇄물 제작 (ICF/CRF/라벨/스티커 등)",
+  kit: "연구용 키트 제작·조립",
+  other: "기타",
+  // device(의료기기/소모품)에 들어맞는 업무 항목이 목록에 없다. 비슷한
+  // 것을 아무거나 켜 주면 파트너사가 엉뚱한 견적을 낸다. 비워 두고
+  // 고르게 한다.
+};
 
 // 소모품 공급 위탁업무
 const supplyTaskOptions = [
@@ -1542,7 +1558,7 @@ function NewRequestForm() {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-foreground">공급 유형 *</label>
-                      <select value={supplyType} onChange={(e) => { setSupplyType(e.target.value); if (e.target.value !== "print") setTasks((prev) => prev.filter((t) => t !== "인쇄물 제작 (ICF/CRF/라벨/스티커 등)")); }}
+                      <select value={supplyType} onChange={(e) => { const v = e.target.value; setSupplyType(v); const t = supplyTypeTask[v]; setTasks(t ? [t] : []); }}
                         className="mt-1 w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none focus:border-primary">
                         <option value="">유형 선택</option>
                         {supplyTypeOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
