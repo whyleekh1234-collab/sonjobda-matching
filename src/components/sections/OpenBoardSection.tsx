@@ -81,7 +81,8 @@ export default function OpenBoardSection() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
             <p className="text-sm font-semibold text-white">
-              지금 견적을 기다리는 의뢰 <span className="tabular-nums text-emerald-400">{total}</span>건
+              지금 견적을 기다리는 의뢰{" "}
+              <span className="board-count tabular-nums text-emerald-400">{total}</span>건
             </p>
           </div>
 
@@ -94,14 +95,20 @@ export default function OpenBoardSection() {
         </div>
 
         <ul className="mt-4 flex flex-wrap gap-2">
-          {sortByOrder(open).map((r) => (
+          {sortByOrder(open).map((r, i) => (
             <li key={r.category}>
               <Link
                 href={href}
                 className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 transition-colors hover:border-white/25 hover:bg-white/10"
               >
                 <span className="text-sm text-white/85">{r.category}</span>
-                <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-emerald-300">
+                {/* 칸마다 조금씩 늦게 깜빡인다. 다 같이 깜빡이면 화면
+                    전체가 한 번에 번쩍여서 눈이 피로하고, 전광판보다는
+                    경고등처럼 읽힌다. */}
+                <span
+                  className="board-count rounded bg-emerald-400/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-emerald-300"
+                  style={{ animationDelay: `${i * 0.22}s` }}
+                >
                   {r.count}건
                 </span>
               </Link>

@@ -197,3 +197,30 @@ button:not(:has(p, h1, h2, h3, h4)) {
     padding: 0 !important;
   }
 }
+
+/* 전광판 숫자.
+   전광판처럼 보이려면 숫자가 살아 있어야 한다. 다만 글자를 지웠다
+   띄우면 읽는 도중에 숫자를 놓치므로, 완전히 사라지게는 하지 않는다.
+   옅어졌다 밝아지면서 초록빛이 번지는 정도로 둔다. */
+@keyframes board-count {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 14px 1px rgba(52, 211, 153, 0.45);
+  }
+}
+
+.board-count {
+  animation: board-count 1.6s ease-in-out infinite;
+}
+
+/* 움직임을 줄여 달라고 설정해 둔 사람에게는 멈춘 채로 보인다. 빛이
+   깜빡이는 화면을 견디기 어려운 사람이 있고, 그 설정은 그래서 있다. */
+@media (prefers-reduced-motion: reduce) {
+  .board-count {
+    animation: none;
+  }
+}
