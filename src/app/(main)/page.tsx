@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HeroSection from "@/components/sections/HeroSection";
+import OpenBoardSection from "@/components/sections/OpenBoardSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import ProcessSection from "@/components/sections/ProcessSection";
 import AdsSection from "@/components/sections/AdsSection";
@@ -50,6 +51,12 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
       <HeroSection />
+      {/* 전광판. 띄울 의뢰가 적으면 스스로 사라진다 — 빈 전광판은
+          "아직 아무도 안 쓰는 곳"이라고 광고하는 것과 같다.
+
+          히어로 바로 아래에 둔다. 분야 소개보다 위다. 무엇을 하는
+          곳인지 읽기 전에 "지금 일이 돌고 있다"가 먼저 보여야 한다. */}
+      <OpenBoardSection />
       <ServicesSection />
       {/* 광고 자리. 넉 칸 중 빈 칸은 "이 자리를 팝니다"라는 알림이라
           비어 있어도 구역이 사라지지 않는다.
