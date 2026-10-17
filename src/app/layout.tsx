@@ -22,7 +22,31 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+// 검색엔진 소유 확인.
+//
+// 구글 서치콘솔과 네이버 서치어드바이저는 "이 사이트가 정말 당신 것인가"를
+// 먼저 묻는다. 확인되기 전에는 사이트맵을 받아주지도, 어떤 검색어로
+// 들어왔는지 보여주지도 않는다. 특히 네이버는 등록하지 않으면 사실상
+// 잡히지 않는다.
+//
+// 각 콘솔이 주는 문자열을 Vercel 환경변수에 넣으면 여기서 <meta>로
+// 나간다. 코드를 고칠 일이 없고, 값이 없으면 태그 자체가 안 나간다 —
+// 빈 meta를 남겨 두면 확인에 실패하면서 이유도 안 보인다.
+//
+// 비밀이 아니다. 어차피 페이지 소스에 그대로 박히는 값이라 NEXT_PUBLIC_로
+// 둔다. 확인이 끝난 뒤에도 지우면 안 된다 — 콘솔이 주기적으로 다시 본다.
+const verification = (() => {
+  const google = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+  const naver = process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION?.trim();
+  if (!google && !naver) return undefined;
+  return {
+    ...(google ? { google } : {}),
+    ...(naver ? { other: { "naver-site-verification": naver } } : {}),
+  };
+})();
+
 export const metadata: Metadata = {
+  verification,
   // 상대 경로(OG 이미지 등)가 어느 주소를 기준으로 풀리는지 알려 준다.
   // 없으면 Next가 배포 호스트를 추측하는데, 미리보기 배포 주소가 섞여
   // 들어가 카카오톡·슬랙 링크 미리보기가 엉뚱한 주소를 가리킨다.
