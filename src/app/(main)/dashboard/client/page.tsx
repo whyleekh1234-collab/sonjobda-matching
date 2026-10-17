@@ -23,7 +23,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import QuoteAttachment from "@/components/dashboard/QuoteAttachment";
 import { listPartnerProfiles, listProfileDocs, type PartnerProfile } from "@/lib/data/partnerProfiles";
 import { toast } from "@/components/ui/Toast";
-import { userMessage } from "@/lib/errorMessage";
+import { userMessage, loadFailed, reportFailure } from "@/lib/errorMessage";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 type Section = "activity" | "requests" | "quotes" | "completed" | "undecided";
@@ -53,7 +53,7 @@ export default function ClientDashboard() {
       listProfileDocs(ids).then(setProfileDocs).catch(console.error);
     } catch (err) {
       console.error(err);
-      toast("의뢰 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+      toast(loadFailed(err, "의뢰 목록"), "error");
     }
   }, [user]);
 
@@ -122,6 +122,10 @@ export default function ClientDashboard() {
       await reloadRequests();
     } catch (err) {
       console.error(err);
+      // 화면에는 띄우지 않는다. 사용자가 누른 일이 아니라 열어 보면
+      // 저절로 찍히는 표시다. 다만 이것이 막히면 파트너사 쪽에서
+      // "읽었는지"가 영영 바뀌지 않는다.
+      reportFailure("견적 열람 표시", err instanceof Error ? err.message : "");
     }
   };
 

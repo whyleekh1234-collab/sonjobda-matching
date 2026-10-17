@@ -25,7 +25,7 @@ import type { Notice, Notification } from "@/types/auth";
 import Greeting from "@/components/dashboard/Greeting";
 import CompanyLogo from "@/components/CompanyLogo";
 import { toast } from "@/components/ui/Toast";
-import { userMessage } from "@/lib/errorMessage";
+import { userMessage, loadFailed, reportFailure } from "@/lib/errorMessage";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 // request/new의 marketingTypeOptions와 같은 키를 쓴다.
@@ -80,6 +80,9 @@ export default function PartnerDashboard() {
     } catch (err) {
       console.error(err);
       setRequests([]);
+      // 빈 목록과 못 불러온 것을 구분해 준다. 파트너사가 "들어온 의뢰가
+      // 없다"고 읽고 닫으면 우리는 영영 모른다.
+      toast(loadFailed(err, "받은 의뢰", "들어온 의뢰가 없는 것은 아닙니다."), "error");
     }
   }, [user]);
 
@@ -93,6 +96,7 @@ export default function PartnerDashboard() {
       setNotifications(notifs);
     } catch (err) {
       console.error(err);
+      toast(loadFailed(err, "공지와 알림"), "error");
     }
   }, [user]);
 
@@ -104,6 +108,9 @@ export default function PartnerDashboard() {
       await loadNotices();
     } catch (err) {
       console.error(err);
+      // 화면에는 띄우지 않는다. 읽음 표시는 누른 사람이 기다리는 일이
+      // 아니다. 다만 배지가 안 지워지는 이유는 우리가 알아야 한다.
+      reportFailure("알림 읽음 표시", err instanceof Error ? err.message : "");
     }
   };
 

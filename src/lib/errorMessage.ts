@@ -23,6 +23,8 @@
 // 뜻이다. 알려야 할 것은 정확히 그것이다. 그래서 자리 이름(place)만
 // 넘기면 그 한 가지가 운영자에게 간다.
 
+import { eul } from "@/lib/text";
+
 const HANGUL = /[가-힣]/;
 
 export function userMessage(err: unknown, fallback: string, place?: string): string {
@@ -42,6 +44,22 @@ export function userMessage(err: unknown, fallback: string, place?: string): str
  * 기다리지 않는다(await 하지 않는다). 알리는 일이 느리거나 실패해도 사용자
  * 화면은 이미 할 말을 했다. 알리다 난 오류를 다시 알리려 들지도 않는다.
  */
+/**
+ * 목록을 못 불러왔을 때 보여줄 말을 주고, 같은 사실을 운영자에게 알린다.
+ *
+ * 비어 보이는 것과 못 불러온 것은 다르다. 파트너사가 받은 의뢰를 못
+ * 불러왔는데 빈 화면만 보면 "들어온 일이 없다"고 읽고 닫는다. 그러면
+ * 우리는 아무것도 모른다 — 떠난 사람은 말해주지 않는다.
+ */
+export function loadFailed(
+  err: unknown,
+  what: string,
+  hint = "비어 있는 것은 아닙니다.",
+): string {
+  reportFailure(`${what} 불러오기`, err instanceof Error ? err.message : String(err ?? ""));
+  return `${what}${eul(what)} 불러오지 못했습니다. ${hint} 새로고침해도 같으면 알려주세요.`;
+}
+
 export function reportFailure(place: string, message: string) {
   if (typeof window === "undefined") return;
 

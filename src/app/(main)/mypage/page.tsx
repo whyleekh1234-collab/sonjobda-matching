@@ -27,7 +27,7 @@ import {
 } from "@/lib/data/changeRequests";
 import type { PartnerCategory } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
-import { userMessage } from "@/lib/errorMessage";
+import { userMessage, loadFailed } from "@/lib/errorMessage";
 import { promptDialog } from "@/components/ui/Prompt";
 import { confirmDialog } from "@/components/ui/Confirm";
 
@@ -201,6 +201,7 @@ export default function MyPage() {
       setCompanyMembers(await listCompanyMembers(user.companyId));
     } catch (err) {
       console.error(err);
+      toast(loadFailed(err, "회사 멤버"), "error");
     }
   };
 
@@ -282,6 +283,7 @@ export default function MyPage() {
       setChangeRequests(await listMyChangeRequests());
     } catch (err) {
       console.error(err);
+      toast(loadFailed(err, "변경 요청"), "error");
     }
   };
 

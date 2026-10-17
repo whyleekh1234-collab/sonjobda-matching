@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { listMyInquiries, createInquiry, type InquiryWithExtras } from "@/lib/data/notices";
 import { toast } from "@/components/ui/Toast";
-import { userMessage } from "@/lib/errorMessage";
+import { userMessage, loadFailed } from "@/lib/errorMessage";
 
 const inquiryTypes = [
   { value: "general", label: "일반 문의" },
@@ -37,6 +37,7 @@ function InquiryPageInner() {
       setMyInquiries(await listMyInquiries());
     } catch (err) {
       console.error(err);
+      toast(loadFailed(err, "내 문의"), "error");
     }
   }, [user]);
 

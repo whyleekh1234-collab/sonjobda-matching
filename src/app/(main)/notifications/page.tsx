@@ -17,7 +17,7 @@ import {
 } from "@/lib/data/notices";
 import type { Notification, Notice } from "@/types/auth";
 import { toast } from "@/components/ui/Toast";
-import { userMessage } from "@/lib/errorMessage";
+import { userMessage, loadFailed } from "@/lib/errorMessage";
 import { confirmDialog } from "@/components/ui/Confirm";
 
 export default function NotificationsPage() {
@@ -45,6 +45,7 @@ export default function NotificationsPage() {
       setReadNoticeIds(readIds);
     } catch (err) {
       console.error(err);
+      toast(loadFailed(err, "알림"), "error");
     }
   }, [user]);
 
