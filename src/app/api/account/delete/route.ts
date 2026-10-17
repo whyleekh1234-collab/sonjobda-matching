@@ -28,7 +28,7 @@ export async function POST() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ message: "로그인이 필요했습니다." }, { status: 401 });
+    return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
   }
 
   // 사용자 자신의 권한으로 부른다. 함수 안에서 auth.uid()를 쓰므로
