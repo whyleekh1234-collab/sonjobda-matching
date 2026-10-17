@@ -57,6 +57,7 @@ const linkColumns = [
     heading: "고객지원",
     links: [
       { label: "문의하기", href: "/inquiry" },
+      { label: "파트너사 등록 안내", href: "/partner" },
       { label: "광고 안내", href: "/advertise" },
       { label: "공지 · 알림", href: "/notifications" },
       { label: "대시보드", href: "/dashboard" },

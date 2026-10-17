@@ -23,6 +23,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE}/signup`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE}/inquiry`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    // 파트너사 모집이 지금 가장 아쉬운 자리다. 검색에서 걸리는 것이
+    // 광고 안내보다 중요하므로 가입 다음으로 높게 둔다.
+    { url: `${SITE}/partner`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE}/advertise`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
     { url: `${SITE}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },

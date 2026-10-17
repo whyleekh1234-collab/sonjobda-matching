@@ -203,7 +203,17 @@ export default function AdvertisePage() {
           >
             {CONTACT} 으로 문의하기
           </a>
-          <p className="mt-5 text-sm text-foreground/60">
+          {/* 광고를 보러 온 회사가 곧 파트너사 후보다. 광고를 사는 이유가
+              "의뢰사 눈에 띄려고"인데, 그걸 원하는 쪽이 바로 수탁사다.
+              등록은 공짜이므로 먼저 권하는 것이 서로에게 낫다. */}
+          <p className="mt-5 text-sm leading-6 text-foreground/60">
+            수탁 업무를 하시는 회사라면{" "}
+            <Link href="/partner" className="font-semibold text-primary hover:underline">
+              파트너사 등록
+            </Link>
+            을 먼저 해보세요. 비용 없이 등록해 두시면 해당 분야 의뢰가 올라올 때 알려드립니다.
+          </p>
+          <p className="mt-3 text-sm text-foreground/60">
             서비스에 대한 다른 궁금증은{" "}
             <Link href="/faq" className="font-semibold text-primary hover:underline">
               자주 묻는 질문
