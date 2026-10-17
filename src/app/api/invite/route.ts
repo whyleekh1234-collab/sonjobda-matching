@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
   const result = await sendEmail(
     row.email,
     `[손잡다매칭] ${row.companies?.name ?? "회사"} 멤버 초대`,
+    // 제목에 회사명이 들어간다. 실패를 적을 이름은 따로 넘긴다.
+    "멤버 초대",
     inviteTemplate(row.companies?.name ?? "회사", row.profiles?.name ?? "담당자", link)
   );
 

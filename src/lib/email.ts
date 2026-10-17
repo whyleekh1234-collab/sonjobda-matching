@@ -4,6 +4,8 @@
 // 보고 개발 중임을 알 수 있어야 한다. 조용히 실패하면 "메일이 안 온다"는
 // 문의만 쌓인다.
 
+import { reportServerFailure } from "@/lib/failureLog";
+
 const FROM = process.env.EMAIL_FROM ?? "손잡다매칭 <onboarding@resend.dev>";
 
 export interface SendResult {
@@ -11,24 +13,72 @@ export interface SendResult {
   reason?: string;
 }
 
-export async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
+// 실패를 적을 때 쓸 이름. 제목에서 변하는 부분을 떼어 낸다.
+//
+// "[손잡다매칭] 가입 신청 — (주)이모티브"를 그대로 쓰면 회사마다 새
+// 종류가 되어, 같은 고장이 수십 줄로 쌓이고 메일도 수십 통 간다.
+// "가입 신청"까지만 남기면 한 줄에 모인다.
+function label(subject: string): string {
+  return subject
+    .replace(/^\[손잡다매칭\]\s*/, "")
+    .split(" — ")[0]
+    .trim() || "메일";
+}
+
+// 실패를 알리는 메일이 또 실패하면 그것까지 적지 않는다. 적어도 나르는
+// 길이 이미 끊긴 상태라 줄만 늘고, 운영자가 볼 때 원래 고장이 그 아래
+// 묻힌다.
+const SELF = "실패";
+
+/**
+ * name은 실패를 적을 때 쓸 이름이다. 제목에 회사명처럼 변하는 값이
+ * 들어가는 경우에만 넘긴다 — 안 넘기면 제목에서 뽑으므로 회사마다
+ * 다른 종류가 되어, 같은 고장이 회사 수만큼 쌓이고 메일도 그만큼 간다.
+ */
+export async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  name?: string,
+): Promise<SendResult> {
+  const place = name?.trim() || label(subject);
+
+  // 발송이 안 된 것을 부르는 쪽이 세기만 하고 이유는 버렸다. 키가
+  // 만료되거나 도메인이 막히면 수주 알림·1차 선정·가입 승인 메일이
+  // 전부 조용히 안 나가고, 받는 사람도 보낸 사람도 모른다.
+  const fail = (reason: string): SendResult => {
+    if (place !== SELF) {
+      void reportServerFailure(`메일 발송 — ${place}`, reason);
+    }
+    return { sent: false, reason };
+  };
+
+  // 키가 없는 것도 적는다. 키를 바꾸고 Vercel에 넣는 것을 잊으면 모든
+  // 메일이 조용히 안 나가는데, 그때 아무 기록도 없으면 알 길이 없다.
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    return { sent: false, reason: "RESEND_API_KEY가 설정되지 않았습니다." };
+    return fail("RESEND_API_KEY가 설정되지 않았습니다.");
   }
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
-  });
+  let res: Response;
+  try {
+    res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from: FROM, to: [to], subject, html }),
+    });
+  } catch (err) {
+    // 네트워크가 끊기면 fetch가 던진다. 전에는 이것이 라우트 밖으로
+    // 튀어 500이 됐고, 메일 하나 때문에 가입이나 승인이 실패했다.
+    return fail(`보내지 못했습니다: ${err instanceof Error ? err.message : "알 수 없음"}`);
+  }
 
   if (!res.ok) {
     const body = await res.text();
-    return { sent: false, reason: `발송 실패 (${res.status}): ${body.slice(0, 200)}` };
+    return fail(`발송 실패 (${res.status}): ${body.slice(0, 200)}`);
   }
   return { sent: true };
 }

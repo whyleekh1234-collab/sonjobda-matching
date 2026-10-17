@@ -51,6 +51,8 @@ export async function POST(request: Request) {
   const result = await sendEmail(
     body.email!,
     `[손잡다매칭] ${body.companyName} 파트너사 등록 안내`,
+    // 제목에 회사명이 들어간다. 실패를 적을 이름은 따로 넘긴다.
+    "파트너사 등록 안내",
     inviteTemplate(body.companyName!, "손잡다매칭 운영자", link)
   );
 
