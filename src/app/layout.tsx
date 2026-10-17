@@ -35,13 +35,17 @@ export const viewport: Viewport = {
 //
 // 비밀이 아니다. 어차피 페이지 소스에 그대로 박히는 값이라 NEXT_PUBLIC_로
 // 둔다. 확인이 끝난 뒤에도 지우면 안 된다 — 콘솔이 주기적으로 다시 본다.
-// 네이버 값은 여기 적어 둔다. 비밀이 아니고(페이지 소스에 그대로 나간다)
+// 두 값 모두 여기 적어 둔다. 비밀이 아니고(페이지 소스에 그대로 나간다)
 // 한 번 정하면 안 바뀌는 값이라, 환경변수에 두면 설정을 옮길 때마다
 // 따라다녀야 할 짐만 는다. 환경변수를 넣으면 그쪽이 이긴다.
+//
+// 확인이 끝난 뒤에도 지우면 안 된다. 두 콘솔 다 주기적으로 다시 보고,
+// 태그가 사라지면 소유확인이 풀린다.
 const NAVER_VERIFICATION = "abb8149e48aab55e93fa16831f6288bd84cb57f4";
+const GOOGLE_VERIFICATION = "u8j_8oAQjuAdOMuI41vJxEO7-2l4zis--66CJ7_X28Y";
 
 const verification = (() => {
-  const google = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+  const google = (process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? GOOGLE_VERIFICATION).trim();
   const naver = (process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ?? NAVER_VERIFICATION).trim();
   if (!google && !naver) return undefined;
   return {
